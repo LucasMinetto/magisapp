@@ -1,17 +1,17 @@
 # TASKS: Magistrado
 
 > Produto: [PRD.md](PRD.md) · Técnica: [TECH_SPEC.md](TECH_SPEC.md) · Memória: [PROJECT_MEMORY.md](PROJECT_MEMORY.md)
-> Status em 2026-11-02: nenhuma tarefa iniciada. "Bloqueada" = espera uma decisão de [TECH_SPEC § Decisões pendentes](TECH_SPEC.md#decisões-pendentes).
+> Status em 2026-11-03: T1 e T2 concluídas (commits `b0ea20a` e `b922810`, sem push). "Bloqueada" = espera uma decisão de [TECH_SPEC § Decisões pendentes](TECH_SPEC.md#decisões-pendentes).
 
 ## Fase 1: base funcionando com o nome novo
 
-### T1. Criar o repositório novo a partir do autore
+### T1. Criar o repositório novo a partir do autore ✅ 2026-11-03
 - **Depende de:** nada (Q4 e Q7 decididas: histórico do zero, remoto `github.com/LucasMinetto/magistrado`)
-- **Resultado:** `Magistrado/` é um repositório git com `app/` e `design/` copiados de `_fontes/autore`, `docs/` preservado e `_fontes/` no `.gitignore`. O primeiro commit cita `autore@28fa658` e `taberna@71f7b1c`.
+- **Resultado:** `Magistrado/` é um repositório git com `app/` e `replica/` copiados de `_fontes/autore` (`replica/` mantida com esse nome porque o e2e e os scripts de tokens usam o caminho), `docs/` preservado e `_fontes/` no `.gitignore`. O primeiro commit cita `autore@28fa658` e `taberna@71f7b1c`.
 - **Aceite:** `npm.cmd install`, `npm.cmd run typecheck`, `npm.cmd test` e `node e2e/slice.mjs` passam em `app/` sem mudar nada no código.
-- **Arquivos:** `app/**`, `design/**`, `.gitignore`, `README.md`.
+- **Arquivos:** `app/**`, `replica/**`, `.gitignore`, `.gitattributes`, `README.md`.
 
-### T2. Renomear Mesa → Magistrado
+### T2. Renomear Mesa → Magistrado ✅ 2026-11-03
 - **Depende de:** T1
 - **Resultado:** nome do pacote, título da janela, extensão `.magistrado`, protocolo `magistrado://`, backup `.magistrado-backup`, pasta `%APPDATA%/Magistrado`. Sem compatibilidade com `.mesa` (Q6: não há campanhas reais).
 - **Aceite:** nenhuma ocorrência técnica de `mesa` em `app/src` (as palavras de interface com sentido de "mesa de jogo" ficam). Os testes e o e2e passam. O backup restaura.

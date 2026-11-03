@@ -5,7 +5,7 @@
 ## Propósito e status
 
 - **O que é:** app de desktop do mestre de Ordem Paranormal. Junta o **autore** (a base) com a ficha do agente, a rolagem com dados físicos e os modelos de ameaças, itens e rituais do **taberna**.
-- **Status (2026-11-02):** intenção confirmada e documentos criados. **Nada implementado.** As cópias dos dois projetos estão em `_fontes/`.
+- **Status (2026-11-03):** T1 e T2 concluídas. O repositório local tem o app do autore rebatizado de Magistrado (`.magistrado`, `magistrado://`, `.magistrado-backup`, `%APPDATA%/Magistrado`, `Documentos\Campanhas Magistrado`). Typecheck, 76 testes e e2e 110/110 passam. **Ainda sem push** para o GitHub. As cópias dos dois projetos estão em `_fontes/` (fora do git).
 
 ## Restrições confirmadas
 
@@ -34,7 +34,9 @@
 
 - No PowerShell deste PC o `npm.ps1` é bloqueado: usar **`npm.cmd` / `npx.cmd`**.
 - `npm.cmd install`: o Electron é baixado no `postinstall`.
-- `npm.cmd run dev` · `npm.cmd run typecheck` · `npm.cmd test` (vitest) · `node e2e/slice.mjs` (Playwright).
+- `npm.cmd run dev` · `npm.cmd run typecheck` · `npm.cmd test` (vitest) · `npm.cmd run build && node e2e/slice.mjs` (Playwright; o e2e usa o build em `out/`).
+- O npm avisa que o script de instalação do better-sqlite3 não foi liberado: pode ignorar, o pacote traz o binário pronto em `prebuilds/`.
+- Variáveis de teste: `MAGISTRADO_USER_DATA`, `MAGISTRADO_CAMPAIGNS_DIR`, `MAGISTRADO_BACKUP_DIR`.
 - O computer use não controla o Electron de desenvolvimento: a verificação visual é feita com Playwright.
 
 ## Decisões
@@ -42,7 +44,10 @@
 - Todas decididas em 2026-11-02, Q1 a Q7 ([TECH_SPEC § Decididas](TECH_SPEC.md#decididas-em-2026-11-02)). A Q5 trouxe o painel de iniciativa do taberna para a tela de sessão.
 - Repositório: **github.com/LucasMinetto/magistrado** (vazio em 2026-11-02). Histórico do zero.
 - Sem compatibilidade com `.mesa` (não há campanhas reais).
+- `replica/` (arquitetura e design herdados) fica com esse nome: o e2e grava em `replica/clone-screens/` e os scripts de tokens citam `replica/design`.
+- O rótulo "Mesa" do menu lateral e as frases "na mesa" são mesa de jogo e ficam.
+- Git local com identidade `Lucas <lucasminetto13@gmail.com>` só neste repositório.
 
 ## Próximo passo
 
-T1 (criar o repositório a partir do autore) e T2 (renomear) estão liberadas. Para executar, usar `planning-with-files` (tarefa longa, várias sessões).
+Push para `github.com/LucasMinetto/magistrado` quando o Lucas liberar. Depois, T3 (portar as regras) e T4b (biblioteca), que podem andar em paralelo.
