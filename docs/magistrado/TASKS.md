@@ -107,6 +107,9 @@
 ### P1. Dados do livro de regras
 - Extrair do livro e cadastrar as **ameaças, os itens e os rituais** reais na biblioteca única (T4b, T8, T9), cada um com a origem do livro de onde veio. Pedido do usuário em 2026-11-02.
 - Antes de começar: confirmar quais livros (básico, Sobrevivendo ao Horror…) e o formato da extração.
+- **Conferir no livro** (pedido em 2026-11-03):
+  - **Crítico:** a T7 multiplica só o dano da arma; os danos extras (ex.: Energia de arma amaldiçoada) não multiplicam. Confirmar a regra e ajustar `FormularioDano` em `ficha/JanelaRolagem.tsx` se for diferente.
+  - **Cobertura:** verificar se tudo o que o livro traz para ameaças, rituais e itens tem campo no Magistrado (`blocoAmeacaSchema`, `camposRitual`, `camposItem` em `shared/ordem/esquemas.ts`) e acrescentar o que faltar.
 
 ### P3. Direcionar o dano ao alvo
 - Escolher quem recebe o dano de uma rolagem, descontar as resistências por tipo e tirar o PV. Depende das resistências das ameaças em `sheet_data` (T8). Pedido do usuário em 2026-11-03, ao revisar a T7.
