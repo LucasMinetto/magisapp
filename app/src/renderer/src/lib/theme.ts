@@ -1,7 +1,7 @@
 // Tema escuro (padrão), claro ou o do Windows. É preferência de quem usa o computador: fica no localStorage.
 export type ThemePref = 'escuro' | 'claro' | 'sistema'
 
-const KEY = 'mesa.theme'
+const KEY = 'magistrado.theme'
 const media = () => window.matchMedia('(prefers-color-scheme: light)')
 
 export function themePref(): ThemePref {

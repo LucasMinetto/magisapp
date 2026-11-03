@@ -1,4 +1,4 @@
-// Backup em arquivo único (.mesa-backup = zip comum) e restauração.
+// Backup em arquivo único (.magistrado-backup = zip comum) e restauração.
 //   campanha.sqlite   cópia consistente (VACUUM INTO), o caminho normal para restaurar
 //   campanha.json     todas as tabelas em texto; restaura se o banco estiver corrompido
 //   anexos/           imagens e arquivos, com o nome legível de sempre
@@ -14,7 +14,7 @@ import type { CampaignStore } from './store'
 import { buildVault, README, safeFileName } from './vault'
 import type { BackupEntry } from '../shared/types'
 
-export const BACKUP_EXT = '.mesa-backup'
+export const BACKUP_EXT = '.magistrado-backup'
 /** Versão do formato do campanha.json. Sobe quando a forma do arquivo mudar. */
 export const JSON_FORMAT = 1
 
@@ -23,7 +23,7 @@ const DERIVED = new Set(['search_index', 'mentions'])
 
 export interface CampaignJson {
   formato: number
-  app: 'Mesa'
+  app: 'Magistrado'
   schemaVersion: number
   exportadoEm: string
   tabelas: Record<string, Record<string, unknown>[]>
@@ -37,12 +37,12 @@ const dataTables = (db: DB) =>
 export function dumpJson(db: DB): CampaignJson {
   const tabelas: CampaignJson['tabelas'] = {}
   for (const t of dataTables(db)) tabelas[t] = db.prepare(`select * from "${t}"`).all() as Record<string, unknown>[]
-  return { formato: JSON_FORMAT, app: 'Mesa', schemaVersion: SCHEMA_VERSION, exportadoEm: new Date().toISOString(), tabelas }
+  return { formato: JSON_FORMAT, app: 'Magistrado', schemaVersion: SCHEMA_VERSION, exportadoEm: new Date().toISOString(), tabelas }
 }
 
 /** Cria um banco novo a partir do json. Colunas que não existem mais são ignoradas; as novas ficam no padrão. */
 export function loadJson(json: CampaignJson, file: string): void {
-  if (json.app !== 'Mesa' || typeof json.tabelas !== 'object') throw new Error('Este campanha.json não é de uma campanha do Mesa.')
+  if (json.app !== 'Magistrado' || typeof json.tabelas !== 'object') throw new Error('Este campanha.json não é de uma campanha do Magistrado.')
   if (json.formato > JSON_FORMAT) throw new Error('Backup feito numa versão mais nova do app.')
   const db = createEmptyDb(file)
   try {
@@ -87,7 +87,7 @@ export function createBackup(store: CampaignStore, dir: string, opts: { auto?: b
   for (let i = 2; existsSync(file); i++) file = join(dir, `${base} ${i}${BACKUP_EXT}`)
 
   // Nunca copiar o .sqlite aberto direto (o WAL deixa a cópia pela metade).
-  const tmp = join(tmpdir(), `mesa-${newId()}.sqlite`)
+  const tmp = join(tmpdir(), `magistrado-${newId()}.sqlite`)
   store.db.exec(`vacuum into '${tmp.replaceAll("'", "''")}'`)
   try {
     const files: Zippable = {
@@ -143,13 +143,13 @@ export function restoreBackup(file: string, destBase: string, now = new Date()):
   try {
     entries = unzipSync(readFileSync(file), { filter: (f) => f.name === 'campanha.sqlite' || f.name === 'campanha.json' || safeAttachmentPath(f.name) })
   } catch {
-    throw new Error('Não deu para ler este arquivo. Ele é um backup do Mesa?')
+    throw new Error('Não deu para ler este arquivo. Ele é um backup do Magistrado?')
   }
   const json = entries['campanha.json'] ? (JSON.parse(strFromU8(entries['campanha.json'])) as CampaignJson) : null
   const name = (json?.tabelas.campaign?.[0]?.name as string | undefined) ?? 'Campanha restaurada'
   const label = `${safeFileName(name, 'Campanha')} (restaurada ${stamp(now).slice(0, 10)})`
-  let path = join(destBase, `${label}.mesa`)
-  for (let i = 2; existsSync(path); i++) path = join(destBase, `${label} ${i}.mesa`)
+  let path = join(destBase, `${label}.magistrado`)
+  for (let i = 2; existsSync(path); i++) path = join(destBase, `${label} ${i}.magistrado`)
   mkdirSync(join(path, 'anexos'), { recursive: true })
 
   for (const [p, data] of Object.entries(entries)) if (safeAttachmentPath(p)) writeFileSync(join(path, p), data)

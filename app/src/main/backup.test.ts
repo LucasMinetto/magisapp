@@ -13,8 +13,8 @@ let store: CampaignStore
 const backups = () => join(dir, 'backups')
 
 beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), 'mesa-bk-'))
-  const camp = join(dir, 'Caso.mesa')
+  dir = mkdtempSync(join(tmpdir(), 'magistrado-bk-'))
+  const camp = join(dir, 'Caso.magistrado')
   store = new CampaignStore(openDb(join(dir, 'campanha.sqlite'), (db) => initCampaignRow(db, 'Caso do Hospital', '2026-07-22')), dir)
   void camp
   seedExample(store)
@@ -31,7 +31,7 @@ const without = (j: ReturnType<typeof dumpJson>) => ({ ...j, exportadoEm: '' })
 describe('backup', () => {
   it('um arquivo com banco, json, LEIA-ME e o cofre do Obsidian', () => {
     const { file } = createBackup(store, backups(), { now: new Date(2026, 10, 2, 21, 30) })
-    expect(file.endsWith('Caso do Hospital 2026-11-02 21h30.mesa-backup')).toBe(true)
+    expect(file.endsWith('Caso do Hospital 2026-11-02 21h30.magistrado-backup')).toBe(true)
     const z = unzip(file)
     expect(Object.keys(z)).toEqual(expect.arrayContaining(['LEIA-ME.md', 'campanha.sqlite', 'campanha.json', 'legivel/Linha do tempo.md']))
     const aurelio = text(z, 'legivel/Personagens/Dr. Aurélio Bastos.md')
@@ -102,7 +102,7 @@ describe('restaurar', () => {
   it('banco corrompido: monta do campanha.json e refaz a busca', () => {
     const z = unzip(createBackup(store, backups()).file)
     z['campanha.sqlite'] = strToU8('isto não é um banco')
-    const broken = join(dir, 'quebrado.mesa-backup')
+    const broken = join(dir, 'quebrado.magistrado-backup')
     writeFileSync(broken, zipSync(z))
     const { path, fromJson } = restoreBackup(broken, join(dir, 'campanhas'))
     expect(fromJson).toBe(true)
@@ -118,7 +118,7 @@ describe('restaurar', () => {
     const z = unzip(createBackup(store, backups()).file)
     z['../fora.txt'] = strToU8('x')
     z['anexos/../../fora2.txt'] = strToU8('x')
-    const evil = join(dir, 'mau.mesa-backup')
+    const evil = join(dir, 'mau.magistrado-backup')
     writeFileSync(evil, zipSync(z))
     restoreBackup(evil, join(dir, 'campanhas', 'sub'))
     expect(existsSync(join(dir, 'campanhas', 'fora.txt'))).toBe(false)
@@ -126,8 +126,8 @@ describe('restaurar', () => {
   })
 
   it('arquivo que não é backup dá erro claro', () => {
-    const junk = join(dir, 'x.mesa-backup')
+    const junk = join(dir, 'x.magistrado-backup')
     writeFileSync(junk, 'nada')
-    expect(() => restoreBackup(junk, join(dir, 'campanhas'))).toThrow(/backup do Mesa/)
+    expect(() => restoreBackup(junk, join(dir, 'campanhas'))).toThrow(/backup do Magistrado/)
   })
 })

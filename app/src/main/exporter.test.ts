@@ -24,7 +24,7 @@ const pngHeader = (w: number, h: number) => {
 }
 
 beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), 'mesa-exp-'))
+  dir = mkdtempSync(join(tmpdir(), 'magistrado-exp-'))
   store = new CampaignStore(openDb(join(dir, 'campanha.sqlite'), (db) => initCampaignRow(db, 'Caso do Hospital', '2026-07-22')), dir)
   seedExample(store)
 })
@@ -101,7 +101,7 @@ describe('exportar', () => {
     const html = toHtml(buildExport(store, all), 'Caso')
     expect(html).not.toContain('<script>')
     expect(html).toContain('src="data:image/png;base64,')
-    expect(html).not.toMatch(/src="(https?|file|mesa):/)
+    expect(html).not.toMatch(/src="(https?|file|magistrado):/)
   })
 
   it('lê o tamanho de PNG e JPEG pelo cabeçalho', () => {

@@ -64,7 +64,7 @@ export function Settings() {
         <div>
           <h2 className="type-lg">Backup</h2>
           <p className="mt-1 text-sm text-muted">
-            Cada backup é um único arquivo <span className="font-mono">.mesa-backup</span> com tudo dentro. Se o app quebrar, dá para abrir sem ele: é um zip com a
+            Cada backup é um único arquivo <span className="font-mono">.magistrado-backup</span> com tudo dentro. Se o app quebrar, dá para abrir sem ele: é um zip com a
             campanha em Markdown (para o Obsidian), as imagens e os dados em texto.
           </p>
         </div>

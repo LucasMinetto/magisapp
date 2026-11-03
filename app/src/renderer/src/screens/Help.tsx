@@ -1,4 +1,4 @@
-// Ajuda: um guia curto do app e os atalhos. Texto escrito para o Mesa.
+// Ajuda: um guia curto do app e os atalhos. Texto escrito para o Magistrado.
 import { Link } from 'react-router'
 import { Card } from '@/ui'
 
@@ -31,7 +31,7 @@ export function Help() {
 
       <section aria-labelledby="help-steps" className="flex flex-col gap-2">
         <h2 id="help-steps" className="type-label text-muted">
-          Como o Mesa se organiza
+          Como o Magistrado se organiza
         </h2>
         <ol className="flex flex-col gap-2">
           {STEPS.map(([title, to, text], i) => (
@@ -74,7 +74,7 @@ export function Help() {
         </h2>
         <Card className="flex flex-col gap-2 text-sm text-muted">
           <p>
-            Cada campanha é uma pasta em <span className="font-mono text-xs text-fg">Documentos\Campanhas Mesa</span>, com o banco (
+            Cada campanha é uma pasta em <span className="font-mono text-xs text-fg">Documentos\Campanhas Magistrado</span>, com o banco (
             <span className="font-mono text-xs">campanha.sqlite</span>) e a pasta <span className="font-mono text-xs">anexos</span>.
           </p>
           <p>

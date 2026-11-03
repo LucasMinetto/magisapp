@@ -315,7 +315,7 @@ export function buildVault(store: CampaignStore): VaultFile[] {
   return files
 }
 
-export const README = `# Backup do Mesa
+export const README = `# Backup do Magistrado
 
 Este arquivo é um zip comum. Para abrir sem o app:
 

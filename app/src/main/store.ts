@@ -146,7 +146,7 @@ const attachment = (r: AttachmentRow): Attachment => ({
   relPath: r.rel_path,
   mime: r.mime,
   sizeBytes: r.size_bytes,
-  url: `mesa://anexo/${r.id}`
+  url: `magistrado://anexo/${r.id}`
 })
 
 /** 'Bilhete Rasgado (1).PNG' -> 'bilhete-rasgado-1' */
@@ -174,7 +174,7 @@ const summary = (r: EntityRow): EntitySummary => ({
   name: r.name,
   role: r.role,
   isPlayer: r.is_player === 1,
-  portraitUrl: r.portrait_id ? `mesa://anexo/${r.portrait_id}` : null,
+  portraitUrl: r.portrait_id ? `magistrado://anexo/${r.portrait_id}` : null,
   updatedAt: r.updated_at
 })
 
@@ -182,7 +182,7 @@ const entity = (r: EntityRow): Entity => ({
   ...summary(r),
   portraitId: r.portrait_id,
   mapId: r.map_id,
-  mapUrl: r.map_id ? `mesa://anexo/${r.map_id}` : null,
+  mapUrl: r.map_id ? `magistrado://anexo/${r.map_id}` : null,
   notes: r.notes,
   customAttributes: parseJson<CustomAttribute[]>(r.custom_attributes, []),
   aliases: parseJson<string[]>(r.aliases, []),
@@ -238,7 +238,7 @@ export class CampaignStore {
       currentGameMinute: r.current_game_minute,
       tagline: r.tagline,
       coverId: r.cover_id,
-      coverUrl: r.cover_id ? `mesa://anexo/${r.cover_id}` : null,
+      coverUrl: r.cover_id ? `magistrado://anexo/${r.cover_id}` : null,
       systemTemplateId: r.system_template_id,
       path: this.path
     }
@@ -800,7 +800,7 @@ export class CampaignStore {
     return attachment(r)
   }
 
-  /** Arquivo no disco para o protocolo mesa://. Só devolve o que está dentro de anexos/. */
+  /** Arquivo no disco para o protocolo magistrado://. Só devolve o que está dentro de anexos/. */
   attachmentFile(id: string): { file: string; mime: string } | null {
     const r = this.db.prepare('select rel_path, mime from attachments where id = ?').get(id) as { rel_path: string; mime: string } | undefined
     if (!r || !r.rel_path.startsWith('anexos/') || r.rel_path.includes('..')) return null
@@ -1011,13 +1011,13 @@ export class CampaignStore {
           subtitle: e?.role ?? '',
           kind: e?.kind,
           isPlayer: e?.is_player === 1,
-          imageUrl: e?.portrait_id ? `mesa://anexo/${e.portrait_id}` : null,
+          imageUrl: e?.portrait_id ? `magistrado://anexo/${e.portrait_id}` : null,
           missing: !e || !!e.deleted_at
         }
       }
       if (n.type === 'clue') {
         const c = clues.get(n.clue_id) as { title: string; status: Clue['status']; deleted_at: string | null; image_id: string | null } | undefined
-        return { title: c?.title || 'Sem título', subtitle: '', clueStatus: c?.status, imageUrl: c?.image_id ? `mesa://anexo/${c.image_id}` : null, missing: !c || !!c.deleted_at }
+        return { title: c?.title || 'Sem título', subtitle: '', clueStatus: c?.status, imageUrl: c?.image_id ? `magistrado://anexo/${c.image_id}` : null, missing: !c || !!c.deleted_at }
       }
       if (n.type === 'scene') {
         const s = scenes.get(n.scene_id) as { title: string; game_minute_start: number | null; deleted_at: string | null; place: string | null } | undefined
@@ -1025,7 +1025,7 @@ export class CampaignStore {
       }
       if (n.type === 'image') {
         const a = files.get(n.attachment_id) as { id: string; file_name: string; deleted_at: string | null } | undefined
-        return { title: a?.file_name ?? '', subtitle: '', imageUrl: a ? `mesa://anexo/${a.id}` : null, missing: !a || !!a.deleted_at }
+        return { title: a?.file_name ?? '', subtitle: '', imageUrl: a ? `magistrado://anexo/${a.id}` : null, missing: !a || !!a.deleted_at }
       }
       return null
     }

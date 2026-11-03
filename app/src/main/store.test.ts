@@ -13,7 +13,7 @@ let dir: string
 let store: CampaignStore
 
 beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), 'mesa-'))
+  dir = mkdtempSync(join(tmpdir(), 'magistrado-'))
   store = new CampaignStore(openDb(join(dir, 'campanha.sqlite'), (db) => initCampaignRow(db, 'Caso do Hospital', '2026-07-22')), dir)
   seedExample(store)
 })
@@ -49,7 +49,7 @@ describe('notas, mapa e corkboard', () => {
     writeFileSync(src, Buffer.from('89504e470d0a1a0a03', 'hex'))
     const map = store.importImage(src)
     const hospital = store.getEntity(byName('Hospital Santa Clara').id)
-    expect(store.saveEntity({ ...hospital, mapId: map.id }).mapUrl).toBe(`mesa://anexo/${map.id}`)
+    expect(store.saveEntity({ ...hospital, mapId: map.id }).mapUrl).toBe(`magistrado://anexo/${map.id}`)
     const { mapId: _m, ...withoutMap } = store.getEntity(hospital.id)
     expect(store.saveEntity(withoutMap).mapId).toBe(map.id)
     expect(store.saveEntity({ ...store.getEntity(hospital.id), mapId: null }).mapId).toBeNull()
@@ -71,7 +71,7 @@ describe('acervo: trazer fichas de outra campanha', () => {
     const aurelio = store.getEntity(byName('Dr. Aurélio Bastos').id)
     store.saveEntity({ ...aurelio, portraitId: portrait.id, notes: paragraphsDoc(['Volta no próximo caso.']) })
 
-    const otherDir = mkdtempSync(join(tmpdir(), 'mesa-outra-'))
+    const otherDir = mkdtempSync(join(tmpdir(), 'magistrado-outra-'))
     const other = new CampaignStore(openDb(join(otherDir, 'campanha.sqlite'), (db) => initCampaignRow(db, 'Outro caso', '2026-09-01')), otherDir)
     try {
       const peek = CampaignStore.peekEntities(dir)
@@ -259,7 +259,7 @@ describe('campanha de exemplo', () => {
     const a = store.importImage(src)
     expect(a.relPath).toMatch(/^anexos\/bilhete-rasgado-[0-9a-f]{6}\.png$/)
     expect(existsSync(join(dir, a.relPath))).toBe(true)
-    expect(a.url).toBe(`mesa://anexo/${a.id}`)
+    expect(a.url).toBe(`magistrado://anexo/${a.id}`)
     expect(store.importImage(src).id).toBe(a.id)
     expect(store.attachmentFile(a.id)?.mime).toBe('image/png')
     expect(() => store.importImage(join(dir, 'campanha.sqlite'))).toThrow(/Formato/)
@@ -318,9 +318,9 @@ describe('campanha de exemplo', () => {
     const a = store.importImage(src)
     const lia = store.getEntity(byName('Lia Moraes').id)
     store.saveEntity({ ...lia, portraitId: a.id })
-    expect(store.listEntities('personagem').find((e) => e.id === lia.id)?.portraitUrl).toBe(`mesa://anexo/${a.id}`)
+    expect(store.listEntities('personagem').find((e) => e.id === lia.id)?.portraitUrl).toBe(`magistrado://anexo/${a.id}`)
     const c = store.updateCampaign({ name: 'Caso do Hospital', tagline: '  Um enfermeiro sumiu.  ', coverId: a.id })
-    expect(c).toMatchObject({ tagline: 'Um enfermeiro sumiu.', coverUrl: `mesa://anexo/${a.id}` })
+    expect(c).toMatchObject({ tagline: 'Um enfermeiro sumiu.', coverUrl: `magistrado://anexo/${a.id}` })
     expect(store.updateCampaign({ name: 'Caso do Hospital', tagline: '', coverId: null })).toMatchObject({ tagline: null, coverUrl: null })
   })
 

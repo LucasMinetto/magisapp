@@ -414,7 +414,7 @@ export async function toDocx(blocks: Block[], title: string): Promise<Buffer> {
       )
     } else if (b.t === 'break') children.push(new Paragraph({ children: [new PageBreak()] }))
   }
-  const doc = new Document({ title, creator: 'Mesa', styles: { default: { document: { run: { font: 'Georgia', size: 22 } } } }, sections: [{ children }] })
+  const doc = new Document({ title, creator: 'Magistrado', styles: { default: { document: { run: { font: 'Georgia', size: 22 } } } }, sections: [{ children }] })
   return Packer.toBuffer(doc)
 }
 

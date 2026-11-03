@@ -35,7 +35,7 @@ function writeObsidian(store: CampaignStore, parent: string): string {
     mkdirSync(dirname(target), { recursive: true })
     writeFileSync(target, typeof data === 'string' ? strToU8(data) : data)
   }
-  write('LEIA-ME.md', README.replace('# Backup do Mesa', '# Campanha exportada do Mesa'))
+  write('LEIA-ME.md', README.replace('# Backup do Magistrado', '# Campanha exportada do Magistrado'))
   for (const f of buildVault(store)) write(f.path, f.text)
   for (const a of store.db.prepare('select id, rel_path from attachments where deleted_at is null').all() as { id: string; rel_path: string }[]) {
     const src = store.attachmentFile(a.id)

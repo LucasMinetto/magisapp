@@ -80,7 +80,7 @@ const swap = (next: CampaignStore) => {
   return next.campaign()
 }
 
-/** A campanha aberta, para o protocolo mesa:// achar os anexos. */
+/** A campanha aberta, para o protocolo magistrado:// achar os anexos. */
 export const currentStore = (): CampaignStore | null => store
 
 export function closeCurrent(): void {
@@ -329,7 +329,7 @@ const channels: Record<string, [z.ZodTypeAny, (input: never, win: BrowserWindow)
         title: 'Restaurar um backup',
         defaultPath: backupConfig().dir,
         properties: ['openFile'],
-        filters: [{ name: 'Backup do Mesa', extensions: ['mesa-backup', 'zip'] }]
+        filters: [{ name: 'Backup do Magistrado', extensions: ['magistrado-backup', 'zip'] }]
       })
       if (res.canceled || !res.filePaths[0]) return null
       const { path } = restoreBackup(res.filePaths[0], defaultCampaignsDir())

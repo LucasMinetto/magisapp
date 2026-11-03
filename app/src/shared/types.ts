@@ -72,7 +72,7 @@ export interface EntitySummary {
   name: string
   role: string
   isPlayer: boolean
-  /** mesa://anexo/<id> do retrato, ou null (mostra as iniciais). */
+  /** magistrado://anexo/<id> do retrato, ou null (mostra as iniciais). */
   portraitUrl: string | null
   updatedAt: string
 }
@@ -289,7 +289,7 @@ export interface Attachment {
   relPath: string
   mime: string
   sizeBytes: number
-  /** Endereço seguro para <img>: mesa://anexo/<id> */
+  /** Endereço seguro para <img>: magistrado://anexo/<id> */
   url: string
 }
 
@@ -485,7 +485,7 @@ export interface Api {
     now(): Promise<BackupEntry>
     list(): Promise<BackupEntry[]>
     reveal(file: string): Promise<void>
-    /** Escolhe um .mesa-backup, restaura como campanha nova e abre. null se cancelar. */
+    /** Escolhe um .magistrado-backup, restaura como campanha nova e abre. null se cancelar. */
     pickAndRestore(): Promise<Campaign | null>
   }
   history: {

@@ -54,7 +54,7 @@ const FOOT_NAV: NavItem[] = [
   { to: '/ajuda', label: 'Ajuda', icon: <CircleHelp /> }
 ]
 
-const OPEN_KEY = 'mesa.sidebar.open'
+const OPEN_KEY = 'magistrado.sidebar.open'
 
 function readOpen(): boolean {
   try {

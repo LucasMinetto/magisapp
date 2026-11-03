@@ -5,13 +5,13 @@ import { recentCoverFile } from './campaigns'
 import { autoBackupTick, closeCurrent, currentStore, registerIpc } from './ipc'
 
 // Testes isolam as configurações (campanhas recentes) numa pasta temporária.
-if (process.env.MESA_USER_DATA) app.setPath('userData', process.env.MESA_USER_DATA)
+if (process.env.MAGISTRADO_USER_DATA) app.setPath('userData', process.env.MAGISTRADO_USER_DATA)
 
-// Anexos da campanha chegam à tela só por mesa://anexo/<id>, nunca por file:// solto.
-protocol.registerSchemesAsPrivileged([{ scheme: 'mesa', privileges: { standard: true, secure: true, supportFetchAPI: true } }])
+// Anexos da campanha chegam à tela só por magistrado://anexo/<id>, nunca por file:// solto.
+protocol.registerSchemesAsPrivileged([{ scheme: 'magistrado', privileges: { standard: true, secure: true, supportFetchAPI: true } }])
 
 function serveAttachments(): void {
-  protocol.handle('mesa', async (req) => {
+  protocol.handle('magistrado', async (req) => {
     const url = new URL(req.url)
     const file =
       url.host === 'anexo'
@@ -42,7 +42,7 @@ function createWindow(): void {
     minWidth: 1024,
     minHeight: 640,
     backgroundColor: '#0b0b0a',
-    title: 'Mesa',
+    title: 'Magistrado',
     autoHideMenuBar: true,
     show: false,
     webPreferences: {

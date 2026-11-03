@@ -19,7 +19,7 @@ const PDF = '%PDF-1.4\n%fake\n'
 const PNG = '\x89PNG\r\n\x1a\n'
 
 beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), 'mesa-imp-'))
+  dir = mkdtempSync(join(tmpdir(), 'magistrado-imp-'))
   store = new CampaignStore(openDb(join(dir, 'campanha.sqlite'), (db) => initCampaignRow(db, 'Caso do Hospital', '2026-07-22')), dir)
   seedExample(store)
 })

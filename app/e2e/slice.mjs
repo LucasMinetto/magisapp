@@ -13,7 +13,7 @@ const here = dirname(fileURLToPath(import.meta.url))
 const appDir = join(here, '..')
 const shots = join(appDir, '..', 'replica', 'clone-screens')
 mkdirSync(shots, { recursive: true })
-const tmp = mkdtempSync(join(tmpdir(), 'mesa-e2e-'))
+const tmp = mkdtempSync(join(tmpdir(), 'magistrado-e2e-'))
 
 // Imagem de teste feita aqui mesmo: um PNG liso com uma faixa, sem depender de arquivo de fora.
 const CRC = Array.from({ length: 256 }, (_, n) => {
@@ -99,7 +99,7 @@ const check = (name, ok, detail = '') => {
 
 const app = await electron.launch({
   args: [appDir],
-  env: { ...process.env, MESA_USER_DATA: join(tmp, 'user'), MESA_CAMPAIGNS_DIR: join(tmp, 'campanhas'), MESA_BACKUP_DIR: join(tmp, 'backups') }
+  env: { ...process.env, MAGISTRADO_USER_DATA: join(tmp, 'user'), MAGISTRADO_CAMPAIGNS_DIR: join(tmp, 'campanhas'), MAGISTRADO_BACKUP_DIR: join(tmp, 'backups') }
 })
 const errors = []
 try {
@@ -280,7 +280,7 @@ try {
   const editorImg = page.getByRole('complementary', { name: 'Pista' }).getByRole('img', { name: 'Chave da ala fechada' })
   await editorImg.waitFor({ timeout: 5000 })
   const loadedImg = await editorImg.evaluate((img) => img.complete && img.naturalWidth === 160)
-  check('imagem importada aparece pelo protocolo mesa://', loadedImg)
+  check('imagem importada aparece pelo protocolo magistrado://', loadedImg)
 
   await page.getByRole('button', { name: 'Achada agora' }).click()
   await page.getByLabel('Tomás Andrade').check()
@@ -391,7 +391,7 @@ try {
   await page.keyboard.press('Escape')
   await page.getByRole('link', { name: 'Fichas' }).click()
   await page.getByText('Dr. Aurélio Bastos').waitFor()
-  check('lista de fichas mostra o retrato', (await page.locator('img[src^="mesa://anexo/"]').count()) >= 1)
+  check('lista de fichas mostra o retrato', (await page.locator('img[src^="magistrado://anexo/"]').count()) >= 1)
 
   // Textos: página livre com menção e barra flutuante de formatação
   await page.getByRole('link', { name: 'Textos' }).click()
@@ -523,7 +523,7 @@ try {
   await page.getByRole('button', { name: 'Restaurar um backup…' }).click()
   await page.getByText('(restaurada').first().waitFor({ timeout: 15000 }).catch(() => {})
   await page.getByRole('link', { name: 'Ajustes' }).click()
-  check('backup restaurado abre como campanha nova', (await page.getByText(/\(restaurada \d{4}-\d{2}-\d{2}\)\.mesa/).count()) >= 1)
+  check('backup restaurado abre como campanha nova', (await page.getByText(/\(restaurada \d{4}-\d{2}-\d{2}\)\.magistrado/).count()) >= 1)
   await page.keyboard.press('Control+k')
   await page.keyboard.type('arrombou')
   check('campanha restaurada tem as notas e a busca', await page.getByRole('option', { name: /Sessão 2/ }).waitFor({ timeout: 5000 }).then(() => true, () => false))
@@ -569,7 +569,7 @@ try {
   const frame = page.getByTitle('PDF O Hospital Esquecido.pdf')
   await frame.waitFor({ timeout: 5000 })
   const frameSrc = await frame.getAttribute('src')
-  // A página não pode buscar mesa:// (a CSP só deixa em <img> e <iframe>); quem confere é o processo principal.
+  // A página não pode buscar magistrado:// (a CSP só deixa em <img> e <iframe>); quem confere é o processo principal.
   const served = await app.evaluate(async ({ net }, src) => {
     const r = await net.fetch(src.split('#')[0])
     return { type: r.headers.get('content-type'), head: (await r.text()).slice(0, 5) }

@@ -74,12 +74,12 @@ export function recentCampaigns(): RecentCampaign[] {
         tagline: p.tagline,
         epochDate: p.epochDate,
         counts: p.counts,
-        coverUrl: p.coverFile ? `mesa://capa/${encodeURIComponent(r.path)}` : null
+        coverUrl: p.coverFile ? `magistrado://capa/${encodeURIComponent(r.path)}` : null
       }
     })
 }
 
-/** Arquivo da capa de uma campanha recente, para o protocolo mesa://capa/. Só campanhas da lista. */
+/** Arquivo da capa de uma campanha recente, para o protocolo magistrado://capa/. Só campanhas da lista. */
 export function recentCoverFile(path: string): string | null {
   if (!readSettings().recent.some((r) => r.path === path)) return null
   return peek(path).coverFile
@@ -153,7 +153,7 @@ export function removeUserStructure(id: string): void {
 
 export function backupConfig(): BackupConfig {
   // Fora da pasta das campanhas, para um problema no disco não levar os dois juntos.
-  const dir = process.env.MESA_BACKUP_DIR || join(app.getPath('documents'), 'Backups de campanhas')
+  const dir = process.env.MAGISTRADO_BACKUP_DIR || join(app.getPath('documents'), 'Backups de campanhas')
   return { dir, intervalMin: 30, keep: 5, ...readSettings().backup }
 }
 
@@ -165,8 +165,8 @@ export function setBackupConfig(patch: Partial<BackupConfig>): BackupConfig {
 }
 
 export function defaultCampaignsDir(): string {
-  // MESA_CAMPAIGNS_DIR: só para testes, que rodam numa pasta temporária.
-  return process.env.MESA_CAMPAIGNS_DIR || join(app.getPath('documents'), 'Campanhas Mesa')
+  // MAGISTRADO_CAMPAIGNS_DIR: só para testes, que rodam numa pasta temporária.
+  return process.env.MAGISTRADO_CAMPAIGNS_DIR || join(app.getPath('documents'), 'Campanhas Magistrado')
 }
 
 const safeFolderName = (name: string) =>
@@ -194,8 +194,8 @@ export function closeCampaign(store: CampaignStore): void {
 
 export function createCampaign(input: { name: string; epochDate: string; example?: boolean }): CampaignStore {
   const base = defaultCampaignsDir()
-  let path = join(base, `${safeFolderName(input.name)}.mesa`)
-  for (let i = 2; existsSync(path); i++) path = join(base, `${safeFolderName(input.name)} (${i}).mesa`)
+  let path = join(base, `${safeFolderName(input.name)}.magistrado`)
+  for (let i = 2; existsSync(path); i++) path = join(base, `${safeFolderName(input.name)} (${i}).magistrado`)
   mkdirSync(join(path, 'anexos'), { recursive: true })
 
   const db = openDb(join(path, DB_FILE), (fresh) => initCampaignRow(fresh, input.name, input.epochDate))

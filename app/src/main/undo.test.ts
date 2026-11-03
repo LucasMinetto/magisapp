@@ -21,7 +21,7 @@ const step = <T>(label: string, job: () => T): T => {
 const scene = (title: string) => store.listScenes().find((s) => s.title === title)!
 
 beforeEach(() => {
-  dir = mkdtempSync(join(tmpdir(), 'mesa-undo-'))
+  dir = mkdtempSync(join(tmpdir(), 'magistrado-undo-'))
   store = new CampaignStore(openDb(join(dir, 'campanha.sqlite'), (db) => initCampaignRow(db, 'Caso', '2026-07-22')), dir)
   seedExample(store)
   undo = new UndoLog(store.db)
