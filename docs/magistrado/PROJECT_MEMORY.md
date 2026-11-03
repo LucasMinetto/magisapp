@@ -5,7 +5,7 @@
 ## Propósito e status
 
 - **O que é:** app de desktop do mestre de Ordem Paranormal. Junta o **autore** (a base) com a ficha do agente, a rolagem com dados físicos e os modelos de ameaças, itens e rituais do **taberna**.
-- **Status (2026-11-03):** T1 e T2 concluídas. O repositório local tem o app do autore rebatizado de Magistrado (`.magistrado`, `magistrado://`, `.magistrado-backup`, `%APPDATA%/Magistrado`, `Documentos\Campanhas Magistrado`). Typecheck, 76 testes e e2e 110/110 passam. Enviado para github.com/LucasMinetto/magistrado (branch `main`). As cópias dos dois projetos estão em `_fontes/` (fora do git).
+- **Status (2026-11-03):** T1 a T5 concluídas (base rebatizada, regras, biblioteca, migração 4 e IPC). 114 testes e e2e 110/110. **Ainda não há telas novas** (ficha completa, biblioteca, rolagem): elas começam na T6. As cópias dos dois projetos estão em `_fontes/` (fora do git).
 
 ## Restrições confirmadas
 
@@ -46,8 +46,10 @@
 - Sem compatibilidade com `.mesa` (não há campanhas reais).
 - `replica/` (arquitetura e design herdados) fica com esse nome: o e2e grava em `replica/clone-screens/` e os scripts de tokens citam `replica/design`.
 - O rótulo "Mesa" do menu lateral e as frases "na mesa" são mesa de jogo e ficam.
+- **Modelo da ficha (T4):** agente = `is_player`; `sheet` (compacta/completa); ficha completa e bloco de ameaça em `sheet_data`, montados de `stats` enquanto não editados (ver [TECH_SPEC § Modelo de dados](TECH_SPEC.md#modelo-de-dados-novo-migração-4)).
+- **Biblioteca:** `%APPDATA%/Magistrado/biblioteca.sqlite` (`app/src/main/library.ts`), aberta só quando pedida.
 - Git local com identidade `Lucas <lucasminetto13@gmail.com>` só neste repositório.
 
 ## Próximo passo
 
-T3 (portar as regras) e T4b (biblioteca), que podem andar em paralelo.
+T6 (ficha completa), T8 (ameaças) e T9 (rituais e itens): as primeiras telas. A T7 (rolagem) também está liberada.

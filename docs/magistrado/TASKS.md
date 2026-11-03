@@ -1,7 +1,7 @@
 # TASKS: Magistrado
 
 > Produto: [PRD.md](PRD.md) · Técnica: [TECH_SPEC.md](TECH_SPEC.md) · Memória: [PROJECT_MEMORY.md](PROJECT_MEMORY.md)
-> Status em 2026-11-03: T1 e T2 concluídas (commits `b0ea20a` e `b922810`, enviados ao GitHub). "Bloqueada" = espera uma decisão de [TECH_SPEC § Decisões pendentes](TECH_SPEC.md#decisões-pendentes).
+> Status em 2026-11-03: T1, T2, T3, T4b, T4 e T5 concluídas. Próxima: as telas (T6 a T9). "Bloqueada" = espera uma decisão de [TECH_SPEC § Decisões pendentes](TECH_SPEC.md#decisões-pendentes).
 
 ## Fase 1: base funcionando com o nome novo
 
@@ -19,28 +19,28 @@
 
 ## Fase 2: regras e dados
 
-### T3. Portar as regras de Ordem Paranormal
+### T3. Portar as regras de Ordem Paranormal ✅ 2026-11-03
 - **Depende de:** T1
 - **Resultado:** `app/src/shared/ordem/regras.ts` e `esquemas.ts` (zod 4) portados de `taberna/shared/`.
 - **Aceite:** os casos de `taberna/shared/regras.test.ts` rodam no vitest e passam com os mesmos valores.
 
-### T4. Migração 4: personagem com ficha completa ou compacta, ameaça e rolagem
+### T4. Migração 4: personagem com ficha completa ou compacta, ameaça e rolagem ✅ 2026-11-03
 - **Depende de:** T3
-- **Resultado:** esquema da campanha na versão 4 conforme a TECH_SPEC (`role` e `sheet` em personagem, `criatura` → `ameaca`, tabela `rolls`), com cópia do banco antes de migrar.
+- **Resultado:** esquema da campanha na versão 4 conforme a TECH_SPEC (`sheet`, `sheet_data` e `origin` em `entities`; agente = `is_player`, já que `role` existia com outro sentido; `criatura` → `ameaca`, tabela `rolls`), com cópia do banco antes de migrar.
 - **Aceite:** uma campanha v3 abre, migra e mantém cenas, fichas, menções e quadros. Os ids são preservados. Há teste em `store.test.ts`.
 - **Arquivos:** `app/src/main/{schema.sql,db.ts,store.ts,seed.ts}`, `app/src/shared/types.ts`.
 
-### T4b. Biblioteca única com origem
+### T4b. Biblioteca única com origem ✅ 2026-11-03
 - **Depende de:** T3
 - **Resultado:** `%APPDATA%/Magistrado/biblioteca.sqlite` com `sources` ("Criações próprias" já criada), `lib_threats`, `lib_items` e `lib_rituals`, com migrações próprias e backup próprio.
 - **Aceite:** testes de criar origem, cadastrar com origem, filtrar por origem, copiar para a campanha (a cópia sobrevive se o original for apagado) e fazer backup e restaurar a biblioteca.
 - **Arquivos:** `app/src/main/library.ts` (novo) e testes.
 
-### T5. IPC dos dados novos
+### T5. IPC dos dados novos ✅ 2026-11-03
 - **Depende de:** T4, T4b
 - **Resultado:** canais de personagem (`role`, `sheet`), biblioteca e rolagem validados com zod. Os dados da campanha entram também no desfazer, na lixeira e na busca.
 - **Aceite:** testes de store, desfazer e lixeira para cada tipo novo.
-- **Arquivos:** `app/src/main/{ipc,store,undo}.ts`, `app/src/preload/index.ts`, `app/src/renderer/src/lib/data.ts`.
+- **Arquivos:** `app/src/main/{ipc,store,undo,library}.ts`, `app/src/preload/index.ts`, `app/src/shared/types.ts`. Testes em `app/src/main/sheet.test.ts`.
 
 ## Fase 3: telas
 
@@ -59,7 +59,8 @@
 ### T8. Ameaças
 - **Depende de:** T5
 - **Resultado:** editor e bloco de ameaça no formato do livro, na biblioteca (com origem) e na campanha (cópia ligada a cenas e quadros como as fichas).
-- **Aceite:** cria na biblioteca, traz para a campanha, liga a uma cena e aparece na tela de sessão. O menu diz "Ameaças", não "Criaturas".
+- **Aceite:** cria na biblioteca, traz para a campanha, liga a uma cena e aparece na tela de sessão. O menu diz "Ameaças", não "Criaturas" (já feito na T4).
+- **Atenção:** o editor de ameaça precisa passar a editar o bloco em `sheet_data` (`blocoAmeacaSchema`). Hoje ele edita os campos do modelo em `stats`, e a ameaça vinda da biblioteca chega com `stats` vazio.
 - **Base:** `taberna/web/src/paginas/AmeacaEditor.tsx`, `taberna/web/src/componentes/BlocoAmeaca.tsx`.
 
 ### T9. Rituais e itens

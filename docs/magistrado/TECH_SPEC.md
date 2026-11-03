@@ -63,23 +63,30 @@ A busca por `mesa` em `app/src` acha todas as ocorrências. Cuidado com textos d
 ### Modelo de dados novo (migração 4)
 
 - **Personagens: dois tamanhos de ficha.** **[confirmado]** Os agentes são os personagens dos jogadores e usam a **ficha completa**. A ficha dos NPCs é **compacta**, mas alguns NPCs (os vilões) usam a **ficha completa**, igual à dos agentes.
-  - **[recomendação]** Tudo continua em `entities` com `kind = 'personagem'`, mais dois campos: `role in ('agente','npc')` e `sheet in ('compacta','completa')`. O agente é sempre `completa`. O NPC começa `compacta` e um botão "usar ficha completa" o transforma em vilão sem perder dados.
-  - A ficha completa guarda o formato do `agenteSchema` em `stats` JSON, validado por zod. A compacta usa os campos do modelo Ordem que já existem.
-  - Com isso, menções, busca, lixeira, desfazer, cenas, quadros e backup funcionam sem código novo, e não é preciso reconstruir a tabela por causa do `CHECK`.
-- **Ameaças.** **[confirmado]** O nome na interface é **Ameaças**. **[recomendação]** Internamente vem da `kind = 'criatura'` do autore (renomeada para `ameaca` na migração, com reconstrução da tabela por causa do `CHECK`). Ela ganha os campos que só o `ameacaSchema` tem (VD, Presença Perturbadora, ações, resistências, vulnerabilidades e imunidades de marcar). Assim existe uma coisa só para "monstro".
+  - **[implementado em 2026-11-03, T4]** Tudo continua em `entities` com `kind = 'personagem'`. Agente = `is_player = 1`, coluna que o autore já tinha. **Não** foi criada a coluna `role`, porque ela já existe com o sentido de "papel na história". A coluna nova é só `sheet in ('compacta','completa')`. O agente é sempre `completa`. O NPC começa `compacta`, e `entities:setSheet` o transforma em vilão sem perder dados.
+  - A ficha completa fica em `sheet_data` (JSON validado por `fichaAgenteSchema`), porque `stats` só aceita valores simples. A compacta continua nos campos do modelo Ordem em `stats`. Enquanto a completa não é editada, ela é **montada da compacta** a cada leitura (`fichaDeStats`), então nada se perde e as telas antigas continuam valendo. Ao salvar, o app reconhece quando a tela só devolveu o que recebeu e não grava.
+  - Com isso, menções, busca, lixeira, desfazer, cenas, quadros e backup funcionam sem código novo.
+- **Ameaças.** **[confirmado]** O nome na interface é **Ameaças**. **[implementado, T4]** A `kind = 'criatura'` do autore virou `ameaca`, com `entities` e `template_fields` reconstruídas e os mesmos ids. O bloco do livro (`blocoAmeacaSchema`) fica em `sheet_data`, montado dos campos antigos (`ameacaDeStats`) enquanto não for editado. **Pendente para a T8:** o editor atual ainda edita os campos do modelo em `stats`. Uma ameaça trazida da biblioteca chega com o bloco em `sheet_data` e `stats` vazio, então a T8 tem de passar a tela a usar o bloco.
 - **Biblioteca única com origem.** **[confirmado]** Ameaças-modelo, itens e rituais ficam numa **biblioteca única**, compartilhada por todas as campanhas, e cada registro diz **de onde veio**.
   - **[recomendação]** Banco próprio em `%APPDATA%/Magistrado/biblioteca.sqlite`, com as tabelas `sources`, `lib_threats`, `lib_items` e `lib_rituals`.
   - `sources` = a origem: `nome` (ex.: "Livro de Regras", "Sobrevivendo ao Horror", "Criações próprias"), `tipo in ('oficial','propria','outro')` e `abreviacao`. "Criações próprias" já vem criada. O usuário pode adicionar outros livros.
   - Cada item, ritual ou ameaça-modelo tem `source_id` obrigatório. A biblioteca filtra por origem.
-  - Usar na campanha **copia** o registro para dentro dela (uma ameaça na cena, um ritual ou item na ficha) e guarda `source_id` e o id de origem. A campanha continua funcionando sozinha (backup, outro PC) mesmo sem a biblioteca.
-  - A biblioteca tem backup próprio (`biblioteca.magistrado-backup`) e entra em Ajustes. Os dados do livro (P1) entram aqui.
-- **Ritual ou item na ficha.** Fica no `stats` do personagem (lista de `ritualDaFichaSchema` e de itens com quantidade), copiado da biblioteca com o id de origem. Apagar da biblioteca não quebra a ficha.
-- **Rolagem.** Tabela `rolls` (`entity_id`, `game_session_id` opcional, `game_minute`, expressão, valores digitados, resultado, crítico, hora real), no formato do `rolagemSchema`. Entra no desfazer e no backup.
+  - Usar na campanha **copia** o registro para dentro dela (uma ameaça na cena, um ritual ou item na ficha) e guarda a origem `{ libraryId, sourceId, sourceName }` (coluna `entities.origin` ou campo `origem` do item ou ritual). A campanha continua funcionando sozinha (backup, outro PC) mesmo sem a biblioteca.
+  - A biblioteca tem backup próprio (`Biblioteca <data>.magistrado-backup`, com `biblioteca.sqlite` e `biblioteca.json`). Restaurar guarda a anterior em `biblioteca.sqlite.antes-de-restaurar`. A tela fica em Ajustes. Os dados do livro (P1) entram aqui.
+- **Ritual ou item na ficha.** Fica no `sheet_data` do personagem (lista de `ritualDaFichaSchema` e de itens com quantidade), copiado da biblioteca com o id de origem. Apagar da biblioteca não quebra a ficha.
+- **Rolagem.** Tabela `rolls` (`entity_id`, `game_session_id` opcional, `game_minute`, `who`, `label`, `type`, `formula`, `dice`, `total`, `critical`, `detail`, `created_at`), no formato do `rolagemSchema`. Entra no desfazer e no backup.
+- **Iniciativa.** Coluna `game_sessions.initiative` (JSON `{ rodada, turno, ordem }`), já criada na migração 4 para a T10.
 - **Backup e export.** O `campanha.json` passa para o `formato: 2`, com o teste de ida e volta atualizado. O `legivel/` ganha as pastas `Agentes/` e `Ameaças/` (no lugar de `Criaturas/`), e as rolagens entram no Markdown da sessão. Rituais e itens aparecem dentro da ficha.
 
-### IPC novo (proposta)
+### IPC novo (implementado em 2026-11-03, T5)
 
-`entities:*` com `role` e `sheet` · biblioteca: `library:sources:list/save`, `library:threats|items|rituals:list/save`, `library:copyToCampaign`, `library:backup` · `rolls:list/add`, `rules:derive` (opcional: as regras são puras e rodam no renderer pelo `shared/`). Todos com zod.
+- `entities:save` aceita `sheet` e `sheetData`.
+- `entities:setSheet`.
+- `rolls:list`, `rolls:add` e `rolls:remove`.
+- `sessions:initiative` e `sessions:saveInitiative`.
+- Biblioteca: `library:sources`, `library:saveSource`, `library:deleteSource`, `library:list`, `library:get`, `library:save`, `library:remove`, `library:copyToCampaign`, `library:backup` e `library:pickAndRestore`.
+
+Todos os canais são validados com zod. As regras rodam no renderer pelo `shared/ordem`, sem canal próprio. A biblioteca não entra no desfazer da campanha nem a marca como alterada, com exceção de `library:copyToCampaign`.
 
 ### Telas novas
 
