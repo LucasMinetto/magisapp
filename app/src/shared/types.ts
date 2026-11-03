@@ -1,4 +1,5 @@
 // Contrato entre a interface (renderer) e o processo principal. Um só lugar para os dois lados.
+import type { AmeacaBiblioteca, ItemBiblioteca, RitualBiblioteca } from './ordem/esquemas'
 
 export const ENTITY_KINDS = ['personagem', 'criatura', 'local', 'grupo', 'lore'] as const
 export type EntityKind = (typeof ENTITY_KINDS)[number]
@@ -200,6 +201,42 @@ export interface BackupEntry {
   auto: boolean
   sizeBytes: number
   createdAt: string
+}
+
+// ------------------------------------------------------------ biblioteca (fora das campanhas)
+
+export const SOURCE_KINDS = ['oficial', 'propria', 'outro'] as const
+export type SourceKind = (typeof SOURCE_KINDS)[number]
+
+/** De onde vem um registro da biblioteca: um livro oficial, "Criações próprias" ou outro livro. */
+export interface LibrarySource {
+  id: string
+  name: string
+  kind: SourceKind
+  abbreviation: string
+  /** "Criações próprias" vem com o app e não pode ser apagada. */
+  builtin: boolean
+  /** Quantos registros usam esta origem. */
+  count: number
+}
+
+export const LIBRARY_KINDS = ['ameaca', 'item', 'ritual'] as const
+export type LibraryKind = (typeof LIBRARY_KINDS)[number]
+
+export interface LibraryDataByKind {
+  ameaca: AmeacaBiblioteca
+  item: ItemBiblioteca
+  ritual: RitualBiblioteca
+}
+
+export interface LibraryEntry<K extends LibraryKind = LibraryKind> {
+  id: string
+  kind: K
+  sourceId: string
+  sourceName: string
+  name: string
+  data: LibraryDataByKind[K]
+  updatedAt: string
 }
 
 export const TRASH_TYPES = ['entity', 'scene', 'event', 'clue', 'board', 'document'] as const
