@@ -5,7 +5,7 @@
 ## Propósito e status
 
 - **O que é:** app de desktop do mestre de Ordem Paranormal. Junta o **autore** (a base) com a ficha do agente, a rolagem com dados físicos e os modelos de ameaças, itens e rituais do **taberna**.
-- **Status (2026-11-03):** T1 e T2 concluídas. O repositório local tem o app do autore rebatizado de Magistrado (`.magistrado`, `magistrado://`, `.magistrado-backup`, `%APPDATA%/Magistrado`, `Documentos\Campanhas Magistrado`). Typecheck, 76 testes e e2e 110/110 passam. **Ainda sem push** para o GitHub. As cópias dos dois projetos estão em `_fontes/` (fora do git).
+- **Status (2026-11-03):** T1 e T2 concluídas. O repositório local tem o app do autore rebatizado de Magistrado (`.magistrado`, `magistrado://`, `.magistrado-backup`, `%APPDATA%/Magistrado`, `Documentos\Campanhas Magistrado`). Typecheck, 76 testes e e2e 110/110 passam. Enviado para github.com/LucasMinetto/magistrado (branch `main`). As cópias dos dois projetos estão em `_fontes/` (fora do git).
 
 ## Restrições confirmadas
 
@@ -50,4 +50,4 @@
 
 ## Próximo passo
 
-Push para `github.com/LucasMinetto/magistrado` quando o Lucas liberar. Depois, T3 (portar as regras) e T4b (biblioteca), que podem andar em paralelo.
+T3 (portar as regras) e T4b (biblioteca), que podem andar em paralelo.
