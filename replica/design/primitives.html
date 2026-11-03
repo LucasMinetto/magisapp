@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Primitivos do app de mestre</title>
+<!-- Só para esta página de checagem. No app as fontes vêm empacotadas (@fontsource), offline. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="tokens.css">
+<script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--color-bg); color: var(--color-text); font-family: var(--font-sans);
+         font-size: var(--text-sm); line-height: var(--text-sm--line-height); }
+  main { max-width: 1200px; margin: 0 auto; padding: 32px 24px 64px; }
+  h1 { margin: 0 0 4px; }
+  section { margin-top: 40px; }
+  section > h2 { margin: 0 0 16px; color: var(--color-text-muted); }
+  .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+  .muted { color: var(--color-text-muted); } .subtle { color: var(--color-text-subtle); }
+  svg.lucide { width: 16px; height: 16px; stroke-width: 1.75; flex: none; }
+
+  .btn { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 16px; border-radius: var(--radius-md);
+         font: 600 var(--text-sm)/1 var(--font-sans); border: 1px solid transparent; cursor: pointer;
+         transition: background var(--duration-fast) var(--ease-out), border-color var(--duration-fast); }
+  .btn:focus-visible, .field:focus-visible, .icon-btn:focus-visible, .tab:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+  .btn.sm { height: 28px; padding: 0 12px; } .btn.lg { height: 44px; padding: 0 20px; }
+  .primary { background: var(--color-accent); color: var(--color-on-accent); }
+  .primary:hover, .primary.is-hover { background: var(--color-accent-hover); }
+  .secondary { background: transparent; color: var(--color-text); border-color: var(--color-border-input); }
+  .secondary:hover, .secondary.is-hover { background: var(--color-surface-raised); }
+  .ghost { background: transparent; color: var(--color-text-muted); }
+  .ghost:hover, .ghost.is-hover { background: var(--color-surface-raised); color: var(--color-text); }
+  .danger { background: transparent; color: var(--color-danger); border-color: var(--color-danger); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .is-focus { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+  .spin { animation: spin 900ms linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }
+  .icon-btn { width: 32px; height: 32px; display: inline-grid; place-items: center; border-radius: var(--radius-md); border: 0;
+              background: transparent; color: var(--color-text-muted); cursor: pointer; position: relative; }
+  .icon-btn:hover { background: var(--color-surface-raised); color: var(--color-text); }
+  .icon-btn[aria-pressed="true"] { background: var(--color-surface-raised); color: var(--color-text); }
+  .dot::after { content: ""; position: absolute; top: 6px; right: 6px; width: 6px; height: 6px; border-radius: 99px; background: var(--color-warning); }
+
+  .label-text { display: block; margin-bottom: 6px; color: var(--color-text-muted); }
+  .field { width: 100%; height: 36px; padding: 0 12px; border-radius: var(--radius-md); border: 1px solid var(--color-border-input);
+           background: var(--color-bg); color: var(--color-text); font: var(--text-sm)/1 var(--font-sans); }
+  .field::placeholder { color: var(--color-text-subtle); font-family: var(--font-serif); font-style: italic; }
+  .field.error { border-color: var(--color-danger); } .err { color: var(--color-danger); font-size: var(--text-xs); margin-top: 6px; }
+  .field:disabled { opacity: .45; }
+  .search-box { position: relative; } .search-box svg { position: absolute; left: 10px; top: 10px; color: var(--color-text-subtle); pointer-events: none; }
+  .search-box .field { padding-left: 34px; }
+
+  .chip { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 10px; border-radius: var(--radius-pill);
+          font: 600 var(--text-xs)/1 var(--font-sans); }
+  .chip svg.lucide { width: 12px; height: 12px; }
+  .c-hidden { color: var(--color-clue-hidden); background: color-mix(in srgb, var(--color-clue-hidden) 14%, transparent); }
+  .c-found { color: var(--color-clue-found); background: color-mix(in srgb, var(--color-clue-found) 14%, transparent); }
+  .c-understood { color: var(--color-clue-understood); background: color-mix(in srgb, var(--color-clue-understood) 14%, transparent); }
+  .c-before { color: var(--color-text-muted); background: var(--color-surface-raised); }
+
+  .tabs { display: flex; gap: 24px; border-bottom: 1px solid var(--color-border); }
+  .tab { background: none; border: 0; padding: 10px 0; color: var(--color-text-muted); font: 500 var(--text-sm)/1 var(--font-sans);
+         border-bottom: 2px solid transparent; margin-bottom: -1px; cursor: pointer; }
+  .tab[aria-selected="true"] { color: var(--color-text); border-bottom-color: var(--color-accent); }
+  .seg { display: inline-flex; padding: 3px; border-radius: var(--radius-md); background: var(--color-surface); border: 1px solid var(--color-border); }
+  .seg button { height: 28px; padding: 0 12px; border: 0; border-radius: var(--radius-sm); background: none; color: var(--color-text-muted); font: 500 var(--text-sm)/1 var(--font-sans); }
+  .seg button[aria-pressed="true"] { background: var(--color-surface-raised); color: var(--color-text); }
+
+  .card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 16px; }
+  .card.sel { border-color: var(--color-accent); }
+  .stat .n { font: 600 var(--text-xl)/var(--text-xl--line-height) var(--font-mono); }
+  .stat.zero .n { color: var(--color-text-muted); }
+
+  .portrait { width: 40px; height: 40px; border-radius: 99px; display: grid; place-items: center; background: var(--color-surface-raised);
+              color: var(--color-text-muted); font: 600 var(--text-xs)/1 var(--font-sans); border: 1px solid var(--color-border); flex: none; }
+  .portrait.sm { width: 24px; height: 24px; font-size: 10px; margin-left: -6px; border-color: var(--color-surface); }
+
+  .clue-img { height: 120px; border-radius: var(--radius-md); background:
+      repeating-linear-gradient(-8deg, #2a2822 0 2px, #24221d 2px 18px); display: grid; place-items: center; color: var(--color-text-subtle);
+      margin-bottom: 12px; border: 1px solid var(--color-border); }
+  .clue-img svg.lucide { width: 28px; height: 28px; }
+  .meta { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 12px 0; font-size: var(--text-xs); line-height: 18px; }
+  .meta dt { color: var(--color-text-subtle); } .meta dd { margin: 0; color: var(--color-text-muted); }
+  .reveal { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: var(--radius-md); background: var(--color-surface-raised); color: var(--color-text-muted); font-size: var(--text-xs); }
+
+  .clock { display: inline-flex; align-items: center; gap: 10px; height: 32px; padding: 0 12px; border-radius: var(--radius-pill);
+           background: var(--color-surface); border: 1px solid var(--color-border); }
+  .clock .t { font: 500 var(--text-sm)/1 var(--font-mono); }
+  .clock-big { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+  .next { display: flex; align-items: center; gap: 8px; color: var(--color-warning); font-weight: 600; }
+
+  .tl { list-style: none; margin: 0; padding: 0; }
+  .tl li { display: grid; grid-template-columns: 96px 16px 1fr; gap: 12px; align-items: start; }
+  .tl .h { font: 500 var(--text-xs)/20px var(--font-mono); color: var(--color-text-muted); text-align: right; padding-top: 10px; }
+  .tl .rail { position: relative; height: 100%; min-height: 44px; }
+  .tl .rail::before { content: ""; position: absolute; left: 7px; top: 0; bottom: 0; width: 2px; background: var(--color-border); }
+  .tl .rail i { position: absolute; left: 3px; top: 14px; width: 10px; height: 10px; border-radius: 99px; background: var(--color-text-subtle); }
+  .tl .now .rail i { background: var(--color-accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 25%, transparent); }
+  .tl .body { padding: 8px 0 12px; }
+  .tl .past .body { color: var(--color-text-muted); }
+  .tl .gap .body { margin: 4px 0 8px; padding: 10px 12px; border: 1px dashed var(--color-border-input); border-radius: var(--radius-md); color: var(--color-text-muted); }
+  .tl .evt b { color: var(--color-warning); }
+
+  .empty { text-align: center; padding: 40px 16px; }
+  .empty svg.lucide { width: 32px; height: 32px; color: var(--color-text-subtle); }
+  .empty p { color: var(--color-text-muted); margin: 6px 0 16px; }
+
+  .dialog { max-width: 560px; background: var(--color-surface-raised); border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-pop); }
+  .dialog header, .dialog footer { padding: 16px 20px; } .dialog .content { padding: 0 20px; }
+  .dialog footer { display: flex; justify-content: flex-end; gap: 8px; }
+
+  .side { width: 200px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 8px; }
+  .nav { display: flex; align-items: center; gap: 10px; height: 32px; padding: 0 10px; border-radius: var(--radius-md); color: var(--color-text-muted); position: relative; }
+  .nav[aria-current] { background: var(--color-surface-raised); color: var(--color-text); }
+  .nav[aria-current]::before { content: ""; position: absolute; left: 0; top: 6px; bottom: 6px; width: 2px; border-radius: 2px; background: var(--color-accent); }
+  .nav-group { padding: 12px 10px 4px; color: var(--color-text-subtle); }
+
+  .editor { max-width: var(--layout-reading-max); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 28px 32px; position: relative; }
+  .editor p { font-family: var(--font-serif); font-size: var(--text-reading); line-height: var(--text-reading--line-height); margin: 0 0 12px; }
+  .mention { text-decoration: underline dotted var(--color-text-muted); text-underline-offset: 4px; cursor: pointer; }
+  .float { position: absolute; top: -18px; left: 210px; display: flex; gap: 2px; padding: 4px; background: var(--color-surface-raised); border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-pop); }
+  .search-box { display: block; }
+  .hovercard { position: absolute; left: calc(100% + 16px); top: 64px; width: 240px; padding: 12px; background: var(--color-surface-raised); border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-pop); }
+  .meter { height: 6px; border-radius: 99px; background: var(--color-bg); overflow: hidden; } .meter i { display: block; height: 100%; background: var(--color-success); }
+  .attrs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 10px; text-align: center; }
+  .attrs div { background: var(--color-bg); border-radius: var(--radius-sm); padding: 4px 0; }
+  .attrs b { display: block; font: 600 var(--text-sm)/20px var(--font-mono); }
+  .palette { max-width: 640px; background: var(--color-surface-raised); border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-pop); overflow: hidden; }
+  .palette .q { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--color-border); font-size: var(--text-base); }
+  .palette .res { display: flex; align-items: center; gap: 12px; padding: 10px 16px; }
+  .palette .res.active { background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
+  .palette mark { background: none; color: var(--color-text); font-weight: 600; text-decoration: underline; }
+  .kbd { font: 500 11px/1 var(--font-mono); padding: 3px 6px; border: 1px solid var(--color-border-input); border-radius: 4px; color: var(--color-text-muted); }
+  .toast { display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 14px; background: var(--color-surface-raised); border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-pop); }
+</style>
+</head>
+<body>
+<main>
+  <h1 class="type-display">Primitivos</h1>
+  <p class="muted">Cada componente de <code>components.md</code> com seus estados. Cores só de <code>tokens.css</code>. Accent neutro provisório: a cor da marca vem do /replica-brand.</p>
+
+  <section>
+    <h2 class="type-label">Botões</h2>
+    <div class="row">
+      <button class="btn primary"><i data-lucide="plus"></i>Nova pista</button>
+      <button class="btn primary is-hover">Hover</button>
+      <button class="btn primary is-focus">Foco</button>
+      <button class="btn primary" disabled>Desabilitado</button>
+      <button class="btn primary" aria-busy="true"><i data-lucide="loader-2" class="spin"></i>Salvando</button>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn secondary">Secundário</button>
+      <button class="btn secondary is-hover">Hover</button>
+      <button class="btn ghost">Fantasma</button>
+      <button class="btn danger"><i data-lucide="trash-2"></i>Excluir</button>
+      <button class="btn secondary sm">Pequeno</button>
+      <button class="btn primary lg">Grande</button>
+      <span style="width:16px"></span>
+      <button class="icon-btn" aria-label="Buscar"><i data-lucide="search"></i></button>
+      <button class="icon-btn" aria-label="Negrito" aria-pressed="true"><i data-lucide="bold"></i></button>
+      <button class="icon-btn dot" aria-label="Backup pendente"><i data-lucide="archive"></i></button>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="type-label">Campos</h2>
+    <div class="grid">
+      <label><span class="label-text type-label">Nome</span><input class="field" placeholder="Como os jogadores chamam essa pessoa"></label>
+      <label><span class="label-text type-label">Lugar</span><input class="field" value="Hospital Santa Clara"></label>
+      <label><span class="label-text type-label">Foco</span><input class="field is-focus" value="Dr. Aurélio"></label>
+      <label><span class="label-text type-label">Hora no jogo</span><input class="field error" value="21:00" aria-invalid="true"><div class="err">O fim da cena não pode ser antes do início (22:30).</div></label>
+      <label><span class="label-text type-label">Desabilitado</span><input class="field" value="Ordem Paranormal" disabled></label>
+      <label><span class="label-text type-label">Busca</span><span class="search-box"><i data-lucide="search"></i><input class="field" placeholder="Buscar fichas, cenas, pistas…"></span></label>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="type-label">Abas, segmentado, chips</h2>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true">Personagens</button>
+      <button class="tab" role="tab">Criaturas</button>
+      <button class="tab" role="tab">Locais</button>
+      <button class="tab" role="tab">Grupos</button>
+      <button class="tab" role="tab">Lore</button>
+    </div>
+    <div class="row" style="margin-top:16px">
+      <div class="seg"><button aria-pressed="true">Lista</button><button>Quadro</button><button>Linha do tempo</button></div>
+      <span class="chip c-hidden"><i data-lucide="eye-off"></i>oculta</span>
+      <span class="chip c-found"><i data-lucide="search-check"></i>achada</span>
+      <span class="chip c-understood"><i data-lucide="lightbulb"></i>entendida</span>
+      <span class="chip c-before">antes do caso</span>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="type-label">Relógio da investigação e linha do tempo</h2>
+    <div class="row" style="margin-bottom:16px">
+      <span class="clock"><i data-lucide="clock"></i><span class="t">qua 22/07 · 23h10</span></span>
+      <span class="clock" style="border-color:var(--color-warning)"><i data-lucide="alarm-clock"></i><span class="t" style="color:var(--color-warning)">ritual em 0h50</span></span>
+      <button class="btn secondary sm">+10 min</button><button class="btn secondary sm">+1 h</button><button class="btn ghost sm">Próxima cena</button>
+    </div>
+    <div class="card">
+      <div class="clock-big">
+        <div><div class="type-label muted">Agora no jogo</div><div class="type-xl" style="font-family:var(--font-mono)">quarta, 22/07/2026 · 23h10</div></div>
+        <div class="next"><i data-lucide="alarm-clock"></i>Ritual no porão em 2h50</div>
+      </div>
+      <ol class="tl" style="margin-top:16px">
+        <li class="past"><span class="h">dom 19/07 22h00</span><span class="rail"><i></i></span><div class="body">O enfermeiro desaparece <span class="chip c-before">antes do caso</span></div></li>
+        <li class="past"><span class="h">qua 22/07 19h00</span><span class="rail"><i></i></span><div class="body"><b style="color:var(--color-text)">Cena 1 · Chamado da Ordem</b><br>Escritório · 1h</div></li>
+        <li class="gap"><span class="h"></span><span class="rail"></span><div class="body"><i data-lucide="hourglass" style="vertical-align:-3px"></i> 2h sem nada marcado. O que os agentes fazem até o hospital?</div></li>
+        <li class="now"><span class="h" style="color:var(--color-text)">23h10</span><span class="rail"><i></i></span><div class="body"><b>Cena 2 · Ala fechada</b><br><span class="muted">Hospital Santa Clara · Dr. Aurélio, Vigia</span></div></li>
+        <li class="evt"><span class="h">qui 23/07 02h00</span><span class="rail"><i style="background:var(--color-warning)"></i></span><div class="body"><b>Evento · Ritual no porão</b><br><span class="muted">Se ignorado: a Vigia vira hospedeira.</span></div></li>
+      </ol>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="type-label">Pistas, fichas, números</h2>
+    <div class="grid">
+      <article class="card">
+        <div class="clue-img"><i data-lucide="file-text"></i></div>
+        <div class="row" style="justify-content:space-between"><h3 class="type-lg" style="margin:0">Bilhete rasgado</h3><span class="chip c-found">achada</span></div>
+        <dl class="meta"><dt>Onde</dt><dd>Hospital · sala 12</dd><dt>Quando</dt><dd>qua 22/07 23h40 · sessão 4</dd><dt>Quem</dt><dd><span class="row" style="gap:0;padding-left:6px"><span class="portrait sm">LM</span><span class="portrait sm">TA</span></span></dd></dl>
+        <button class="reveal" aria-expanded="false" style="border:0;width:100%;text-align:left;cursor:pointer"><i data-lucide="eye"></i>O que revela (só o mestre)</button>
+      </article>
+      <article class="card">
+        <div class="clue-img"><i data-lucide="image"></i></div>
+        <div class="row" style="justify-content:space-between"><h3 class="type-lg" style="margin:0">Foto do porão</h3><span class="chip c-hidden">oculta</span></div>
+        <dl class="meta"><dt>Plantada em</dt><dd>Cena 3 · Arquivo</dd><dt>Ligada a</dt><dd>Dr. Aurélio</dd></dl>
+      </article>
+      <article class="card sel">
+        <div class="row"><span class="portrait">DA</span><div><h3 class="type-lg" style="margin:0">Dr. Aurélio</h3><span class="muted">Diretor do hospital</span></div></div>
+        <div style="margin-top:14px" class="row"><span class="type-label muted" style="width:72px">PV 18/24</span><div class="meter" role="meter" aria-valuenow="18" aria-valuemax="24" style="flex:1"><i style="width:75%"></i></div></div>
+        <div style="margin-top:8px" class="row"><span class="type-label muted" style="width:72px">SAN 6/20</span><div class="meter" style="flex:1"><i style="width:30%;background:var(--color-danger)"></i></div></div>
+        <div class="attrs"><div><b>1</b><span class="subtle">AGI</span></div><div><b>2</b><span class="subtle">FOR</span></div><div><b>3</b><span class="subtle">INT</span></div><div><b>2</b><span class="subtle">PRE</span></div><div><b>1</b><span class="subtle">VIG</span></div></div>
+      </article>
+      <div style="display:grid;gap:16px">
+        <div class="card stat"><div class="n">14</div><div class="type-label muted">Pistas</div></div>
+        <div class="card stat zero"><div class="n">0</div><div class="type-label muted">Sessões jogadas</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="type-label">Editor, menção e barra flutuante</h2>
+    <div class="editor">
+      <div class="float" role="toolbar" aria-label="Formatar">
+        <button class="icon-btn" aria-label="Negrito"><i data-lucide="bold"></i></button>
+        <button class="icon-btn" aria-label="Itálico"><i data-lucide="italic"></i></button>
+        <button class="icon-btn" aria-label="Ler em voz alta"><i data-lucide="quote"></i></button>
+        <button class="icon-btn" aria-label="Ligar a ficha"><i data-lucide="link-2"></i></button>
+        <button class="icon-btn" aria-label="Virar pista"><i data-lucide="search-check"></i></button>
+      </div>
+      <h3 class="type-xl" style="margin:0 0 12px">Ala fechada</h3>
+      <p>O corredor cheira a cloro e ferrugem. <span class="mention">Dr. Aurélio</span> espera junto à porta da ala, sem olhar nos olhos de ninguém.</p>
+      <p class="muted">A <span class="mention">Vigia</span> só aparece se os agentes chegarem depois da meia-noite.</p>
+      <div class="hovercard"><div class="row"><span class="portrait">DA</span><div><b>Dr. Aurélio</b><div class="muted" style="font-size:var(--text-xs)">Diretor do hospital · PV 18/24</div></div></div><div class="subtle" style="font-size:var(--text-xs);margin-top:8px">Ctrl+clique abre a ficha</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="type-label">Navegação, busca, estados vazios, diálogo, toast</h2>
+    <div class="row" style="align-items:flex-start;gap:24px">
+      <nav class="side" aria-label="Principal">
+        <div class="nav-group type-label">Campanha</div>
+        <a class="nav"><i data-lucide="home"></i>Início</a>
+        <a class="nav"><i data-lucide="users"></i>Fichas</a>
+        <a class="nav"><i data-lucide="clapperboard"></i>Cenas</a>
+        <a class="nav" aria-current="page"><i data-lucide="clock"></i>Linha do tempo</a>
+        <a class="nav"><i data-lucide="search-check"></i>Pistas</a>
+        <a class="nav"><i data-lucide="network"></i>Quadros</a>
+        <div class="nav-group type-label">Mesa</div>
+        <a class="nav"><i data-lucide="dices"></i>Sessão</a>
+      </nav>
+      <div style="flex:1;min-width:320px;display:grid;gap:16px">
+        <div class="palette" role="dialog" aria-label="Buscar">
+          <div class="q"><i data-lucide="search"></i><span>auré<span class="muted">|</span></span><span style="margin-left:auto" class="kbd">Esc</span></div>
+          <div class="res active"><span class="portrait" style="width:28px;height:28px">DA</span><div><mark>Auré</mark>lio, Dr.<div class="subtle" style="font-size:var(--text-xs)">Ficha · Personagem</div></div><span class="kbd" style="margin-left:auto">Enter</span></div>
+          <div class="res"><i data-lucide="clapperboard"></i><div>Ala fechada<div class="subtle" style="font-size:var(--text-xs)">Cena · “…<mark>Auré</mark>lio espera junto à porta…”</div></div></div>
+          <div class="res"><i data-lucide="search-check"></i><div>Bilhete rasgado<div class="subtle" style="font-size:var(--text-xs)">Pista · assinado “A.”</div></div></div>
+        </div>
+        <div class="card empty"><i data-lucide="search-check"></i><h3 class="type-lg" style="margin:8px 0 0">Nenhuma pista plantada ainda</h3><p>Cada pista guarda onde, quando e quem achou.</p><button class="btn primary"><i data-lucide="plus"></i>Nova pista</button></div>
+      </div>
+    </div>
+    <div class="row" style="margin-top:24px;align-items:flex-start;gap:24px">
+      <div class="dialog" role="dialog" aria-labelledby="dlg-t">
+        <header><h3 id="dlg-t" class="type-lg" style="margin:0">Marcar pista como achada</h3></header>
+        <div class="content" style="display:grid;gap:12px">
+          <label><span class="label-text type-label">Quando (no jogo)</span><input class="field" value="qua 22/07/2026 · 23:40" style="font-family:var(--font-mono)"></label>
+          <label><span class="label-text type-label">Sessão</span><input class="field" value="Sessão 4"></label>
+        </div>
+        <footer><button class="btn ghost">Cancelar</button><button class="btn primary">Marcar achada</button></footer>
+      </div>
+      <div style="display:grid;gap:12px">
+        <div class="toast" role="status"><i data-lucide="check"></i>Pista excluída<button class="btn ghost sm" style="margin-left:12px">Desfazer</button></div>
+        <div class="toast" role="alert" style="border-color:var(--color-danger)"><i data-lucide="alert-triangle" style="color:var(--color-danger)"></i>Não deu para salvar a cena<button class="btn secondary sm">Tentar de novo</button></div>
+      </div>
+    </div>
+  </section>
+</main>
+<script>lucide.createIcons();</script>
+</body>
+</html>

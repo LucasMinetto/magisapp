@@ -1,0 +1,89 @@
+/* Gerado por build_tokens.py a partir de tokens.json. Não editar à mão. */
+:root {
+  color-scheme: dark;
+  --color-bg: #0b0b0a;
+  --color-surface: #141412;
+  --color-surface-raised: #1c1c19;
+  --color-border: #2c2b26;
+  --color-border-input: #77735f;
+  --color-text: #ece8dc;
+  --color-text-muted: #aaa494;
+  --color-text-subtle: #8f8a7b;
+  --color-accent: #d9d4c7;
+  --color-accent-hover: #ece8dc;
+  --color-on-accent: #141412;
+  --color-focus: #d9d4c7;
+  --color-danger: #f0646a;
+  --color-success: #4cc28b;
+  --color-warning: #e8ad45;
+  --color-clue-hidden: #8f8a7b;
+  --color-clue-found: #e8ad45;
+  --color-clue-understood: #4cc28b;
+  --font-sans: Inter, system-ui, Segoe UI, sans-serif;
+  --font-serif: "Source Serif 4", Georgia, serif;
+  --font-mono: "IBM Plex Mono", Consolas, monospace;
+  --text-label: 11px;
+  --text-label--line-height: 16px;
+  --text-label--font-weight: 600;
+  --text-label--letter-spacing: 0.12em;
+  --text-xs: 12px;
+  --text-xs--line-height: 16px;
+  --text-xs--font-weight: 500;
+  --text-sm: 14px;
+  --text-sm--line-height: 20px;
+  --text-sm--font-weight: 400;
+  --text-base: 16px;
+  --text-base--line-height: 24px;
+  --text-base--font-weight: 400;
+  --text-reading: 18px;
+  --text-reading--line-height: 30px;
+  --text-reading--font-weight: 400;
+  --text-lg: 20px;
+  --text-lg--line-height: 28px;
+  --text-lg--font-weight: 600;
+  --text-xl: 28px;
+  --text-xl--line-height: 34px;
+  --text-xl--font-weight: 600;
+  --text-display: 40px;
+  --text-display--line-height: 44px;
+  --text-display--font-weight: 600;
+  --text-display--letter-spacing: 0.04em;
+  --text-clock: 20px;
+  --text-clock--line-height: 24px;
+  --text-clock--font-weight: 500;
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 48px;
+  --space-9: 64px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 999px;
+  --shadow-card: 0 0 0 1px rgba(255,255,255,.04);
+  --shadow-pop: 0 16px 40px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.06);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --ease-out: cubic-bezier(.2,.8,.2,1);
+  --layout-topbar: 40px;
+  --layout-sidebar-collapsed: 56px;
+  --layout-sidebar-open: 200px;
+  --layout-list-panel: 240px;
+  --layout-inspector: 300px;
+  --layout-editor-panel: 380px;
+  --layout-card-min: 220px;
+  --layout-reading-max: 720px;
+  --layout-content-max: 1200px;
+  --layout-gutter: 24px;
+}
+.type-label { font-size: var(--text-label); line-height: var(--text-label--line-height); font-weight: var(--text-label--font-weight); letter-spacing: var(--text-label--letter-spacing); font-family: var(--font-sans); text-transform: uppercase; }
+.type-reading { font-size: var(--text-reading); line-height: var(--text-reading--line-height); font-weight: var(--text-reading--font-weight); font-family: var(--font-serif); }
+.type-lg { font-size: var(--text-lg); line-height: var(--text-lg--line-height); font-weight: var(--text-lg--font-weight); font-family: var(--font-serif); }
+.type-xl { font-size: var(--text-xl); line-height: var(--text-xl--line-height); font-weight: var(--text-xl--font-weight); font-family: var(--font-serif); }
+.type-display { font-size: var(--text-display); line-height: var(--text-display--line-height); font-weight: var(--text-display--font-weight); letter-spacing: var(--text-display--letter-spacing); font-family: var(--font-serif); }
+.type-clock { font-size: var(--text-clock); line-height: var(--text-clock--line-height); font-weight: var(--text-clock--font-weight); font-family: var(--font-mono); }

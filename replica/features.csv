@@ -1,0 +1,65 @@
+feature,area,priority,original,clone,notes
+Criar campanha / aventura com nome sistema e data do caso,biblioteca,must,yes,yes,S01; no Autor é livro; data real do caso obrigatória (ex.: qua 22/07/2026) | build: S15; data do caso obrigatória; campanha de exemplo
+Biblioteca com campanha selecionada e contadores,biblioteca,must,yes,yes,S01 | build: S01 com capa, frase, data do caso e contadores lidos da pasta; capa e frase editáveis no Início
+Abrir campanhas recentes,biblioteca,must,yes,yes,S01; sem limite de 1 projeto | build: S01; também abrir pasta
+Salvar tudo local num arquivo ou pasta por campanha,dados,must,yes,yes,teste.autor; formato próprio do clone | build: <nome>.mesa/campanha.sqlite + anexos/
+Autosave com indicador Salvo,dados,must,yes,yes,sidebar e S04 | build: debounce 600 ms; erro aparece
+Busca global / paleta de comando (ir para qualquer coisa),navegação,must,yes,yes,S11; tela-chave (pesquisa T3) | build: Ctrl+K; FTS5 sem acento; cria ficha/cena pelo nome
+Fichas com abas Personagens Locais Grupos Lore,universo,must,yes,yes,S03 | build: + Criaturas
+Ficha com retrato nome papel e atributos agrupados,universo,must,yes,yes,S04 | build: retrato com imagem (escolher ou soltar); aparece na lista e no quadro
+Atributos customizados na ficha,universo,must,yes,yes,S04 Seus atributos; base dos modelos de sistema | build: "Seus atributos" (nome + valor), entram na busca
+Modelo de ficha Ordem Paranormal (NPC e criatura),universo,must,no,yes,novo (pesquisa T6); atributos NEX PV Sanidade rituais; sem fixar no código | build: campos vindos de template_fields
+Busca nas fichas por nome apelido e texto,universo,must,yes,yes,S03 | build: S03
+Menções automáticas da ficha no texto (sem sintaxe de link),universo,must,yes,yes,S04 No manuscrito; substitui o [[link]] do Obsidian (pesquisa T1) | build: editor sublinha; ficha lista 'Aparece em'; Ctrl+clique abre
+Portfólio de pistas (imagem descrição local data sessão quem achou status),pistas,must,no,yes,novo (pesquisa T4) | build: N01; grade com imagem; filtros por situação lugar sessão; achada agora (hora do relógio + última sessão); quem achou; o que revela escondido; soltar imagem cria pista; imagens em anexos/ por mesa://
+Relógio da investigação (data e hora atual no jogo + próximos eventos),tempo,must,no,yes,novo (pesquisa T2) | build: N02 + barra de cima; ±10 min / +1 h / até a próxima cena / definir; Alt+→; próximo evento com contagem; alerta de evento que passou
+Calendário do mundo,tempo,must,yes,yes,S03 aba Calendário (pesquisa T2) | build: N02 aba Calendário; mês de dom a sáb; dia do caso e agora marcados; clicar no dia leva à lista
+Linha do tempo de cenas e eventos com lacunas,tempo,must,no,yes,novo (pesquisa T2) | build: N02; lacuna de 1 h ou mais com 'Evento aqui'; eventos com 'se ninguém agir' e situação; fichas citadas ligadas sozinhas; busca acha eventos
+Lista de cenas com data e hora no jogo,roteiro,must,yes,yes,S05 + campo de tempo | build: S05; ordem por hora; fim antes do início recusado
+Canvas / mapa mental com cards e ligações,enredo,must,yes,yes,S06 (pesquisa T5) | build: @xyflow/react; card, texto, ligações com rótulo e seta; desfazer/refazer; Delete; zoom e mini-mapa; salva em lote
+Cards de ficha e pista no canvas,enredo,must,yes,yes,S06 + Personagem·lugar | build: nós de ficha, pista (com imagem e situação) e cena (com hora); abrir com duplo clique; item na lixeira fica tracejado
+Texto da aventura em capítulos/cenas (editor rich text),manuscrito,must,yes,yes,S02; peso menor que no Autor | build: texto nas cenas + Textos (páginas livres) com menções e busca
+Barra flutuante de formatação,manuscrito,must,yes,yes,S02 | build: aparece na seleção; negrito, itálico, riscado, título, subtítulo, listas, citação
+Lixeira com restaurar,dados,must,yes,yes,S14 modal; 60 dias | build: S14 lista tudo que saiu, restaurar refaz busca e ligações, apagar de vez com confirmação, limpa sozinha após 60 dias
+Tela de sessão (mesa): busca cena atual relógio pistas NPCs,sessão,should,no,yes,novo (pesquisa T3) | build: N03; cena pela hora do jogo; NPCs com −/+ de PV SAN PE PD; pistas da cena com Achada e Desfazer; relógio; começar sessão
+Notas de sessão (o que aconteceu e pistas achadas),sessão,should,no,yes,novo (pesquisa T4) | build: notas por sessão com menções e busca; pista achada guarda a sessão
+Importar aventura: anexar PDF tokens e imagens e ligar a cenas e fichas,importar,should,no,yes,novo (pesquisa T5) | build: tela Arquivos (vários de uma vez, soltar, repetido reaproveitado, tipo pelo nome); ligar à cena com página; PDF abre no app na página; token vira ficha; imagem vira pista; material na cena e na sessão
+Lugar com imagem de mapa e notas (sem editor),universo,should,no,yes,mapas vêm prontos da internet | build: card Mapa nas fichas de Local (escolher ou soltar, abre grande); Notas do mestre em toda ficha, com menções
+Corkboard de cenas,roteiro,should,yes,yes,S05 | build: Cenas → corkboard; ordem de planejamento por arrastar ou ← →; lista por hora continua
+Aplicar modelo de estrutura,roteiro,should,yes,yes,S05; trocar modelos de romance por modelos de investigação | build: 5 modelos de investigação escritos para o app; cenas com hora a partir do relógio
+Salvar e apagar modelo próprio de estrutura,roteiro,should,yes,yes,S05 | build: salva títulos, resumos e distância de horas; vale para todas as campanhas
+Vários quadros no canvas,enredo,should,yes,yes,S06 + | build: lista de quadros, criar, renomear, lixeira
+Imagem e texto livre no canvas,enredo,should,yes,yes,S06 | build: imagem por botão ou soltando o arquivo, redimensionável; texto solto
+Arranjar automático do canvas,enredo,should,yes,yes,S06 | build: elkjs em camadas, da esquerda para a direita
+Desfazer e refazer,global,should,yes,yes,S06 S08 S09 | build: Ctrl+Z/Ctrl+Y e botões na barra; qualquer ação vira um passo (gatilhos temporários do SQLite); tela relê; quadro tem o seu, mais fino
+Blocos de notas por capítulo/cena,manuscrito,should,yes,yes,S02 + Novo bloco | build: Notas do mestre em blocos na cena; aparecem na sessão; entram na busca e nas menções
+Exportar .docx .md .txt .pdf,exportar,should,yes,yes,S18 PDF Word TXT | build: S18; escolhe partes; versão para jogadores sem segredos, pistas ocultas e eventos futuros; PDF A4 pela janela escondida; Word com imagens
+Ações do projeto (renomear abrir pasta backup excluir),biblioteca,should,yes,yes,S01 Editar | build: Editar na biblioteca; excluir manda para a Lixeira do Windows
+Backup em arquivo único (manual + automático) e restaurar,dados,should,yes,yes,sem Google Drive (pedido do usuário); zip com banco + anexos | build: Ajustes; ao fechar e a cada 30 min se mudou; guarda 5 automáticos; restaura como campanha nova (também na biblioteca)
+Backup legível sem o app (cofre Markdown para Obsidian + JSON),dados,should,no,yes,dentro do .mesa-backup; pedido do usuário | build: legivel/ com fichas cenas pistas sessões textos linha do tempo e quadros .canvas; links [[ ]] e aliases; campanha.json restaura se o banco corromper
+Exportar campanha para pasta Markdown/Obsidian,exportar,could,no,yes,mesmo gerador do backup legível | build: formato "Pasta do Obsidian" no Exportar
+Modelos de ficha para outros sistemas (D&D etc.),universo,could,no,no,futuro (pesquisa T6) | adiado: o usuário pediu só Ordem por agora; o modelo de ficha já é por dados (system_templates) para receber outro sistema
+Versão dos jogadores (só pistas e fichas liberadas),jogadores,could,no,no,futuro (pesquisa P9) | adiado: precisa de servidor/sync; hoje existe Exportar → Para os jogadores (sem segredos)
+Enviar tokens/imagens ao Owlbear Rodeo,integrações,could,no,no,SDK público de extensões do Owlbear; a confirmar | adiado: seria uma extensão web do Owlbear, projeto à parte; o usuário disse que mapas ficam para depois
+Acervo / mundo compartilhado entre campanhas,universo,could,yes,partial,Acervo e Unificar livros | build: Fichas → Trazer de outra campanha (cópia com retrato mapa notas; não duplica pelo nome); não é um mundo compartilhado vivo
+Idiomas construídos,universo,could,yes,skip,S03 aba Idiomas | fora: recurso de romancista, não apareceu na pesquisa
+Correção IA com sugestões aceitar/recusar,ia,could,yes,skip,S17; não apareceu na entrevista | fora: precisa de serviço externo e chave; o app é offline
+Resumo de cena/capítulo por IA,ia,could,yes,skip,S02 | fora: mesmo motivo (offline, sem serviço externo)
+Medidas do editor e modo foco,manuscrito,could,yes,yes,S02 S16 | build: contagem de palavras nas cenas e textos; modo foco Ctrl+Shift+F / Esc
+Skins (temas de cor),aparência,could,yes,yes,paleta própria | build: tema escuro, claro (0 falhas AA em 26 pares) ou igual ao Windows, em Ajustes
+Tutoriais e formulário de dúvidas no app,ajuda,could,yes,partial,S13 Tutoriais | build: página Ajuda (como o app se organiza, atalhos, onde ficam os arquivos); sem vídeos nem formulário (uso próprio)
+Editor de mapas (pincéis carimbos grade),mapas,skip,yes,skip,usuário vai usar outro programa
+Diagramar miolo PDF de gráfica e EPUB,diagramação,skip,yes,skip,não publica (pesquisa)
+Diagramar capa com lombada sangria e marcas de corte,diagramação,skip,yes,skip,não publica
+Sessão de escrita com meta de palavras,sessão,skip,yes,skip,substituída pela tela de sessão de jogo
+Beta-reader IA,ia,skip,yes,skip,não serve para mestrar
+Música / rádio Ecos,extras,skip,yes,skip,removido pelo usuário
+Agenda Norte / rumo ao lançamento,extras,skip,yes,skip,removido pelo usuário
+Progresso (ritmo metas estatísticas),extras,skip,yes,skip,removido pelo usuário
+Publicar / Novels / Portal do Escritor / Hystoria,publicação,skip,yes,skip,removido pelo usuário; rede deles
+Pincéis carimbos ornamentos e arte das skins do Autor,aparência,skip,yes,skip,arte deles
+Logo estrela e mascote,aparência,skip,yes,skip,marca deles
+Planos licença e ativação em 2 PCs,conta,skip,yes,skip,uso próprio
+Textos dicas e descrições dos modelos,conteúdo,skip,yes,skip,reescrever
+Fontes licenciadas,aparência,skip,yes,skip,usar fontes livres (OFL)
+Sincronização com celular / web,dados,skip,yes,skip,precisa de servidor; rever quando houver versão dos jogadores
