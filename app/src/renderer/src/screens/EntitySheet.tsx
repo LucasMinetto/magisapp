@@ -521,6 +521,7 @@ export function EntitySheet() {
           entityId={draft.id!}
           ficha={draft.sheetData as FichaAgente}
           aoMudar={(sheetData) => update({ sheetData })}
+          jogador={draft.isPlayer}
           topo={
             <>
               {identity}

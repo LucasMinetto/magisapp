@@ -7,11 +7,15 @@ import { useFicha } from './contexto'
 import { Escolha, Numero, Rastreador, Secao, Texto } from './partes'
 
 export function Identidade() {
-  const { a, alterar } = useFicha()
+  const { a, alterar, dadosFisicos } = useFicha()
   return (
     <div className="flex flex-col gap-5">
       <div className="grid grid-cols-2 gap-3">
         <Texto rotulo="Jogador" valor={a.jogador} placeholder="Nome de quem joga" aoMudar={(jogador) => alterar({ jogador })} className="col-span-2" />
+        <label className="col-span-2 flex items-center gap-2 text-sm" title="Marcada: a janela de rolagem pede os valores dos dados da mesa. Desmarcada: o Magistrado rola.">
+          <input type="checkbox" checked={dadosFisicos} onChange={(e) => alterar({ dadosFisicos: e.target.checked })} className="size-4 accent-(--color-accent)" />
+          Rola dados físicos
+        </label>
         <Escolha rotulo="Origem" livre valor={a.origem} opcoes={ORIGENS} aoMudar={(origem) => alterar({ origem })} />
         <Escolha rotulo="Classe" valor={a.classe} opcoes={['', ...NOMES_CLASSES, 'Sobrevivente']} aoMudar={(classe) => alterar({ classe, trilha: '' })} />
         <Escolha key={a.classe} rotulo="Trilha" livre valor={a.trilha} opcoes={TRILHAS[a.classe as Classe] ?? []} aoMudar={(trilha) => alterar({ trilha })} />

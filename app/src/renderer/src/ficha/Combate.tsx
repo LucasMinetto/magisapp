@@ -50,6 +50,7 @@ const NOVO_ATAQUE = (): Ataque => ({
   bonusAtaque: 0,
   dano: '1d6',
   tipoDano: 'Impacto',
+  danosExtras: [],
   margemCritico: 20,
   multCritico: 2,
   alcance: 'Corpo a corpo',
@@ -88,10 +89,13 @@ function Ataques() {
           // Ataque corpo a corpo (Luta) soma FOR ao dano.
           const somaFor = at.pericia === 'Luta' ? a.atributos.for : 0
           const expr = lerExpressao(at.dano)
-          const textoDano = descreverExpressao({ ...expr, fixo: expr.fixo + somaFor })
+          const extras = at.danosExtras.filter((x) => x.dano.trim())
+          const textoDano = [descreverExpressao({ ...expr, fixo: expr.fixo + somaFor }), ...extras.map((x) => descreverExpressao(lerExpressao(x.dano)))].join(' + ')
           const danoFinal = `${at.dano}${somaFor ? sinal(somaFor) : ''}`
           const critico = `${at.margemCritico < 20 ? `${at.margemCritico}/` : ''}x${at.multCritico}`
-          const dano = { opcoes: [{ nome: 'Dano', expressao: danoFinal }], mult: at.multCritico, tipoDano: at.tipoDano }
+          const partes = [{ expressao: danoFinal, tipo: at.tipoDano }, ...extras.map((x) => ({ expressao: x.dano, tipo: x.tipoDano }))]
+          const dano = { opcoes: [{ nome: 'Dano', partes }], mult: at.multCritico }
+          const tipos = [at.tipoDano, ...extras.map((x) => x.tipoDano)].filter(Boolean).join(' + ')
 
           if (editando === at.id)
             return (
@@ -111,6 +115,23 @@ function Ataques() {
                   <Numero rotulo="Crítico (margem)" valor={at.margemCritico} aoMudar={(v) => mudar(at.id, { margemCritico: Math.min(20, Math.max(2, v || 20)) })} />
                   <Numero rotulo="Multiplicador" valor={at.multCritico} aoMudar={(v) => mudar(at.id, { multCritico: Math.min(5, Math.max(2, v || 2)) })} />
                 </div>
+                {at.danosExtras.map((x, i) => {
+                  const mudarExtra = (p: Partial<typeof x>) => mudar(at.id, { danosExtras: at.danosExtras.map((y, j) => (j === i ? { ...y, ...p } : y)) })
+                  return (
+                    <div key={i} className="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
+                      <Texto rotulo="Dano extra" valor={x.dano} placeholder="2d6" aoMudar={(dano) => mudarExtra({ dano })} />
+                      <Escolha rotulo="Tipo do extra" valor={x.tipoDano} opcoes={['', ...TIPOS_DANO]} aoMudar={(tipoDano) => mudarExtra({ tipoDano })} />
+                      <Button size="sm" variant="ghost" onClick={() => mudar(at.id, { danosExtras: at.danosExtras.filter((_, j) => j !== i) })}>
+                        Tirar
+                      </Button>
+                    </div>
+                  )
+                })}
+                {at.danosExtras.length < 6 && (
+                  <Button size="sm" variant="ghost" icon={<Plus className="size-4" />} className="self-start" onClick={() => mudar(at.id, { danosExtras: [...at.danosExtras, { dano: '', tipoDano: '' }] })}>
+                    Outro tipo de dano
+                  </Button>
+                )}
                 <Texto rotulo="Notas" valor={at.notas} aoMudar={(notas) => mudar(at.id, { notas })} />
                 <div className="flex justify-between">
                   <Button
@@ -135,7 +156,7 @@ function Ataques() {
               <div className="mb-2 flex items-center justify-between gap-2">
                 <div className="min-w-0">
                   <div className="truncate font-semibold">{at.nome}</div>
-                  <div className="truncate text-xs text-subtle">{[at.pericia, at.alcance, at.tipoDano].filter(Boolean).join(' · ')}</div>
+                  <div className="truncate text-xs text-subtle">{[at.pericia, at.alcance, tipos].filter(Boolean).join(' · ')}</div>
                 </div>
                 <Button size="sm" variant="ghost" onClick={() => setEditando(at.id)}>
                   Editar

@@ -5,12 +5,19 @@ import { CLASSES, derivados } from '@shared/ordem/regras'
 
 export type Derivados = ReturnType<typeof derivados>
 
-/** Pedido de rolagem. A janela que pede os dados é a T7; até lá ninguém passa `rolar` e os botões não aparecem. */
+/** Uma parte do dano, de um tipo só (cada alvo resiste a um tipo). */
+export interface ParteDano {
+  expressao: string
+  tipo: string
+}
+
+/** Pedido de rolagem: o que a JanelaRolagem pede ou rola. */
 export interface PedidoRolagem {
   rotulo: string
   tipo: 'teste' | 'ataque' | 'dano' | 'ritual' | 'livre'
   teste?: { quantidade: number; regra: 'maior' | 'menor'; bonus: number; margem?: number }
-  dano?: { opcoes: { nome: string; expressao: string }[]; mult?: number; tipoDano?: string }
+  // Opções de dano (ex.: ritual normal/discente/verdadeiro); a primeira é a padrão. No crítico, só a primeira parte multiplica.
+  dano?: { opcoes: { nome: string; partes: ParteDano[] }[]; mult?: number }
   custoPe?: number
 }
 
@@ -21,6 +28,8 @@ export interface ContextoFicha {
   d: Derivados
   max: { pv: number; pe: number; san: number }
   rolar?: (p: PedidoRolagem) => void
+  /** A janela de rolagem abre em "digitar" (dados físicos) ou em "o app rola". */
+  dadosFisicos: boolean
   // Modificador de testes temporário (dados e bônus extras), não fica salvo.
   mod: { dados: number; bonus: number }
   setMod: (m: { dados: number; bonus: number }) => void

@@ -1,7 +1,7 @@
 # TASKS: Magistrado
 
 > Produto: [PRD.md](PRD.md) · Técnica: [TECH_SPEC.md](TECH_SPEC.md) · Memória: [PROJECT_MEMORY.md](PROJECT_MEMORY.md)
-> Status em 2026-11-03: T1 a T6 concluídas. Próxima: T7 (rolagem), depois T8 e T9. "Bloqueada" = espera uma decisão de [TECH_SPEC § Decisões pendentes](TECH_SPEC.md#decisões-pendentes).
+> Status em 2026-11-03: T1 a T7 concluídas. Próxima: T8 (ameaças), depois T9. "Bloqueada" = espera uma decisão de [TECH_SPEC § Decisões pendentes](TECH_SPEC.md#decisões-pendentes).
 
 ## Fase 1: base funcionando com o nome novo
 
@@ -51,11 +51,18 @@
 - **Base:** `taberna/web/src/ficha/*`, `taberna/web/src/paginas/FichaPagina.tsx`, `taberna/docs/handoff-ficha-rpgpedia.md`.
 - **Feito:** `app/src/renderer/src/ficha/` (contexto, partes, Identidade, Pericias, Combate, Habilidades, Rituais, Inventario, Historico, FichaCompleta). Três colunas a partir de 1280 px de largura; abaixo disso as abas vão para baixo das perícias. Uma sexta aba, **Notas**, guarda histórico e objetivo da ficha, atributos próprios, descrição, notas do mestre e "Aparece em". Sem modo jogo/edição: a ficha é editável direto. Os botões de rolar só aparecem quando a tela passa `rolar` (T7). Ritual e item da biblioteca ainda não entram pela ficha (T9). O vilão volta à compacta com confirmação; a completa fica guardada. e2e com 14 verificações novas.
 
-### T7. Rolagem com dados físicos
+### T7. Rolagem (o Magistrado rola ou o mestre digita os dados físicos) ✅ 2026-11-03
 - **Depende de:** T3, T5
-- **Resultado:** componente que pede os valores dos dados, mostra o total, o crítico e o dano multiplicado, e grava em `rolls`.
+- **Revisada em 2026-11-03** (entrevista com o Lucas).
+- **Resultado:** janela de rolagem aberta pelos botões da ficha, com duas formas: **o Magistrado rola** ou **digitar** o que saiu nos dados físicos.
+  - **Teste:** digita só o d20 que ficou (o maior; o menor quando o atributo é 0), não todos. O app calcula total e crítico.
+  - **Dano separado por tipo**, uma soma por tipo (ex.: arma amaldiçoada = Balístico 9 + Energia 7), porque cada alvo resiste a um tipo. O bônus entra por cima; no crítico digita-se a nova soma.
+  - Caixa **"Rola dados físicos"** em cada personagem decide a forma em que a janela abre (marcada = digitar). NPCs e ameaças começam desmarcados.
+  - Grava em `rolls`.
 - **Aceite:** valores inválidos são recusados. A rolagem aparece no histórico da ficha e pode ser desfeita.
+- **Fora:** escolher o alvo e aplicar o dano com resistências (P3), jogadores rolando sozinhos (P2).
 - **Base:** `taberna/web/src/ficha/Rolagem.tsx`.
+- **Feito:** `ficha/JanelaRolagem.tsx` (aberta pela FichaCompleta). Ataque ganhou **danos extras** (outros tipos, até 6) e ritual ganhou **tipo de dano**. No crítico só o dano da arma multiplica; os extras não. Teste digitado valida 1 a 20; soma digitada valida a faixa dos dados. A caixa fica em `dadosFisicos` da ficha; sem ela vale "é jogador". Desfazer na janela e no Histórico (e o Ctrl+Z geral). e2e com 11 verificações novas.
 
 ### T8. Ameaças
 - **Depende de:** T5
@@ -100,6 +107,9 @@
 ### P1. Dados do livro de regras
 - Extrair do livro e cadastrar as **ameaças, os itens e os rituais** reais na biblioteca única (T4b, T8, T9), cada um com a origem do livro de onde veio. Pedido do usuário em 2026-11-02.
 - Antes de começar: confirmar quais livros (básico, Sobrevivendo ao Horror…) e o formato da extração.
+
+### P3. Direcionar o dano ao alvo
+- Escolher quem recebe o dano de uma rolagem, descontar as resistências por tipo e tirar o PV. Depende das resistências das ameaças em `sheet_data` (T8). Pedido do usuário em 2026-11-03, ao revisar a T7.
 
 ### P2. Versão dos jogadores
 - Celular e ficha compartilhada. Os ids UUID do autore já preparam o sync. Fica para depois.

@@ -1,6 +1,18 @@
 // Os mesmos casos de taberna/shared/regras.test.ts (taberna@71f7b1c), com os mesmos valores.
 import { describe, expect, it } from 'vitest'
-import { dadosDoDano, dadosDoTeste, derivados, descreverExpressao, lerExpressao, resolverDano, resolverTeste, type DadosFicha } from './regras'
+import {
+  dadosDoDano,
+  dadosDoTeste,
+  derivados,
+  descreverExpressao,
+  faixaSoma,
+  lerExpressao,
+  rolarDados,
+  rolarExpressao,
+  resolverDano,
+  resolverTeste,
+  type DadosFicha
+} from './regras'
 
 // O "Kash" da ficha de exemplo: Ocultista, NEX 40%, AGI 2, FOR 1, INT 3, PRE 3, VIG 1.
 const kash: DadosFicha = {
@@ -68,5 +80,19 @@ describe('regras de Ordem Paranormal', () => {
     expect(resolverDano(e, [[5, 6]], 2)).toBe(13)
     expect(descreverExpressao(lerExpressao('2d6 + 1d4 + 3'), 2)).toBe('4d6 + 2d4 + 3')
     expect(resolverDano(lerExpressao('1d3+1'), [[9]])).toBe(1) // valor impossível é ignorado
+  })
+
+  it('faixa da soma digitada: só os dados, multiplicados no crítico', () => {
+    expect(faixaSoma(lerExpressao('2d6+3'))).toEqual({ min: 2, max: 12 })
+    expect(faixaSoma(lerExpressao('2d6+3'), 2)).toEqual({ min: 4, max: 24 })
+    expect(faixaSoma(lerExpressao('1d8+1d4'))).toEqual({ min: 2, max: 12 })
+    expect(faixaSoma(lerExpressao('5'))).toEqual({ min: 0, max: 0 })
+  })
+
+  it('o app rola dados dentro das faces', () => {
+    const sempreMax = (n: number) => n - 1
+    expect(rolarDados(3, 20, sempreMax)).toEqual([20, 20, 20])
+    expect(rolarExpressao(lerExpressao('2d6+1d4+2'), 1, () => 0)).toEqual([[1, 1], [1]])
+    for (const v of rolarDados(200, 6)) expect(v >= 1 && v <= 6).toBe(true)
   })
 })

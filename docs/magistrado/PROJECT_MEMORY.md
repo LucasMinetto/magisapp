@@ -5,7 +5,7 @@
 ## Propósito e status
 
 - **O que é:** app de desktop do mestre de Ordem Paranormal. Junta o **autore** (a base) com a ficha do agente, a rolagem com dados físicos e os modelos de ameaças, itens e rituais do **taberna**.
-- **Status (2026-11-03):** T1 a T6 concluídas. A ficha completa (agentes e vilões) está no app; a compacta continua para NPCs, com "Usar ficha completa". 114 testes e e2e 124/124. Ainda faltam as telas de rolagem (T7), ameaças (T8), rituais e itens da biblioteca (T9). As cópias dos dois projetos estão em `_fontes/` (fora do git).
+- **Status (2026-11-03):** T1 a T7 concluídas. Ficha completa com janela de rolagem (o Magistrado rola ou o mestre digita o d20 que ficou e uma soma por tipo de dano). 116 testes e e2e 135/135. Faltam ameaças (T8), rituais e itens da biblioteca (T9). As cópias dos dois projetos estão em `_fontes/` (fora do git).
 
 ## Restrições confirmadas
 
@@ -13,13 +13,13 @@
 - Só o mestre usa. É offline e sem servidor. A versão dos jogadores fica para depois.
 - A ficha tem o **layout do RPGpédia** com os **tokens, as fontes e os temas do autore**.
 - Fora do escopo: tela Livros, campanhas e missões do taberna, importar dados do taberna (não há dados, só modelos).
-- **Próxima etapa depois da fusão:** extrair do livro de regras os dados de ameaças, itens e rituais ([TASKS § P1](TASKS.md#depois-da-fusão-fora-deste-escopo-já-combinado)).
+- **Próxima etapa depois da fusão:** extrair do livro de regras os dados de ameaças, itens e rituais ([TASKS § P1](TASKS.md#depois-da-fusão-fora-deste-escopo-já-combinado)). Também depois: direcionar o dano ao alvo com resistências (P3).
 
 ## Vocabulário
 
 - **Agente:** personagem jogador de Ordem Paranormal (ficha com NEX, classe, trilha, origem, PV, PE, SAN).
 - **Ameaça:** criatura ou inimigo no formato do livro (VD, Presença Perturbadora, ações).
-- **Dados físicos:** os dados são rolados na mesa e os valores digitados no app, que faz as contas.
+- **Dados físicos:** os dados são rolados na mesa e os valores digitados no app, que faz as contas. No teste digita-se só o d20 que ficou; o dano é uma soma por tipo. A caixa "Rola dados físicos" de cada personagem escolhe entre digitar e o app rolar (T7 revisada em 2026-11-03).
 - **Campanha:** uma pasta com banco SQLite e anexos (herdado do autore).
 - **Biblioteca:** lugar **único**, compartilhado por todas as campanhas, com ameaças, itens e rituais. Cada registro tem uma **origem** (livro oficial, criação própria, outro livro). Usar na campanha copia o registro.
 - **Ficha completa / compacta:** os agentes (jogadores) e os NPCs vilões usam a completa; os outros NPCs usam a compacta.
@@ -52,4 +52,4 @@
 
 ## Próximo passo
 
-T7 (rolagem com dados físicos): a ficha completa já tem os pedidos de rolagem prontos (`PedidoRolagem` em `renderer/src/ficha/contexto.tsx`); falta a janela e passar `rolar` para `FichaCompleta`. Depois T8 (ameaças) e T9 (rituais e itens).
+T8 (ameaças): o editor passa a editar o bloco em `sheet_data`; a ficha da ameaça pode reaproveitar a `JanelaRolagem` (`renderer/src/ficha/JanelaRolagem.tsx`). Depois T9 (rituais e itens). Depois da fusão: P1 (dados do livro), P3 (direcionar dano ao alvo), P2 (jogadores).

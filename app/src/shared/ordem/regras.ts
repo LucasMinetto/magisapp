@@ -267,3 +267,44 @@ export function descreverExpressao(expr: ExpressaoDano, multiplicador = 1) {
   if (expr.fixo) partes.push(String(expr.fixo))
   return partes.join(' + ').replace(/\+ -/g, '- ') || '0'
 }
+
+// --- T7: digitar só o que conta (o d20 que ficou, a soma de cada tipo de dano) ou deixar o app rolar. ---
+
+// Menor e maior soma possíveis dos dados de uma expressão (sem o fixo).
+export function faixaSoma(expr: ExpressaoDano, multiplicador = 1) {
+  let min = 0
+  let max = 0
+  for (const g of dadosDoDano(expr, multiplicador)) {
+    if (g.sinal > 0) {
+      min += g.quantidade
+      max += g.quantidade * g.faces
+    } else {
+      min -= g.quantidade * g.faces
+      max -= g.quantidade
+    }
+  }
+  return { min, max }
+}
+
+/** Um dado de `faces` lados, uniforme. `sorte` recebe o número de faces e devolve de 0 a faces-1 (para os testes). */
+export function rolarDado(faces: number, sorte: (n: number) => number = sorteio) {
+  return sorte(faces) + 1
+}
+
+export function rolarDados(quantidade: number, faces: number, sorte?: (n: number) => number) {
+  return Array.from({ length: quantidade }, () => rolarDado(faces, sorte))
+}
+
+// Rola os dados de uma expressão: um grupo de valores por termo, no formato de resolverDano.
+export function rolarExpressao(expr: ExpressaoDano, multiplicador = 1, sorte?: (n: number) => number) {
+  return dadosDoDano(expr, multiplicador).map((g) => rolarDados(g.quantidade, g.faces, sorte))
+}
+
+function sorteio(n: number) {
+  // Rejeita o resto para não favorecer as faces baixas.
+  const limite = Math.floor(0x1_0000_0000 / n) * n
+  const v = new Uint32Array(1)
+  do crypto.getRandomValues(v)
+  while (v[0] >= limite)
+  return v[0] % n
+}

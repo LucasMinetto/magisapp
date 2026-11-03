@@ -3,7 +3,7 @@
 import { Plus } from 'lucide-react'
 import { useState } from 'react'
 import { ELEMENTOS, type RitualDaFicha } from '@shared/ordem/esquemas'
-import { CUSTO_CIRCULO } from '@shared/ordem/regras'
+import { CUSTO_CIRCULO, TIPOS_DANO } from '@shared/ordem/regras'
 import { Button } from '@/ui'
 import { novoId, useFicha } from './contexto'
 import { AreaTexto, Escolha, Secao, Texto, Vazio } from './partes'
@@ -22,7 +22,8 @@ const VAZIO: Omit<RitualDaFicha, 'id'> = {
   verdadeiro: '',
   danoNormal: '',
   danoDiscente: '',
-  danoVerdadeiro: ''
+  danoVerdadeiro: '',
+  tipoDano: ''
 }
 
 const ROMANO = ['', 'I', 'II', 'III', 'IV']
@@ -70,6 +71,7 @@ export function Rituais() {
               { nome: 'Discente', expressao: r.danoDiscente },
               { nome: 'Verdadeiro', expressao: r.danoVerdadeiro }
             ].filter((f) => f.expressao.trim())
+            const opcoes = formas.map((f) => ({ nome: f.nome, partes: [{ expressao: f.expressao, tipo: r.tipoDano }] }))
 
             if (editando === r.id)
               return (
@@ -125,7 +127,7 @@ export function Rituais() {
                     Editar
                   </Button>
                   {rolar && (
-                    <Button size="sm" variant="primary" onClick={() => rolar({ rotulo: r.nome, tipo: 'ritual', custoPe: custo, dano: formas.length ? { opcoes: formas } : undefined })}>
+                    <Button size="sm" variant="primary" onClick={() => rolar({ rotulo: r.nome, tipo: 'ritual', custoPe: custo, dano: opcoes.length ? { opcoes } : undefined })}>
                       Conjurar
                     </Button>
                   )}
@@ -162,6 +164,7 @@ function EditorRitual({ r, aoMudar, aoFechar, aoRemover }: { r: RitualDaFicha; a
         {t('danoNormal', 'Dano normal', '3d8+3')}
         {t('danoDiscente', 'Dano discente', '5d8+5')}
         {t('danoVerdadeiro', 'Dano verdadeiro', '7d8+7')}
+        <Escolha rotulo="Tipo de dano" valor={r.tipoDano} opcoes={['', ...TIPOS_DANO]} aoMudar={(tipoDano) => aoMudar({ tipoDano })} />
       </div>
       <AreaTexto rotulo="Efeito" valor={r.efeito} aoMudar={(efeito) => aoMudar({ efeito })} />
       <AreaTexto rotulo="Discente" valor={r.discente} linhas={1} aoMudar={(discente) => aoMudar({ discente })} />

@@ -28,6 +28,8 @@ export const ataqueSchema = z.object({
   bonusAtaque: numero,
   dano: texto, // "1d8+2"
   tipoDano: texto,
+  // Outros tipos de dano do mesmo golpe (ex.: arma amaldiçoada: +2d6 de Energia). Não multiplicam no crítico.
+  danosExtras: z.array(z.object({ dano: texto, tipoDano: texto })).max(6).default([]),
   margemCritico: z.coerce.number().int().min(2).max(20).default(20),
   multCritico: z.coerce.number().int().min(2).max(5).default(2),
   alcance: texto,
@@ -48,7 +50,8 @@ const camposRitual = {
   verdadeiro: texto,
   danoNormal: texto,
   danoDiscente: texto,
-  danoVerdadeiro: texto
+  danoVerdadeiro: texto,
+  tipoDano: texto
 }
 
 export const ritualDaFichaSchema = z.object({ id: idLocal, ...camposRitual, origem: origemSchema.optional() })
@@ -105,6 +108,8 @@ export const fichaAgenteSchema = z.object({
   peTemp: numero,
   sanTemp: numero,
   condicoes: z.array(z.string().max(60)).max(60).default([]),
+  // Como a janela de rolagem abre: digitar os dados físicos ou o app rolar. Sem o campo, vale "é jogador".
+  dadosFisicos: z.boolean().optional(),
   ataques: lista(ataqueSchema),
   rituais: lista(ritualDaFichaSchema),
   habilidades: lista(habilidadeSchema),

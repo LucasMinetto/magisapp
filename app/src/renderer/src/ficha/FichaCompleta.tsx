@@ -9,6 +9,7 @@ import { Habilidades } from './Habilidades'
 import { Historico } from './Historico'
 import { Identidade } from './Identidade'
 import { Inventario } from './Inventario'
+import { JanelaRolagem } from './JanelaRolagem'
 import { AreaTexto, Abas } from './partes'
 import { Pericias } from './Pericias'
 import { Rituais } from './Rituais'
@@ -30,7 +31,7 @@ export function FichaCompleta({
   aoMudar,
   topo,
   notas,
-  rolar
+  jogador
 }: {
   entityId: string
   ficha: FichaAgente
@@ -39,9 +40,12 @@ export function FichaCompleta({
   topo: ReactNode
   /** Apelidos, descrição, notas do mestre e "Aparece em". */
   notas: ReactNode
-  rolar?: (p: PedidoRolagem) => void
+  /** Personagem de jogador: sem a caixa marcada ou desmarcada, a rolagem abre em "digitar". */
+  jogador: boolean
 }) {
   const [aba, setAba] = useState<Aba>('combate')
+  const [pedido, setPedido] = useState<PedidoRolagem | null>(null)
+  const dadosFisicos = ficha.dadosFisicos ?? jogador
   const [mod, setMod] = useState({ dados: 0, bonus: 0 })
   const d = derivados(ficha)
   const max = maximos(ficha, d)
@@ -72,7 +76,7 @@ export function FichaCompleta({
   }
 
   return (
-    <Ficha.Provider value={{ entityId, a: ficha, alterar, d, max, rolar, mod, setMod }}>
+    <Ficha.Provider value={{ entityId, a: ficha, alterar, d, max, rolar: setPedido, dadosFisicos, mod, setMod }}>
       <div className="grid items-start gap-6 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(340px,400px)_minmax(0,1fr)]">
         <section aria-label="Identidade e recursos" className="flex flex-col gap-5">
           {topo}
@@ -88,6 +92,15 @@ export function FichaCompleta({
           </div>
         </section>
       </div>
+      {pedido && (
+        <JanelaRolagem
+          pedido={pedido}
+          entityId={entityId}
+          fisicos={dadosFisicos}
+          aoFechar={() => setPedido(null)}
+          aoGastarPe={(custo) => alterar({ peAtual: Math.max(0, ficha.peAtual - custo) })}
+        />
+      )}
     </Ficha.Provider>
   )
 }

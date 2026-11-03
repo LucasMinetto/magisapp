@@ -1,11 +1,12 @@
-// Aba Histórico: rolagens desta ficha (a T7 grava; aqui só a lista). Portado do taberna (web/src/ficha/Historico.tsx).
+// Aba Histórico: rolagens desta ficha, com desfazer. Portado do taberna (web/src/ficha/Historico.tsx).
 import { useCampaign } from '@/campaign'
 import { useLoad } from '@/lib/data'
-import { cx, ErrorNote } from '@/ui'
+import { Undo2 } from 'lucide-react'
+import { cx, ErrorNote, IconButton } from '@/ui'
 import { Vazio } from './partes'
 
 export function Historico({ entityId }: { entityId: string }) {
-  const { version } = useCampaign()
+  const { version, changed } = useCampaign()
   const rolls = useLoad(() => window.api.rolls.list({ entityId, limit: 100 }), [entityId, version])
   if (rolls.error) return <ErrorNote message={rolls.error} onRetry={rolls.reload} />
   if (!rolls.data) return null
@@ -25,6 +26,17 @@ export function Historico({ entityId }: { entityId: string }) {
           <div className={cx('font-serif text-2xl font-semibold', r.critical && 'text-success')} title={r.critical ? 'Crítico' : undefined}>
             {r.total}
           </div>
+          <IconButton
+            label={`Desfazer ${r.label || 'rolagem'}`}
+            onClick={() =>
+              void window.api.rolls
+                .remove(r.id)
+                .then(changed)
+                .catch((e: Error) => window.alert(e.message))
+            }
+          >
+            <Undo2 className="size-4" />
+          </IconButton>
         </li>
       ))}
     </ul>
