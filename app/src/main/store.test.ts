@@ -2,8 +2,7 @@ import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { openDb, SCHEMA_VERSION } from './db'
-import Database from 'better-sqlite3'
+import { createDbAtVersion, openDb, SCHEMA_VERSION } from './db'
 import { initCampaignRow, paragraphsDoc, seedExample, syncOrdemTemplate } from './seed'
 import { CampaignStore } from './store'
 import { applyStructure, BUILTIN_STRUCTURES, structureFromCampaign } from './structures'
@@ -136,34 +135,75 @@ describe('modelo Ordem Paranormal', () => {
     const keys = (kind: string) => t.fields.filter((f) => f.entityKind === kind).map((f) => f.key)
     expect(keys('personagem')).toEqual(expect.arrayContaining(['patente', 'trilha', 'deslocamento', 'inventario', 'estagio', 'pd']))
     expect(t.fields.find((f) => f.key === 'classe')?.options.choices).toContain('Sobrevivente')
-    expect(keys('criatura')).toEqual(expect.arrayContaining(['tamanho', 'fortitude', 'reflexos', 'vontade', 'imunidades', 'vulnerabilidades']))
+    expect(keys('ameaca')).toEqual(expect.arrayContaining(['tamanho', 'fortitude', 'reflexos', 'vontade', 'imunidades', 'vulnerabilidades']))
   })
 
   it('campanha antiga ganha os campos novos sem perder valores', () => {
     const tid = store.templates()[0].id
     store.db.prepare("delete from template_fields where template_id = ? and key in ('patente', 'pd', 'tamanho')").run(tid)
-    store.db.prepare("update template_fields set group_name = 'Recursos' where template_id = ? and entity_kind = 'criatura' and key = 'pv'").run(tid)
+    store.db.prepare("update template_fields set group_name = 'Recursos' where template_id = ? and entity_kind = 'ameaca' and key = 'pv'").run(tid)
     const aurelio = byName('Dr. Aurélio Bastos')
     const before = store.getEntity(aurelio.id).stats
     syncOrdemTemplate(store.db)
     const fields = store.templates()[0].fields
     expect(fields.filter((f) => ['patente', 'pd', 'tamanho'].includes(f.key))).toHaveLength(3)
-    expect(fields.find((f) => f.entityKind === 'criatura' && f.key === 'pv')?.groupName).toBe('Combate')
+    expect(fields.find((f) => f.entityKind === 'ameaca' && f.key === 'pv')?.groupName).toBe('Combate')
     expect(store.getEntity(aurelio.id).stats).toEqual(before)
   })
 })
 
 describe('migração do esquema', () => {
-  it('campanha da versão 1 ganha a coluna da capa, com cópia do banco antes', () => {
-    const file = join(dir, 'campanha.sqlite')
+  const T = '2026-01-01T00:00:00.000Z'
+  /** Uma campanha de verdade parada numa versão antiga. */
+  const oldCampaign = (version: number) => {
     store.close()
-    const raw = new Database(file)
-    raw.exec('drop table scene_notes; alter table entities drop column map_id; alter table campaign drop column cover_id; update campaign set schema_version = 1;')
+    rmSync(join(dir, 'campanha.sqlite'), { force: true })
+    const file = join(dir, 'campanha.sqlite')
+    const raw = createDbAtVersion(file, version)
+    raw
+      .prepare('insert into campaign (id, name, epoch_date, schema_version, created_at, updated_at) values (?, ?, ?, ?, ?, ?)')
+      .run(crypto.randomUUID(), 'Caso do Hospital', '2026-07-22', version, T, T)
+    return { file, raw }
+  }
+
+  it('campanha da versão 1 sobe até a atual, com cópia do banco antes', () => {
+    const { file, raw } = oldCampaign(1)
     raw.close()
     store = new CampaignStore(openDb(file), dir)
     expect(store.campaign()).toMatchObject({ coverId: null, name: 'Caso do Hospital' })
     expect((store.db.prepare('select schema_version as v from campaign').get() as { v: number }).v).toBe(SCHEMA_VERSION)
     expect(existsSync(`${file}.v1.bak`)).toBe(true)
+  })
+
+  it('versão 3 para 4: criatura vira ameaça, agente usa ficha completa e nada que aponta para as fichas se perde', () => {
+    const { file, raw } = oldCampaign(3)
+    const [tpl, lia, vigia, cena, quadro, no] = Array.from({ length: 6 }, () => crypto.randomUUID())
+    raw.prepare("insert into system_templates (id, name, builtin, created_at, updated_at) values (?, 'Ordem Paranormal', 1, ?, ?)").run(tpl, T, T)
+    raw.prepare("update campaign set system_template_id = ?").run(tpl)
+    raw.prepare("insert into template_fields (id, template_id, entity_kind, key, label, type, created_at, updated_at) values (?, ?, 'criatura', 'vd', 'VD', 'text', ?, ?)").run(crypto.randomUUID(), tpl, T, T)
+    const ent = raw.prepare('insert into entities (id, kind, is_player, name, stats, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?)')
+    ent.run(lia, 'personagem', 1, 'Lia Moraes', JSON.stringify({ nex: '15%', classe: 'Ocultista', pv: { current: 9, max: 14 } }), T, T)
+    ent.run(vigia, 'criatura', 0, 'A Vigia', JSON.stringify({ vd: '40', elemento: 'Morte' }), T, T)
+    raw.prepare('insert into scenes (id, title, created_at, updated_at) values (?, ?, ?, ?)').run(cena, 'Ala fechada', T, T)
+    raw.prepare('insert into scene_entities (scene_id, entity_id) values (?, ?)').run(cena, vigia)
+    raw.prepare('insert into boards (id, name, created_at, updated_at) values (?, ?, ?, ?)').run(quadro, 'Suspeitos', T, T)
+    raw.prepare("insert into board_nodes (id, board_id, type, entity_id, created_at, updated_at) values (?, ?, 'entity', ?, ?, ?)").run(no, quadro, vigia, T, T)
+    raw.prepare("insert into mentions (entity_id, source_type, source_id, hits) values (?, 'scene', ?, 2)").run(vigia, cena)
+    raw.close()
+
+    store = new CampaignStore(openDb(file), dir)
+    expect(existsSync(`${file}.v3.bak`)).toBe(true)
+    expect(store.getEntity(vigia)).toMatchObject({ kind: 'ameaca', sheet: 'compacta', sheetData: { vd: 40, elemento: 'Morte' } })
+    expect(store.getEntity(lia)).toMatchObject({ kind: 'personagem', sheet: 'completa', sheetData: { nex: 15, classe: 'Ocultista', pvAtual: 9 } })
+    expect(store.db.prepare('select entity_id from scene_entities where scene_id = ?').all(cena)).toEqual([{ entity_id: vigia }])
+    expect(store.db.prepare('select entity_id from board_nodes where id = ?').get(no)).toEqual({ entity_id: vigia })
+    expect(store.db.prepare('select hits from mentions where entity_id = ?').get(vigia)).toEqual({ hits: 2 })
+    expect(store.db.prepare("select count(*) as n from template_fields where entity_kind = 'ameaca'").get()).toEqual({ n: 1 })
+    expect(store.db.pragma('foreign_keys', { simple: true })).toBe(1)
+    expect(store.db.pragma('foreign_key_check')).toEqual([])
+    // As chaves continuam valendo depois da reconstrução: apagar de vez a ficha leva junto o que aponta para ela.
+    store.db.prepare('delete from entities where id = ?').run(vigia)
+    expect(store.db.prepare('select count(*) as n from scene_entities').get()).toEqual({ n: 0 })
   })
 })
 

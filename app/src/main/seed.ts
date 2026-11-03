@@ -79,7 +79,7 @@ export function syncOrdemTemplate(db: DB): void {
     fields.forEach(([key, label, type, group, options], i) => upsert.run(newId(), t.id, kind, key, label, type, group, JSON.stringify(options ?? {}), i, now, now))
   db.transaction(() => {
     sync('personagem', PERSON)
-    sync('criatura', CREATURE)
+    sync('ameaca', CREATURE)
   })()
 }
 
@@ -126,7 +126,7 @@ export const EXAMPLE: ExampleSeed = {
         { label: 'Se pressionado', value: 'Chora, depois mente sobre o domingo.' }
       ]
     },
-    { key: 'vigia', kind: 'criatura', name: 'A Vigia', role: 'Criatura de Morte na ala fechada', aliases: ['Vigia'], stats: { elemento: 'Morte', vd: '40', pv: { current: 60, max: 60 }, defesa: 18 } },
+    { key: 'vigia', kind: 'ameaca', name: 'A Vigia', role: 'Criatura de Morte na ala fechada', aliases: ['Vigia'], stats: { elemento: 'Morte', vd: '40', pv: { current: 60, max: 60 }, defesa: 18 } },
     { key: 'hospital', kind: 'local', name: 'Hospital Santa Clara', role: 'Hospital fechado pela metade', aliases: ['Santa Clara', 'hospital'] },
     { key: 'sede', kind: 'local', name: 'Escritório da Ordem', role: 'Onde os agentes recebem o caso' }
   ],

@@ -40,6 +40,15 @@ export function dumpJson(db: DB): CampaignJson {
   return { formato: JSON_FORMAT, app: 'Magistrado', schemaVersion: SCHEMA_VERSION, exportadoEm: new Date().toISOString(), tabelas }
 }
 
+/** campanha.json da versão 3: "criatura" virou "ameaca" e agente usa a ficha completa (migração 4 do db.ts). */
+function upgradeV3Rows(t: CampaignJson['tabelas']): void {
+  for (const e of t.entities ?? []) {
+    if (e.kind === 'criatura') e.kind = 'ameaca'
+    e.sheet = e.is_player === 1 ? 'completa' : 'compacta'
+  }
+  for (const f of t.template_fields ?? []) if (f.entity_kind === 'criatura') f.entity_kind = 'ameaca'
+}
+
 /** Cria um banco novo a partir do json. Colunas que não existem mais são ignoradas; as novas ficam no padrão. */
 export function loadJson(json: CampaignJson, file: string): void {
   if (json.app !== 'Magistrado' || typeof json.tabelas !== 'object') throw new Error('Este campanha.json não é de uma campanha do Magistrado.')
@@ -48,6 +57,7 @@ export function loadJson(json: CampaignJson, file: string): void {
   try {
     db.pragma('foreign_keys = OFF') // a ordem das tabelas no json não segue as chaves; confere no fim
     db.transaction(() => {
+      if (json.schemaVersion < 4) upgradeV3Rows(json.tabelas)
       for (const table of dataTables(db)) {
         const rows = json.tabelas[table] ?? []
         if (!rows.length) continue

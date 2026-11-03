@@ -35,8 +35,8 @@ export function findSlash(editor: Editor, dismissedAt: number | null): SlashMatc
   return { from, to: selection.from, query }
 }
 
-const KIND_ICON: Record<EntityKind, LucideIcon> = { personagem: User, criatura: Skull, local: MapPin, grupo: Users, lore: SearchCheck }
-const CREATE_ORDER: EntityKind[] = ['personagem', 'criatura', 'local', 'grupo', 'lore']
+const KIND_ICON: Record<EntityKind, LucideIcon> = { personagem: User, ameaca: Skull, local: MapPin, grupo: Users, lore: SearchCheck }
+const CREATE_ORDER: EntityKind[] = ['personagem', 'ameaca', 'local', 'grupo', 'lore']
 
 interface Item {
   key: string

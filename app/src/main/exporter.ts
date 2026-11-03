@@ -27,7 +27,7 @@ export type Block =
   | { t: 'gm'; label: string; runs: Run[] } // só o mestre vê; some na versão dos jogadores
   | { t: 'break' }
 
-const KIND_PLURAL: Record<EntityKind, string> = { personagem: 'Personagens', criatura: 'Criaturas', local: 'Locais', grupo: 'Grupos', lore: 'Lore' }
+const KIND_PLURAL: Record<EntityKind, string> = { personagem: 'Personagens', ameaca: 'Ameaças', local: 'Locais', grupo: 'Grupos', lore: 'Lore' }
 const STATUS: Record<string, string> = {
   planejada: 'planejada',
   jogada: 'jogada',

@@ -122,6 +122,11 @@ export class UndoLog {
 /** Nome da ação para o botão "Desfazer: …". */
 export const ACTION_LABEL: Record<string, string> = {
   'entities:save': 'editar ficha',
+  'entities:setSheet': 'mudar o tamanho da ficha',
+  'rolls:add': 'rolagem',
+  'rolls:remove': 'apagar rolagem',
+  'sessions:saveInitiative': 'iniciativa',
+  'library:copyToCampaign': 'trazer da biblioteca',
   'entities:trash': 'ficha para a lixeira',
   'scenes:save': 'editar cena',
   'scenes:trash': 'cena para a lixeira',

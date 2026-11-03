@@ -5,6 +5,18 @@ import { basename, extname, join } from 'node:path'
 import type { DB } from './db'
 import { newId, nowIso } from './db'
 import { buildMatcher, docText, findMentions, fold, type Matcher } from '../shared/mentions'
+import {
+  ameacaDeStats,
+  blocoAmeacaSchema,
+  fichaAgenteSchema,
+  fichaDeStats,
+  iniciativaSchema,
+  rolagemSchema,
+  type BlocoAmeaca,
+  type FichaAgente,
+  type Iniciativa,
+  type Origem
+} from '../shared/ordem/esquemas'
 import type {
   Attachment,
   AttachmentDetail,
@@ -45,7 +57,11 @@ import type {
   TemplateField,
   TimelineData,
   TimelineEvent,
-  TimelineEventInput
+  TimelineEventInput,
+  Roll,
+  RollInput,
+  SheetSize,
+  StatValue
 } from '../shared/types'
 
 interface EntityRow {
@@ -64,7 +80,43 @@ interface EntityRow {
   notes: string | null
   custom_attributes: string
   updated_at: string
+  // Ausentes num banco de outra campanha ainda na versão 3 (acervo).
+  sheet?: SheetSize
+  sheet_data?: string
+  origin?: string | null
 }
+
+interface RollRow {
+  id: string
+  entity_id: string | null
+  game_session_id: string | null
+  game_minute: number | null
+  who: string
+  label: string
+  type: Roll['type']
+  formula: string
+  dice: string
+  total: number
+  critical: number
+  detail: string
+  created_at: string
+}
+
+const roll = (r: RollRow): Roll => ({
+  id: r.id,
+  entityId: r.entity_id,
+  sessionId: r.game_session_id,
+  gameMinute: r.game_minute,
+  who: r.who,
+  label: r.label,
+  type: r.type,
+  formula: r.formula,
+  dice: JSON.parse(r.dice) as number[],
+  total: r.total,
+  critical: r.critical === 1,
+  detail: r.detail,
+  createdAt: r.created_at
+})
 
 interface SceneRow {
   id: string
@@ -174,6 +226,7 @@ const summary = (r: EntityRow): EntitySummary => ({
   name: r.name,
   role: r.role,
   isPlayer: r.is_player === 1,
+  sheet: r.is_player === 1 ? 'completa' : (r.sheet ?? 'compacta'),
   portraitUrl: r.portrait_id ? `magistrado://anexo/${r.portrait_id}` : null,
   updatedAt: r.updated_at
 })
@@ -189,8 +242,52 @@ const entity = (r: EntityRow): Entity => ({
   systemTemplateId: r.system_template_id,
   stats: parseJson(r.stats, {}),
   description: r.description,
-  personality: r.personality
+  personality: r.personality,
+  sheetData: sheetData(r),
+  origin: parseJson<Origem | null>(r.origin ?? null, null)
 })
+
+/**
+ * A ficha completa ou o bloco de ameaça. Enquanto não foi salvo (sheet_data vazio), vem montado dos campos
+ * da ficha compacta: virar vilão ou abrir uma criatura antiga nunca perde o que já estava preenchido.
+ */
+function sheetData(r: EntityRow): FichaAgente | BlocoAmeaca | null {
+  const kind = r.kind === ('criatura' as EntityKind) ? 'ameaca' : r.kind
+  const full = kind === 'personagem' && (r.is_player === 1 || r.sheet === 'completa')
+  if (!full && kind !== 'ameaca') return null
+  const saved = parseJson<Record<string, unknown>>(r.sheet_data ?? null, {})
+  const stats = parseJson<Record<string, StatValue>>(r.stats, {})
+  if (kind === 'ameaca') {
+    const ok = Object.keys(saved).length ? blocoAmeacaSchema.safeParse(saved) : null
+    return ok?.success ? ok.data : ameacaDeStats(stats)
+  }
+  const ok = Object.keys(saved).length ? fichaAgenteSchema.safeParse(saved) : null
+  return ok?.success ? ok.data : fichaDeStats(stats)
+}
+
+/** Texto da ficha completa ou do bloco de ameaça para a busca (Ctrl+K). */
+function sheetText(d: FichaAgente | BlocoAmeaca | null): string {
+  if (!d) return ''
+  if ('acoes' in d) return [d.tipo, d.elemento, d.enigma, d.descricao, ...[...d.habilidades, ...d.acoes].map((a) => `${a.nome} ${a.descricao}`)].join('\n')
+  return [
+    d.jogador,
+    d.origem,
+    d.classe,
+    d.trilha,
+    ...d.habilidades.map((h) => `${h.nome} ${h.descricao}`),
+    ...d.rituais.map((r) => r.nome),
+    ...d.inventario.map((i) => i.nome),
+    ...d.ataques.map((a) => a.nome),
+    ...Object.values(d.investigacao)
+  ].join('\n')
+}
+
+/** Valida o que a tela mandou para a ficha completa ou o bloco de ameaça. */
+function parseSheetData(kind: EntityKind, full: boolean, data: unknown): string {
+  if (kind === 'ameaca') return JSON.stringify(blocoAmeacaSchema.parse(data))
+  if (kind === 'personagem' && full) return JSON.stringify(fichaAgenteSchema.parse(data))
+  throw new Error('Esta ficha não tem ficha completa. Use "usar ficha completa" antes.')
+}
 
 const sceneSummary = (r: SceneRow): SceneSummary => ({
   id: r.id,
@@ -337,13 +434,18 @@ export class CampaignStore {
     }
   }
 
-  saveEntity(input: EntityInput): Entity {
+  saveEntity(input: EntityInput, origin: Origem | null = null): Entity {
     const now = nowIso()
     const id = input.id ?? newId()
-    const templateId = input.kind === 'personagem' || input.kind === 'criatura' ? this.campaign().systemTemplateId : null
+    const templateId = input.kind === 'personagem' || input.kind === 'ameaca' ? this.campaign().systemTemplateId : null
     const exists = input.id && this.db.prepare('select 1 from entities where id = ?').get(input.id)
     const aliases = JSON.stringify(input.aliases.map((a) => a.trim()).filter(Boolean))
     const customs = JSON.stringify(input.customAttributes.filter((a) => a.label.trim() || a.value.trim()))
+    const before = exists ? (this.db.prepare('select sheet from entities where id = ?').get(id) as { sheet: SheetSize }) : null
+    // Agente (personagem de jogador) usa sempre a ficha completa; só personagem tem dois tamanhos.
+    const sheet: SheetSize =
+      input.kind !== 'personagem' ? 'compacta' : input.isPlayer ? 'completa' : (input.sheet ?? before?.sheet ?? 'compacta')
+    const sheetJson = this.sheetJsonToSave(exists ? id : null, input.kind, sheet, input.sheetData)
     const tx = this.db.transaction(() => {
       if (exists) {
         this.db
@@ -369,11 +471,12 @@ export class CampaignStore {
           )
         // coalesce mantém o que não veio; null explícito (tirar o mapa) é aplicado aqui.
         if (input.mapId === null) this.db.prepare('update entities set map_id = null where id = ?').run(id)
+        this.db.prepare('update entities set sheet = ?, sheet_data = coalesce(?, sheet_data) where id = ?').run(sheet, sheetJson, id)
       } else {
         this.db
           .prepare(
             `insert into entities (id, kind, is_player, name, role, aliases, system_template_id, stats, description, personality, portrait_id, custom_attributes,
-             map_id, notes, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+             map_id, notes, sheet, sheet_data, origin, created_at, updated_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
           )
           .run(
             id,
@@ -390,6 +493,9 @@ export class CampaignStore {
             customs,
             input.mapId ?? null,
             input.notes ?? null,
+            sheet,
+            sheetJson ?? '{}',
+            origin ? JSON.stringify(origin) : null,
             now,
             now
           )
@@ -403,11 +509,29 @@ export class CampaignStore {
     return entity(this.db.prepare('select * from entities where id = ?').get(id) as EntityRow)
   }
 
+  /**
+   * O que gravar em sheet_data, ou null para manter. Telas que salvam a ficha inteira devolvem o sheetData que
+   * receberam: se a completa ainda não foi gravada e veio só o que foi montado da compacta, nada muda e a
+   * compacta continua sendo a fonte.
+   */
+  private sheetJsonToSave(id: string | null, kind: EntityKind, sheet: SheetSize, data: unknown): string | null {
+    if (data === undefined || data === null) return null
+    const json = parseSheetData(kind, sheet === 'completa', data)
+    const r = id ? (this.db.prepare('select * from entities where id = ?').get(id) as EntityRow) : null
+    if (r && (!r.sheet_data || r.sheet_data === '{}') && JSON.stringify(sheetData({ ...r, kind, sheet })) === json) return null
+    return json
+  }
+
   private indexEntity(id: string): void {
     const r = this.db.prepare('select * from entities where id = ?').get(id) as EntityRow
     const e = entity(r)
     const customs = e.customAttributes.map((a) => `${a.label} ${a.value}`).join('\n')
-    this.indexSearch('entity', id, e.name, [e.role, e.aliases.join(' '), e.description, e.personality, customs, docText(e.notes)].join('\n'))
+    this.indexSearch(
+      'entity',
+      id,
+      e.name,
+      [e.role, e.aliases.join(' '), e.description, e.personality, customs, sheetText(e.sheetData), docText(e.notes)].join('\n')
+    )
     this.indexMentions('entity', id, docText(e.notes))
   }
 
@@ -489,13 +613,15 @@ export class CampaignStore {
       for (const id of ids) {
         const r = other.prepare('select * from entities where id = ? and deleted_at is null').get(id) as (EntityRow & { map_id?: string | null; notes?: string | null }) | undefined
         if (!r) continue
+        if (r.kind === ('criatura' as EntityKind)) r.kind = 'ameaca' // outra campanha ainda na versão 3
         if (existing.has(`${r.kind}:${fold(r.name)}`)) {
           skipped.push(r.name || 'Sem nome')
           continue
         }
         const e = entity(r as EntityRow)
-        this.saveEntity({
-          kind: e.kind,
+        this.saveEntity(
+          {
+            kind: e.kind,
           name: e.name,
           role: e.role,
           isPlayer: e.isPlayer,
@@ -505,9 +631,14 @@ export class CampaignStore {
           personality: e.personality,
           customAttributes: e.customAttributes,
           portraitId: fileOf(r.portrait_id),
-          mapId: fileOf(r.map_id ?? null),
-          notes: r.notes ?? null
-        })
+            mapId: fileOf(r.map_id ?? null),
+            notes: r.notes ?? null,
+            sheet: e.sheet,
+            // Só leva a ficha completa se ela já foi salva lá; senão ela é montada dos mesmos campos aqui.
+            sheetData: r.sheet_data && r.sheet_data !== '{}' ? e.sheetData : undefined
+          },
+          e.origin
+        )
         existing.add(`${r.kind}:${fold(r.name)}`)
         imported++
       }
@@ -515,6 +646,29 @@ export class CampaignStore {
     } finally {
       other.close()
     }
+  }
+
+  /** Troca só a ficha completa ou o bloco de ameaça (ex.: item ou ritual vindo da biblioteca). */
+  saveSheetData(id: string, data: unknown): Entity {
+    const r = this.db.prepare('select * from entities where id = ? and deleted_at is null').get(id) as EntityRow | undefined
+    if (!r) throw new Error('Ficha não encontrada.')
+    const full = r.is_player === 1 || r.sheet === 'completa'
+    this.db.prepare('update entities set sheet_data = ?, updated_at = ? where id = ?').run(parseSheetData(r.kind, full, data), nowIso(), id)
+    this.indexEntity(id)
+    return entity(this.db.prepare('select * from entities where id = ?').get(id) as EntityRow)
+  }
+
+  /** NPC vira vilão (ficha completa) ou volta à compacta. Nada se perde: os campos da compacta ficam em stats. */
+  setSheet(id: string, sheet: SheetSize): Entity {
+    const r = this.db.prepare('select * from entities where id = ? and deleted_at is null').get(id) as EntityRow | undefined
+    if (!r) throw new Error('Ficha não encontrada.')
+    if (r.kind !== 'personagem') throw new Error('Só personagens têm ficha completa e compacta.')
+    if (sheet === 'compacta' && r.is_player === 1) throw new Error('Agente usa sempre a ficha completa.')
+    // Ao virar completa, grava a ficha montada da compacta: a partir daí ela é a ficha.
+    const data = sheet === 'completa' && (!r.sheet_data || r.sheet_data === '{}') ? JSON.stringify(fichaDeStats(parseJson(r.stats, {}))) : null
+    this.db.prepare('update entities set sheet = ?, sheet_data = coalesce(?, sheet_data), updated_at = ? where id = ?').run(sheet, data, nowIso(), id)
+    this.indexEntity(id)
+    return entity(this.db.prepare('select * from entities where id = ?').get(id) as EntityRow)
   }
 
   trashEntity(id: string): void {
@@ -851,6 +1005,79 @@ export class CampaignStore {
       this.indexSearch('session', id, `Sessão ${number}`, text)
       this.indexMentions('session', id, text)
     })()
+  }
+
+  /** Ordem de iniciativa, rodada e turno da sessão de jogo. Fica salva: fechar a campanha não perde o combate. */
+  getInitiative(sessionId: string): Iniciativa {
+    const r = this.db.prepare('select initiative from game_sessions where id = ? and deleted_at is null').get(sessionId) as { initiative: string } | undefined
+    if (!r) throw new Error('Sessão não encontrada.')
+    const ok = iniciativaSchema.safeParse(parseJson(r.initiative, {}))
+    return ok.success ? ok.data : iniciativaSchema.parse({})
+  }
+
+  saveInitiative(sessionId: string, input: Iniciativa): Iniciativa {
+    const data = iniciativaSchema.parse(input)
+    if (data.turno >= data.ordem.length) data.turno = 0
+    const res = this.db
+      .prepare('update game_sessions set initiative = ?, updated_at = ? where id = ? and deleted_at is null')
+      .run(JSON.stringify(data), nowIso(), sessionId)
+    if (!res.changes) throw new Error('Sessão não encontrada.')
+    return data
+  }
+
+  // ------------------------------------------------------------ rolagens
+
+  listRolls(filter: { entityId?: string; sessionId?: string; limit?: number } = {}): Roll[] {
+    const where: string[] = []
+    const args: unknown[] = []
+    if (filter.entityId) {
+      where.push('entity_id = ?')
+      args.push(filter.entityId)
+    }
+    if (filter.sessionId) {
+      where.push('game_session_id = ?')
+      args.push(filter.sessionId)
+    }
+    const rows = this.db
+      .prepare(`select * from rolls ${where.length ? `where ${where.join(' and ')}` : ''} order by created_at desc, rowid desc limit ?`)
+      .all(...args, filter.limit ?? 100) as RollRow[]
+    return rows.map(roll)
+  }
+
+  /** Guarda uma rolagem com dados físicos, com a hora no jogo de agora. */
+  addRoll(input: RollInput): Roll {
+    const r = rolagemSchema.parse(input)
+    const who = r.entityId ? (this.db.prepare('select name from entities where id = ?').get(r.entityId) as { name: string } | undefined) : undefined
+    if (r.entityId && !who) throw new Error('Ficha não encontrada.')
+    if (r.sessionId && !this.db.prepare('select 1 from game_sessions where id = ? and deleted_at is null').get(r.sessionId)) {
+      throw new Error('Sessão não encontrada.')
+    }
+    const id = newId()
+    this.db
+      .prepare(
+        `insert into rolls (id, entity_id, game_session_id, game_minute, who, label, type, formula, dice, total, critical, detail, created_at)
+         values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      )
+      .run(
+        id,
+        r.entityId,
+        r.sessionId,
+        this.campaign().currentGameMinute,
+        r.quem || who?.name || '',
+        r.rotulo,
+        r.tipo,
+        r.formula,
+        JSON.stringify(r.dados),
+        r.total,
+        r.critico ? 1 : 0,
+        r.detalhe,
+        nowIso()
+      )
+    return roll(this.db.prepare('select * from rolls where id = ?').get(id) as RollRow)
+  }
+
+  removeRoll(id: string): void {
+    this.db.prepare('delete from rolls where id = ?').run(id)
   }
 
   // ------------------------------------------------------------ pistas

@@ -12,8 +12,8 @@ export interface VaultFile {
   text: string
 }
 
-const FOLDER: Record<EntityKind, string> = { personagem: 'Personagens', criatura: 'Criaturas', local: 'Locais', grupo: 'Grupos', lore: 'Lore' }
-const KIND: Record<EntityKind, string> = { personagem: 'Personagem', criatura: 'Criatura', local: 'Local', grupo: 'Grupo', lore: 'Lore' }
+const FOLDER: Record<EntityKind, string> = { personagem: 'Personagens', ameaca: 'Ameaças', local: 'Locais', grupo: 'Grupos', lore: 'Lore' }
+const KIND: Record<EntityKind, string> = { personagem: 'Personagem', ameaca: 'Ameaça', local: 'Local', grupo: 'Grupo', lore: 'Lore' }
 const ROOT = 'legivel'
 
 /** Nome de arquivo que funciona no Windows e no Obsidian (sem # ^ [ ] | também, que quebram links). */

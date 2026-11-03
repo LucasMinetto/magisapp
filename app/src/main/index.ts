@@ -2,7 +2,7 @@ import { app, BrowserWindow, net, protocol, shell } from 'electron'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { recentCoverFile } from './campaigns'
-import { autoBackupTick, closeCurrent, currentStore, registerIpc } from './ipc'
+import { autoBackupTick, closeCurrent, closeLibrary, currentStore, registerIpc } from './ipc'
 
 // Testes isolam as configurações (campanhas recentes) numa pasta temporária.
 if (process.env.MAGISTRADO_USER_DATA) app.setPath('userData', process.env.MAGISTRADO_USER_DATA)
@@ -85,4 +85,7 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
 })
 
-app.on('before-quit', () => closeCurrent())
+app.on('before-quit', () => {
+  closeCurrent()
+  closeLibrary()
+})

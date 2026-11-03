@@ -1,7 +1,8 @@
 // Contrato entre a interface (renderer) e o processo principal. Um só lugar para os dois lados.
-import type { AmeacaBiblioteca, ItemBiblioteca, RitualBiblioteca } from './ordem/esquemas'
+import type { TIPOS_ROLAGEM } from './ordem/esquemas'
+import type { AmeacaBiblioteca, BlocoAmeaca, FichaAgente, Iniciativa, ItemBiblioteca, Origem, RitualBiblioteca, RolagemInput } from './ordem/esquemas'
 
-export const ENTITY_KINDS = ['personagem', 'criatura', 'local', 'grupo', 'lore'] as const
+export const ENTITY_KINDS = ['personagem', 'ameaca', 'local', 'grupo', 'lore'] as const
 export type EntityKind = (typeof ENTITY_KINDS)[number]
 
 export const SCENE_STATUSES = ['planejada', 'jogada', 'pulada'] as const
@@ -67,12 +68,17 @@ export interface SystemTemplate {
   fields: TemplateField[]
 }
 
+/** Agentes (jogadores) e NPCs vilões usam a completa; os outros NPCs, a compacta (campos do modelo). */
+export const SHEET_SIZES = ['compacta', 'completa'] as const
+export type SheetSize = (typeof SHEET_SIZES)[number]
+
 export interface EntitySummary {
   id: string
   kind: EntityKind
   name: string
   role: string
   isPlayer: boolean
+  sheet: SheetSize
   /** magistrado://anexo/<id> do retrato, ou null (mostra as iniciais). */
   portraitUrl: string | null
   updatedAt: string
@@ -100,6 +106,13 @@ export interface Entity extends EntitySummary {
   stats: Record<string, StatValue>
   description: string
   personality: string
+  /**
+   * Ficha completa (personagem com sheet 'completa') ou bloco de ameaça (kind 'ameaca'); null nos outros.
+   * Enquanto não foi salva, vem montada a partir dos campos da ficha compacta, sem perder nada.
+   */
+  sheetData: FichaAgente | BlocoAmeaca | null
+  /** De onde veio, quando foi copiada da biblioteca. */
+  origin: Origem | null
 }
 
 export interface MentionRef {
@@ -127,7 +140,30 @@ export interface EntityInput {
   customAttributes: CustomAttribute[]
   mapId?: string | null
   notes?: string | null
+  /** Agente é sempre 'completa'. Sem o campo, fica o que estava. */
+  sheet?: SheetSize
+  /** Validado pelo tipo da ficha (fichaAgenteSchema ou blocoAmeacaSchema). Sem o campo, fica o que estava. */
+  sheetData?: unknown
 }
+
+/** Rolagem com dados físicos guardada na campanha. */
+export interface Roll {
+  id: string
+  entityId: string | null
+  sessionId: string | null
+  gameMinute: number | null
+  who: string
+  label: string
+  type: (typeof TIPOS_ROLAGEM)[number]
+  formula: string
+  dice: number[]
+  total: number
+  critical: boolean
+  detail: string
+  createdAt: string
+}
+
+export type RollInput = RolagemInput
 
 /** Bloco de notas do mestre dentro de uma cena ("Se eles forem ao porão…", "Lembrar"). */
 export interface SceneNote {
@@ -562,6 +598,31 @@ export interface Api {
     /** Acervo: as fichas de outra campanha da lista, para escolher quais trazer. */
     peekOther(path: string): Promise<EntitySummary[]>
     importFrom(input: { path: string; ids: string[] }): Promise<{ imported: number; skipped: string[] }>
+    /** NPC vira vilão (completa) ou volta a compacta, sem perder o que estava preenchido. */
+    setSheet(input: { id: string; sheet: SheetSize }): Promise<Entity>
+  }
+  rolls: {
+    list(input: { entityId?: string; sessionId?: string; limit?: number }): Promise<Roll[]>
+    add(input: RollInput): Promise<Roll>
+    remove(id: string): Promise<void>
+  }
+  library: {
+    sources(): Promise<LibrarySource[]>
+    saveSource(input: { id?: string; name: string; kind: SourceKind; abbreviation: string }): Promise<LibrarySource>
+    deleteSource(id: string): Promise<void>
+    list<K extends LibraryKind>(input: { kind: K; sourceId?: string; q?: string }): Promise<LibraryEntry<K>[]>
+    get<K extends LibraryKind>(input: { kind: K; id: string }): Promise<LibraryEntry<K>>
+    save<K extends LibraryKind>(input: { kind: K; id?: string; sourceId: string; data: unknown }): Promise<LibraryEntry<K>>
+    remove(input: { kind: LibraryKind; id: string }): Promise<void>
+    /**
+     * Copia para a campanha aberta: a ameaça vira ficha nova; item e ritual entram na ficha completa `entityId`.
+     * Devolve a ficha criada ou mudada.
+     */
+    copyToCampaign(input: { kind: LibraryKind; id: string; entityId?: string }): Promise<Entity>
+    /** Backup só da biblioteca na pasta de backups. */
+    backup(): Promise<string>
+    /** Escolhe um backup da biblioteca e troca a atual por ele. false se cancelar. */
+    pickAndRestore(): Promise<boolean>
   }
   scenes: {
     saveNote(input: { id?: string; sceneId: string; title: string; body: string }): Promise<SceneNote>
@@ -607,6 +668,8 @@ export interface Api {
     create(input: { playedOn: string | null }): Promise<GameSession>
     get(id: string): Promise<GameSessionDetail>
     saveNotes(input: { id: string; notes: string | null }): Promise<void>
+    initiative(id: string): Promise<Iniciativa>
+    saveInitiative(input: { id: string; initiative: Iniciativa }): Promise<Iniciativa>
   }
   clues: {
     list(): Promise<Clue[]>

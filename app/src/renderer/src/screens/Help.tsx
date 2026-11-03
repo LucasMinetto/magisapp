@@ -15,7 +15,7 @@ const SHORTCUTS: [string, string][] = [
 
 const STEPS: [string, string, string][] = [
   ['Campanha', '/', 'Crie com a data em que o caso começa. Tudo na linha do tempo conta a partir dela.'],
-  ['Fichas', '/fichas', 'Personagens, criaturas, locais, grupos e lore, com o modelo de Ordem Paranormal. Escreva apelidos para o app achar o nome nos textos.'],
+  ['Fichas', '/fichas', 'Personagens, ameaças, locais, grupos e lore, com o modelo de Ordem Paranormal. Escreva apelidos para o app achar o nome nos textos.'],
   ['Cenas', '/cenas', 'Cada cena tem hora no jogo e lugar. Nomes de fichas no texto viram ligação sozinhos. O corkboard e os modelos ajudam a montar a aventura.'],
   ['Linha do tempo', '/linha-do-tempo', 'O relógio do jogo, os eventos que acontecem mesmo sem os jogadores, e as lacunas onde nada está marcado.'],
   ['Pistas', '/pistas', 'Imagem, onde está, quando e quem achou. "O que revela" fica escondido até você pedir.'],

@@ -2,7 +2,7 @@ import type { Clue, EntityKind, TimelineEvent } from '@shared/types'
 
 export const KIND_LABEL: Record<EntityKind, { one: string; many: string }> = {
   personagem: { one: 'Personagem', many: 'Personagens' },
-  criatura: { one: 'Criatura', many: 'Criaturas' },
+  ameaca: { one: 'Ameaça', many: 'Ameaças' },
   local: { one: 'Local', many: 'Locais' },
   grupo: { one: 'Grupo', many: 'Grupos' },
   lore: { one: 'Lore', many: 'Lore' }

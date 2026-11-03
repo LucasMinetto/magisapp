@@ -1,4 +1,4 @@
-import { dialog, ipcMain, shell, type BrowserWindow } from 'electron'
+import { app, dialog, ipcMain, shell, type BrowserWindow } from 'electron'
 import { z } from 'zod'
 import { createBackup, listBackups, restoreBackup } from './backup'
 import { exportCampaign } from './export-run'
@@ -22,6 +22,9 @@ import {
   setBackupConfig
 } from './campaigns'
 import { CampaignStore, IMAGE_EXTENSIONS, IMPORT_EXTENSIONS } from './store'
+import { join } from 'node:path'
+import { copyToCampaign, LibraryStore } from './library'
+import { iniciativaSchema, rolagemSchema, type Iniciativa, type RolagemInput } from '../shared/ordem/esquemas'
 import {
   ATTACHMENT_KINDS,
   BOARD_NODE_TYPES,
@@ -30,12 +33,18 @@ import {
   EVENT_STATUSES,
   EXPORT_FORMATS,
   EXPORT_SECTIONS,
+  LIBRARY_KINDS,
   SCENE_STATUSES,
+  SHEET_SIZES,
+  SOURCE_KINDS,
   TRASH_TYPES,
   type BoardSave,
   type ExportFormat,
   type ExportSection,
   type IpcResult,
+  type LibraryKind,
+  type SheetSize,
+  type SourceKind,
   type TrashType
 } from '../shared/types'
 
@@ -80,6 +89,15 @@ const swap = (next: CampaignStore) => {
   return next.campaign()
 }
 
+// Biblioteca única (fora das campanhas): abre na primeira vez que alguém pede.
+let lib: LibraryStore | null = null
+const library = (): LibraryStore => (lib ??= new LibraryStore(join(app.getPath('userData'), 'biblioteca.sqlite')))
+
+export function closeLibrary(): void {
+  lib?.close()
+  lib = null
+}
+
 /** A campanha aberta, para o protocolo magistrado:// achar os anexos. */
 export const currentStore = (): CampaignStore | null => store
 
@@ -103,8 +121,13 @@ function travel(direction: 'undo' | 'redo') {
 }
 
 // Canais que mudam a campanha (marcam que precisa de backup).
-const WRITES = /:(save|trash|update|set|advance|import|pickImage|restore|purge|saveNotes|create)$/
-const marksDirty = (name: string) => WRITES.test(name) && (!name.startsWith('campaign:') || name === 'campaign:update') && !name.startsWith('backup:')
+const WRITES = /:(save|trash|update|set|advance|import|pickImage|restore|purge|saveNotes|create|add|remove|setSheet|saveInitiative|copyToCampaign)$/
+// A biblioteca tem banco e backup próprios: só trazer para a campanha muda a campanha.
+const marksDirty = (name: string) =>
+  WRITES.test(name) &&
+  (!name.startsWith('campaign:') || name === 'campaign:update') &&
+  !name.startsWith('backup:') &&
+  (!name.startsWith('library:') || name === 'library:copyToCampaign')
 
 const id = z.string().uuid()
 const kind = z.enum(ENTITY_KINDS)
@@ -129,10 +152,15 @@ const entityInput = z.object({
   portraitId: id.nullable(),
   mapId: id.nullable().optional(),
   notes: z.string().max(2_000_000).nullable().optional(),
+  sheet: z.enum(SHEET_SIZES).optional(),
+  // Validado no store conforme o tipo da ficha (completa ou ameaça).
+  sheetData: z.unknown().optional(),
   customAttributes: z.array(z.object({ label: z.string().max(80), value: z.string().max(2_000) })).max(60)
 })
 
 const trashRef = z.object({ type: z.enum(TRASH_TYPES), id })
+const libraryKind = z.enum(LIBRARY_KINDS)
+
 
 const sceneInput = z.object({
   id: id.optional(),
@@ -347,6 +375,52 @@ const channels: Record<string, [z.ZodTypeAny, (input: never, win: BrowserWindow)
     (input: { kind?: (typeof ENTITY_KINDS)[number]; q?: string }) => need().listEntities(input.kind, input.q)
   ],
   'entities:get': [id, (input: string) => need().getEntity(input)],
+  'entities:setSheet': [
+    z.object({ id, sheet: z.enum(SHEET_SIZES) }),
+    (input: { id: string; sheet: SheetSize }) => need().setSheet(input.id, input.sheet)
+  ],
+  'rolls:list': [
+    z.object({ entityId: id.optional(), sessionId: id.optional(), limit: z.number().int().min(1).max(500).optional() }),
+    (input: { entityId?: string; sessionId?: string; limit?: number }) => need().listRolls(input)
+  ],
+  'rolls:add': [rolagemSchema, (input: RolagemInput) => need().addRoll(input)],
+  'rolls:remove': [id, (input: string) => need().removeRoll(input)],
+  'library:sources': [z.undefined(), () => library().sources()],
+  'library:saveSource': [
+    z.object({ id: id.optional(), name: z.string().trim().min(1).max(120), kind: z.enum(SOURCE_KINDS), abbreviation: z.string().max(20) }),
+    (input: { id?: string; name: string; kind: SourceKind; abbreviation: string }) => library().saveSource(input)
+  ],
+  'library:deleteSource': [id, (input: string) => library().deleteSource(input)],
+  'library:list': [
+    z.object({ kind: libraryKind, sourceId: id.optional(), q: z.string().max(200).optional() }),
+    (input: { kind: LibraryKind; sourceId?: string; q?: string }) => library().list(input.kind, input)
+  ],
+  'library:get': [z.object({ kind: libraryKind, id }), (input: { kind: LibraryKind; id: string }) => library().get(input.kind, input.id)],
+  // O conteúdo é validado na biblioteca pelo esquema do tipo (ameaça, item ou ritual).
+  'library:save': [
+    z.object({ kind: libraryKind, id: id.optional(), sourceId: id, data: z.unknown() }),
+    (input: { kind: LibraryKind; id?: string; sourceId: string; data: unknown }) => library().save(input.kind, input)
+  ],
+  'library:remove': [z.object({ kind: libraryKind, id }), (input: { kind: LibraryKind; id: string }) => library().remove(input.kind, input.id)],
+  'library:copyToCampaign': [
+    z.object({ kind: libraryKind, id, entityId: id.optional() }),
+    (input: { kind: LibraryKind; id: string; entityId?: string }) => copyToCampaign(need(), library(), input)
+  ],
+  'library:backup': [z.undefined(), () => library().backup(backupConfig().dir)],
+  'library:pickAndRestore': [
+    z.undefined(),
+    async (_: never, win: BrowserWindow) => {
+      const res = await dialog.showOpenDialog(win, {
+        title: 'Restaurar a biblioteca',
+        defaultPath: backupConfig().dir,
+        properties: ['openFile'],
+        filters: [{ name: 'Backup da biblioteca', extensions: ['magistrado-backup', 'zip'] }]
+      })
+      if (res.canceled || !res.filePaths[0]) return false
+      library().restore(res.filePaths[0])
+      return true
+    }
+  ],
   'entities:save': [entityInput, (input: z.infer<typeof entityInput>) => need().saveEntity(input)],
   'entities:trash': [id, (input: string) => need().trashEntity(input)],
   'entities:peekOther': [
@@ -443,6 +517,11 @@ const channels: Record<string, [z.ZodTypeAny, (input: never, win: BrowserWindow)
   'sessions:saveNotes': [
     z.object({ id, notes: z.string().max(5_000_000).nullable() }),
     (input: { id: string; notes: string | null }) => need().saveSessionNotes(input.id, input.notes)
+  ],
+  'sessions:initiative': [id, (input: string) => need().getInitiative(input)],
+  'sessions:saveInitiative': [
+    z.object({ id, initiative: iniciativaSchema }),
+    (input: { id: string; initiative: Iniciativa }) => need().saveInitiative(input.id, input.initiative)
   ],
   'clues:list': [z.undefined(), () => need().listClues()],
   'clues:get': [id, (input: string) => need().getClue(input)],

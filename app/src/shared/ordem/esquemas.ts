@@ -209,9 +209,11 @@ const num = (v: Stat): number => {
 }
 const str = (v: Stat): string => (typeof v === 'string' ? v : typeof v === 'number' ? String(v) : Array.isArray(v) ? v.join(', ') : '')
 const recurso = (v: Stat) => (v && typeof v === 'object' && !Array.isArray(v) ? v : { current: num(v), max: num(v) })
-const novoId = () => crypto.randomUUID()
 
-/** Monta a ficha completa a partir da compacta. Listas viram habilidades, rituais e itens com o texto que já havia. */
+/**
+ * Monta a ficha completa a partir da compacta. Listas viram habilidades, rituais e itens com o texto que já havia.
+ * Sempre dá o mesmo resultado para os mesmos campos (ids fixos): o app reconhece quando a tela só devolveu o que recebeu.
+ */
 export function fichaDeStats(stats: Record<string, Stat>): FichaAgente {
   const pv = recurso(stats.pv)
   const pe = recurso(stats.pe)
@@ -236,9 +238,9 @@ export function fichaDeStats(stats: Record<string, Stat>): FichaAgente {
     peAtual: pe.current,
     sanAtual: san.current,
     defesa: num(stats.defesa),
-    habilidades: nomes(stats.pericias).map((nome) => ({ id: novoId(), nome, fonte: 'Perícias da ficha compacta' })),
-    rituais: nomes(stats.rituais).map((nome) => ({ id: novoId(), nome })),
-    inventario: nomes(stats.inventario).map((nome) => ({ id: novoId(), nome }))
+    habilidades: nomes(stats.pericias).map((nome, i) => ({ id: `compacta-pericia-${i}`, nome, fonte: 'Perícias da ficha compacta' })),
+    rituais: nomes(stats.rituais).map((nome, i) => ({ id: `compacta-ritual-${i}`, nome })),
+    inventario: nomes(stats.inventario).map((nome, i) => ({ id: `compacta-item-${i}`, nome }))
   })
 }
 

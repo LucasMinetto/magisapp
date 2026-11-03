@@ -10,7 +10,7 @@ import type { EntityKind, SearchResult } from '@shared/types'
 
 const KIND_ICON: Record<EntityKind, ReactNode> = {
   personagem: <User />,
-  criatura: <Skull />,
+  ameaca: <Skull />,
   local: <MapPin />,
   grupo: <Users />,
   lore: <SearchCheck />
@@ -188,8 +188,8 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
                 <Command.Item value="new:npc" onSelect={() => newEntity('personagem')} className={itemClass}>
                   <Plus /> {q.trim() ? `Personagem «${q.trim()}»` : 'Novo personagem'}
                 </Command.Item>
-                <Command.Item value="new:criatura" onSelect={() => newEntity('criatura')} className={itemClass}>
-                  <Plus /> {q.trim() ? `Criatura «${q.trim()}»` : 'Nova criatura'}
+                <Command.Item value="new:ameaca" onSelect={() => newEntity('ameaca')} className={itemClass}>
+                  <Plus /> {q.trim() ? `Ameaça «${q.trim()}»` : 'Nova ameaça'}
                 </Command.Item>
                 <Command.Item value="new:local" onSelect={() => newEntity('local')} className={itemClass}>
                   <Plus /> {q.trim() ? `Local «${q.trim()}»` : 'Novo local'}

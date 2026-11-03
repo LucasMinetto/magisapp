@@ -146,7 +146,7 @@ try {
   await page.getByRole('link', { name: /Ala fechada/ }).click()
   await page.locator('.mention').first().waitFor()
   const mentionCount = await page.locator('.mention').count()
-  check('texto da cena sublinha NPC e criatura', mentionCount >= 2, `${mentionCount} menções`)
+  check('texto da cena sublinha NPC e ameaça', mentionCount >= 2, `${mentionCount} menções`)
   await shot('S05-cena')
 
   // Criar NPC pela busca (Ctrl+K), só teclado
@@ -461,7 +461,7 @@ try {
   await page.keyboard.type('a vigia')
   await page.getByRole('option', { name: /A Vigia/ }).first().waitFor()
   await page.keyboard.press('Enter')
-  check('ficha de criatura tem tamanho e resistências do livro', await page.getByLabel('Tamanho').waitFor({ timeout: 5000 }).then(() => true, () => false))
+  check('ficha de ameaça tem tamanho e resistências do livro', await page.getByLabel('Tamanho').waitFor({ timeout: 5000 }).then(() => true, () => false))
   await page.keyboard.press('Control+k')
   await page.keyboard.type('lia moraes')
   await page.getByRole('option', { name: /Lia Moraes/ }).first().waitFor()
@@ -557,9 +557,9 @@ try {
   check('PDF ligado à cena na página 2 aparece em "Usado em"', (await usedIn.innerText()).includes('p. 2'))
 
   await page.getByRole('button', { name: /token-cultista\.png/ }).click()
-  await page.getByLabel('Ficha nova de').selectOption('criatura')
+  await page.getByLabel('Ficha nova de').selectOption('ameaca')
   await page.getByRole('button', { name: 'Criar ficha' }).click()
-  check('token vira ficha de criatura com retrato', await page.getByText('Ficha criada: cultista.').waitFor({ timeout: 5000 }).then(() => true, () => false))
+  check('token vira ficha de ameaça com retrato', await page.getByText('Ficha criada: cultista.').waitFor({ timeout: 5000 }).then(() => true, () => false))
 
   await page.getByRole('link', { name: 'Cenas' }).click()
   await page.getByRole('link', { name: /Ala fechada/ }).click()

@@ -146,7 +146,7 @@ function FileDetail({ id, onClose }: { id: string; onClose: () => void }) {
             <SelectField
               label="Ficha nova de"
               className="flex-1"
-              options={(['personagem', 'criatura', 'local'] as EntityKind[]).map((k) => ({ value: k, label: ENTITY_LABEL[k].one }))}
+              options={(['personagem', 'ameaca', 'local'] as EntityKind[]).map((k) => ({ value: k, label: ENTITY_LABEL[k].one }))}
               value={entityKind}
               onChange={(e) => setEntityKind(e.target.value as EntityKind)}
             />

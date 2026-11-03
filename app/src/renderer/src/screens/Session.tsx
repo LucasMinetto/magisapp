@@ -234,7 +234,7 @@ export function Session() {
     changed()
   }
 
-  const people = (scene.data?.mentions ?? []).filter((m) => m.kind === 'personagem' || m.kind === 'criatura')
+  const people = (scene.data?.mentions ?? []).filter((m) => m.kind === 'personagem' || m.kind === 'ameaca')
   const sceneClues = useMemo(
     () =>
       (clues.data ?? []).filter(
@@ -335,7 +335,7 @@ export function Session() {
                 <h2 id="people-h" className="type-label mb-2 text-muted">
                   Quem está na cena
                 </h2>
-                {people.length === 0 && <p className="text-sm text-subtle">Nenhum personagem ou criatura citado no texto desta cena.</p>}
+                {people.length === 0 && <p className="text-sm text-subtle">Nenhum personagem ou ameaça citado no texto desta cena.</p>}
                 <ul className="flex flex-col gap-2">
                   {people.map((p) => (
                     <QuickSheet key={p.id} id={p.id} />

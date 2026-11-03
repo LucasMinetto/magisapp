@@ -11,8 +11,10 @@ import { join } from 'node:path'
 import type { z } from 'zod'
 import { newId, nowIso, type DB } from './db'
 import { BACKUP_EXT } from './backup'
+import type { CampaignStore } from './store'
 import {
   ameacaBibliotecaSchema,
+  fichaAgenteSchema,
   itemBibliotecaSchema,
   itemSchema,
   ritualBibliotecaSchema,
@@ -22,7 +24,7 @@ import {
   type Origem,
   type RitualDaFicha
 } from '../shared/ordem/esquemas'
-import type { LibraryDataByKind, LibraryEntry, LibraryKind, LibrarySource, SourceKind } from '../shared/types'
+import type { Entity, LibraryDataByKind, LibraryEntry, LibraryKind, LibrarySource, SourceKind } from '../shared/types'
 
 export const LIBRARY_VERSION = 1
 export const OWN_SOURCE_NAME = 'Criações próprias'
@@ -309,4 +311,34 @@ export function itemForSheet(e: LibraryEntry<'item'>): Item {
 export function ritualForSheet(e: LibraryEntry<'ritual'>): RitualDaFicha {
   const { alvoTipo: _alvoTipo, ...ritual } = e.data
   return ritualDaFichaSchema.parse({ ...ritual, id: newId(), origem: origem(e) })
+}
+
+/** Ameaça vira ficha nova; item e ritual entram na ficha completa escolhida. Sempre uma cópia. */
+export function copyToCampaign(store: CampaignStore, lib: LibraryStore, input: { kind: LibraryKind; id: string; entityId?: string }): Entity {
+  if (input.kind === 'ameaca') {
+    const t = threatForCampaign(lib.get('ameaca', input.id))
+    return store.saveEntity(
+      {
+        kind: 'ameaca',
+        name: t.name,
+        role: '',
+        isPlayer: false,
+        aliases: [],
+        stats: {},
+        description: '',
+        personality: '',
+        portraitId: null,
+        customAttributes: [],
+        sheetData: t.sheetData
+      },
+      t.origin
+    )
+  }
+  if (!input.entityId) throw new Error('Escolha a ficha que recebe o item ou o ritual.')
+  const target = store.getEntity(input.entityId)
+  if (target.kind !== 'personagem' || target.sheet !== 'completa') throw new Error('Itens e rituais entram só em ficha completa (agente ou vilão).')
+  const ficha = fichaAgenteSchema.parse(target.sheetData)
+  if (input.kind === 'item') ficha.inventario.push(itemForSheet(lib.get('item', input.id)))
+  else ficha.rituais.push(ritualForSheet(lib.get('ritual', input.id)))
+  return store.saveSheetData(target.id, ficha)
 }

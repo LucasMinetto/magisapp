@@ -48,7 +48,21 @@ const api: Api = {
     trash: call('entities:trash'),
     mentionTargets: call('entities:mentionTargets'),
     peekOther: call('entities:peekOther'),
-    importFrom: call('entities:importFrom')
+    importFrom: call('entities:importFrom'),
+    setSheet: call('entities:setSheet')
+  },
+  rolls: { list: call('rolls:list'), add: call('rolls:add'), remove: call('rolls:remove') },
+  library: {
+    sources: call('library:sources'),
+    saveSource: call('library:saveSource'),
+    deleteSource: call('library:deleteSource'),
+    list: call('library:list'),
+    get: call('library:get'),
+    save: call('library:save'),
+    remove: call('library:remove'),
+    copyToCampaign: call('library:copyToCampaign'),
+    backup: call('library:backup'),
+    pickAndRestore: call('library:pickAndRestore')
   },
   scenes: {
     saveNote: call('scenes:saveNote'),
@@ -75,7 +89,14 @@ const api: Api = {
     openExternal: call('attachments:openExternal')
   },
   pathForFile: (file: File) => webUtils.getPathForFile(file),
-  sessions: { list: call('sessions:list'), create: call('sessions:create'), get: call('sessions:get'), saveNotes: call('sessions:saveNotes') },
+  sessions: {
+    list: call('sessions:list'),
+    create: call('sessions:create'),
+    get: call('sessions:get'),
+    saveNotes: call('sessions:saveNotes'),
+    initiative: call('sessions:initiative'),
+    saveInitiative: call('sessions:saveInitiative')
+  },
   clues: { list: call('clues:list'), get: call('clues:get'), save: call('clues:save'), trash: call('clues:trash') },
   boards: { list: call('boards:list'), create: call('boards:create'), get: call('boards:get'), save: call('boards:save'), trash: call('boards:trash') },
   search: { query: call('search:query') }
