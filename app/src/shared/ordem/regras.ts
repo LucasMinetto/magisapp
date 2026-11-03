@@ -93,6 +93,13 @@ export const PATENTES = [
   { nome: 'Agente de elite', prestigio: 200, limite: [3, 3, 3, 2] },
 ]
 
+// Tipos de dano do livro de regras (Combate → Tipos de Dano): físicos, outros e paranormais.
+export const TIPOS_DANO = [
+  'Balístico', 'Corte', 'Impacto', 'Perfuração',
+  'Eletricidade', 'Fogo', 'Frio', 'Químico', 'Mental',
+  'Sangue', 'Morte', 'Conhecimento', 'Energia', 'Medo',
+]
+
 // Tabela 5.2: custo em PE por círculo de ritual.
 export const CUSTO_CIRCULO = [0, 1, 3, 6, 10]
 

@@ -5,7 +5,7 @@
 ## Propósito e status
 
 - **O que é:** app de desktop do mestre de Ordem Paranormal. Junta o **autore** (a base) com a ficha do agente, a rolagem com dados físicos e os modelos de ameaças, itens e rituais do **taberna**.
-- **Status (2026-11-03):** T1 a T5 concluídas (base rebatizada, regras, biblioteca, migração 4 e IPC). 114 testes e e2e 110/110. **Ainda não há telas novas** (ficha completa, biblioteca, rolagem): elas começam na T6. As cópias dos dois projetos estão em `_fontes/` (fora do git).
+- **Status (2026-11-03):** T1 a T6 concluídas. A ficha completa (agentes e vilões) está no app; a compacta continua para NPCs, com "Usar ficha completa". 114 testes e e2e 124/124. Ainda faltam as telas de rolagem (T7), ameaças (T8), rituais e itens da biblioteca (T9). As cópias dos dois projetos estão em `_fontes/` (fora do git).
 
 ## Restrições confirmadas
 
@@ -52,4 +52,4 @@
 
 ## Próximo passo
 
-T6 (ficha completa), T8 (ameaças) e T9 (rituais e itens): as primeiras telas. A T7 (rolagem) também está liberada.
+T7 (rolagem com dados físicos): a ficha completa já tem os pedidos de rolagem prontos (`PedidoRolagem` em `renderer/src/ficha/contexto.tsx`); falta a janela e passar `rolar` para `FichaCompleta`. Depois T8 (ameaças) e T9 (rituais e itens).

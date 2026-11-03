@@ -1,7 +1,7 @@
 # TASKS: Magistrado
 
 > Produto: [PRD.md](PRD.md) · Técnica: [TECH_SPEC.md](TECH_SPEC.md) · Memória: [PROJECT_MEMORY.md](PROJECT_MEMORY.md)
-> Status em 2026-11-03: T1, T2, T3, T4b, T4 e T5 concluídas. Próxima: as telas (T6 a T9). "Bloqueada" = espera uma decisão de [TECH_SPEC § Decisões pendentes](TECH_SPEC.md#decisões-pendentes).
+> Status em 2026-11-03: T1 a T6 concluídas. Próxima: T7 (rolagem), depois T8 e T9. "Bloqueada" = espera uma decisão de [TECH_SPEC § Decisões pendentes](TECH_SPEC.md#decisões-pendentes).
 
 ## Fase 1: base funcionando com o nome novo
 
@@ -44,11 +44,12 @@
 
 ## Fase 3: telas
 
-### T6. Ficha completa (agentes e vilões) e ficha compacta (NPCs)
+### T6. Ficha completa (agentes e vilões) e ficha compacta (NPCs) ✅ 2026-11-03
 - **Depende de:** T5 (ritual e inventário dependem também de T9)
 - **Resultado:** a ficha completa em três colunas com rolagem própria, para agentes e NPCs vilões. A compacta continua no `EntitySheet` com o botão "usar ficha completa", que não perde dados. Coluna 1: retrato, identidade, hexágono de atributos e barras de PV, SAN e PE. Coluna 2: modificador de testes e perícias (todas ou só treinadas, com busca). Coluna 3: abas Combate, Habilidades, Rituais, Inventário e Histórico.
 - **Aceite:** os derivados recalculam ao editar. Funciona nos temas claro e escuro e o `contrast.py` passa. Abre por menção, busca (Ctrl+K) e lista de fichas.
 - **Base:** `taberna/web/src/ficha/*`, `taberna/web/src/paginas/FichaPagina.tsx`, `taberna/docs/handoff-ficha-rpgpedia.md`.
+- **Feito:** `app/src/renderer/src/ficha/` (contexto, partes, Identidade, Pericias, Combate, Habilidades, Rituais, Inventario, Historico, FichaCompleta). Três colunas a partir de 1280 px de largura; abaixo disso as abas vão para baixo das perícias. Uma sexta aba, **Notas**, guarda histórico e objetivo da ficha, atributos próprios, descrição, notas do mestre e "Aparece em". Sem modo jogo/edição: a ficha é editável direto. Os botões de rolar só aparecem quando a tela passa `rolar` (T7). Ritual e item da biblioteca ainda não entram pela ficha (T9). O vilão volta à compacta com confirmação; a completa fica guardada. e2e com 14 verificações novas.
 
 ### T7. Rolagem com dados físicos
 - **Depende de:** T3, T5

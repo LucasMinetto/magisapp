@@ -1,5 +1,6 @@
-import { ArrowLeft, CalendarClock, Clapperboard, Dices, FileSearch, FileText, ImagePlus, Map as MapIcon, Plus, Trash2, User, X } from 'lucide-react'
+import { ArrowLeft, CalendarClock, Clapperboard, Dices, FileSearch, FileText, ImagePlus, Map as MapIcon, Plus, ScrollText, Trash2, User, X } from 'lucide-react'
 import { SceneEditor } from '@/editor/SceneEditor'
+import { FichaCompleta } from '@/ficha/FichaCompleta'
 import { FileViewer } from './Material'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
@@ -7,7 +8,8 @@ import { useCampaign } from '@/campaign'
 import { KIND_LABEL } from '@/lib/actions'
 import { useAutosave, useLoad } from '@/lib/data'
 import { Button, Card, cx, EmptyState, ErrorNote, IconButton, Portrait, SaveIndicator, SelectField, TextArea, TextField } from '@/ui'
-import type { Attachment, CustomAttribute, Entity, EntityInput, StatValue, TemplateField } from '@shared/types'
+import type { FichaAgente } from '@shared/ordem/esquemas'
+import type { Attachment, CustomAttribute, Entity, EntityInput, SheetSize, StatValue, TemplateField } from '@shared/types'
 
 type Resource = { current: number; max: number }
 const isResource = (v: StatValue | undefined): v is Resource => typeof v === 'object' && v !== null && !Array.isArray(v)
@@ -218,6 +220,8 @@ function MapCard({ name, url, mapId, onPick, onClear }: { name: string; url: str
   )
 }
 
+const isFull = (e: Pick<Entity, 'kind' | 'sheet'>) => e.kind === 'personagem' && e.sheet === 'completa'
+
 const toInput = (e: Entity): EntityInput => ({
   id: e.id,
   kind: e.kind,
@@ -231,7 +235,10 @@ const toInput = (e: Entity): EntityInput => ({
   portraitId: e.portraitId,
   customAttributes: e.customAttributes,
   mapId: e.mapId,
-  notes: e.notes
+  notes: e.notes,
+  sheet: e.sheet,
+  // Só a ficha completa vai junto; o bloco de ameaça ainda é editado pelos campos do modelo (T8).
+  sheetData: isFull(e) ? e.sheetData : undefined
 })
 
 export function EntitySheet() {
@@ -321,188 +328,257 @@ export function EntitySheet() {
     navigate(`/fichas/${draft.kind}`)
   }
 
+  // Ficha completa ↔ compacta: salva o que está pendente, troca e recarrega a ficha.
+  const changeSheet = async (sheet: SheetSize) => {
+    if (sheet === 'compacta' && !window.confirm('Voltar à ficha compacta? A ficha completa fica guardada e volta como está se você trocar de novo.')) return
+    await autosave.flush()
+    try {
+      await window.api.entities.setSheet({ id: draft.id!, sheet })
+      changed()
+      loaded.reload()
+    } catch (e) {
+      setPickError((e as Error).message)
+    }
+  }
+
+  // Marcar como personagem de jogador leva à ficha completa (o agente usa sempre a completa).
+  const setPlayer = async (isPlayer: boolean) => {
+    update({ isPlayer })
+    if (isPlayer && draft.sheet !== 'completa') {
+      await autosave.flush()
+      changed()
+      loaded.reload()
+    }
+  }
+
+  const full = isFull({ kind: draft.kind, sheet: draft.sheet ?? 'compacta' }) && draft.sheetData != null
+
+  const identity = (
+    <div className="flex items-start gap-4">
+      <PortraitPicker
+        name={draft.name}
+        url={portraitUrl}
+        onPick={(path) => void pickPortrait(path)}
+        onClear={() => {
+          setPortraitUrl(null)
+          update({ portraitId: null })
+        }}
+      />
+      <div className="min-w-0 flex-1">
+        <label className="sr-only" htmlFor="entity-name">
+          Nome
+        </label>
+        <input
+          id="entity-name"
+          value={draft.name}
+          onChange={(e) => update({ name: e.target.value })}
+          placeholder="Nome"
+          autoFocus={!draft.name}
+          maxLength={200}
+          className="type-xl w-full rounded-md border border-transparent bg-transparent px-1 hover:border-border focus:border-focus"
+        />
+        <label className="sr-only" htmlFor="entity-role">
+          Papel na história
+        </label>
+        <input
+          id="entity-role"
+          value={draft.role}
+          onChange={(e) => update({ role: e.target.value })}
+          placeholder="Papel na história"
+          className="mt-1 w-full rounded-md border border-transparent bg-transparent px-1 font-serif text-muted italic hover:border-border focus:border-focus"
+        />
+        {pickError && <p className="mt-1 px-1 text-xs text-danger">{pickError}</p>}
+      </div>
+    </div>
+  )
+
+  const aliasCard = (
+    <Card className="flex flex-col gap-4">
+      <TextField
+        label="Apelidos"
+        hint="Separados por vírgula. Também são achados nos textos."
+        value={aliasText}
+        onChange={(e) => {
+          setAliasText(e.target.value)
+          update({ aliases: e.target.value.split(',') })
+        }}
+      />
+      {draft.kind === 'personagem' && (
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={draft.isPlayer} onChange={(e) => void setPlayer(e.target.checked)} className="size-4 accent-(--color-accent)" />
+          Personagem de jogador
+        </label>
+      )}
+    </Card>
+  )
+
+  const texts = (
+    <>
+      <CustomAttributes value={draft.customAttributes} onChange={(customAttributes) => update({ customAttributes })} />
+      <Card className="flex flex-col gap-4">
+        <TextArea label="Descrição" value={draft.description} onChange={(e) => update({ description: e.target.value })} placeholder="Aparência, o que os agentes percebem primeiro" />
+        <TextArea label="Personalidade e segredos" value={draft.personality} onChange={(e) => update({ personality: e.target.value })} placeholder="O que quer, o que esconde, como reage" />
+      </Card>
+      <Card className="flex flex-col gap-2">
+        <h2 className="type-label text-muted">Notas do mestre</h2>
+        <div className="rounded-md border border-border-input bg-bg px-4 py-3 [&_.ProseMirror]:min-h-24">
+          <SceneEditor
+            key={`notas-${draft.id}`}
+            initial={draft.notes ?? null}
+            label={`Notas de ${draft.name || 'ficha'}`}
+            placeholder="O que você precisa lembrar sobre esta ficha. Nomes de outras fichas viram ligação."
+            onChange={(notes) => update({ notes })}
+          />
+        </div>
+      </Card>
+    </>
+  )
+
+  const mentionList = (
+    <aside aria-labelledby="mentions-h" className="flex flex-col gap-3">
+      <h2 id="mentions-h" className="type-label text-muted">
+        Aparece em
+      </h2>
+      {!draft.name.trim() && <p className="text-sm text-subtle">Dê um nome à ficha para achá-la nos textos.</p>}
+      {draft.name.trim() && mentions.data?.length === 0 && (
+        <Card>
+          <EmptyState icon={<Clapperboard />} title="Em nenhuma cena" text="Quando o nome ou um apelido aparecer no texto de uma cena, ela entra aqui sozinha." />
+        </Card>
+      )}
+      <ul className="flex flex-col gap-2">
+        {mentions.data?.map((m) => (
+          <li key={`${m.sourceType}:${m.sourceId}`}>
+            <Link
+              to={
+                m.sourceType === 'event'
+                  ? `/linha-do-tempo?evento=${m.sourceId}`
+                  : m.sourceType === 'clue'
+                    ? `/pistas?pista=${m.sourceId}`
+                    : m.sourceType === 'document'
+                      ? `/textos/${m.sourceId}`
+                      : m.sourceType === 'session'
+                        ? `/sessao?s=${m.sourceId}`
+                        : m.sourceType === 'entity'
+                          ? `/ficha/${m.sourceId}`
+                        : `/cenas/${m.sourceId}`
+              }
+              className="flex items-center gap-3 rounded-md border border-border bg-surface px-3 py-2 text-sm hover:border-border-input"
+            >
+              {m.sourceType === 'event' ? (
+                <CalendarClock className="size-4 text-muted" aria-hidden />
+              ) : m.sourceType === 'clue' ? (
+                <FileSearch className="size-4 text-muted" aria-hidden />
+              ) : m.sourceType === 'document' ? (
+                <FileText className="size-4 text-muted" aria-hidden />
+              ) : m.sourceType === 'session' ? (
+                <Dices className="size-4 text-muted" aria-hidden />
+              ) : m.sourceType === 'entity' ? (
+                <User className="size-4 text-muted" aria-hidden />
+              ) : (
+                <Clapperboard className="size-4 text-muted" aria-hidden />
+              )}
+              <span className="min-w-0 flex-1 truncate">{m.title}</span>
+              {m.sourceType === 'event' || m.sourceType === 'clue' ? (
+                <span className="text-xs text-subtle">{m.sourceType === 'event' ? 'evento' : 'pista'}</span>
+              ) : (
+                <span className="font-mono text-xs text-subtle" title="Vezes no texto">
+                  ×{m.hits}
+                </span>
+              )}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </aside>
+  )
+
   return (
-    <div className="mx-auto flex max-w-(--layout-content-max) flex-col gap-6 px-6 py-6">
+    <div className={cx('mx-auto flex flex-col gap-6 px-6 py-6', full ? 'max-w-[1600px]' : 'max-w-(--layout-content-max)')}>
       <div className="flex items-center justify-between gap-4">
         <Link to={`/fichas/${draft.kind}`} className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-fg">
           <ArrowLeft className="size-4" aria-hidden /> {KIND_LABEL[draft.kind].many}
         </Link>
         <div className="flex items-center gap-3">
           <SaveIndicator state={autosave.state} error={autosave.error} />
+          {draft.kind === 'personagem' && !full && (
+            <Button size="sm" icon={<ScrollText className="size-4" />} onClick={() => void changeSheet('completa')}>
+              Usar ficha completa
+            </Button>
+          )}
+          {full && !draft.isPlayer && (
+            <Button size="sm" variant="ghost" onClick={() => void changeSheet('compacta')}>
+              Voltar à ficha compacta
+            </Button>
+          )}
           <Button variant="danger" size="sm" icon={<Trash2 className="size-4" />} onClick={trash}>
             Mover para a lixeira
           </Button>
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_var(--layout-inspector)]">
-        <div className="flex flex-col gap-6">
-          <div className="flex items-start gap-4">
-            <PortraitPicker
-              name={draft.name}
-              url={portraitUrl}
-              onPick={(path) => void pickPortrait(path)}
-              onClear={() => {
-                setPortraitUrl(null)
-                update({ portraitId: null })
-              }}
-            />
-            <div className="min-w-0 flex-1">
-              <label className="sr-only" htmlFor="entity-name">
-                Nome
-              </label>
-              <input
-                id="entity-name"
-                value={draft.name}
-                onChange={(e) => update({ name: e.target.value })}
-                placeholder="Nome"
-                autoFocus={!draft.name}
-                maxLength={200}
-                className="type-xl w-full rounded-md border border-transparent bg-transparent px-1 hover:border-border focus:border-focus"
-              />
-              <label className="sr-only" htmlFor="entity-role">
-                Papel na história
-              </label>
-              <input
-                id="entity-role"
-                value={draft.role}
-                onChange={(e) => update({ role: e.target.value })}
-                placeholder="Papel na história"
-                className="mt-1 w-full rounded-md border border-transparent bg-transparent px-1 font-serif text-muted italic hover:border-border focus:border-focus"
-              />
-              {pickError && <p className="mt-1 px-1 text-xs text-danger">{pickError}</p>}
-            </div>
-          </div>
+      {full ? (
+        <FichaCompleta
+          entityId={draft.id!}
+          ficha={draft.sheetData as FichaAgente}
+          aoMudar={(sheetData) => update({ sheetData })}
+          topo={
+            <>
+              {identity}
+              {aliasCard}
+            </>
+          }
+          notas={
+            <>
+              {texts}
+              {mentionList}
+            </>
+          }
+        />
+      ) : (
+        <div className="grid gap-6 lg:grid-cols-[1fr_var(--layout-inspector)]">
+          <div className="flex flex-col gap-6">
+            {identity}
+            {aliasCard}
 
-          <Card className="flex flex-col gap-4">
-            <TextField
-              label="Apelidos"
-              hint="Separados por vírgula. Também são achados nos textos."
-              value={aliasText}
-              onChange={(e) => {
-                setAliasText(e.target.value)
-                update({ aliases: e.target.value.split(',') })
-              }}
-            />
-            {draft.kind === 'personagem' && (
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={draft.isPlayer} onChange={(e) => update({ isPlayer: e.target.checked })} className="size-4 accent-(--color-accent)" />
-                Personagem de jogador
-              </label>
+            {groups.length > 0 && (
+              <Card className="flex flex-col gap-5">
+                <h2 className="type-label text-muted">Ficha · Ordem Paranormal</h2>
+                {groups.map(([group, gf]) => (
+                  <section key={group} aria-label={group} className="flex flex-col gap-3">
+                    <h3 className="text-sm font-semibold">{group}</h3>
+                    <div className="flex flex-wrap gap-4 [&>*]:min-w-32">
+                      {gf.map((f) => (
+                        <StatField key={f.id} field={f} value={draft.stats[f.key]} onChange={(v) => update({ stats: { ...draft.stats, [f.key]: v } })} />
+                      ))}
+                    </div>
+                  </section>
+                ))}
+                {hiddenOptional.length > 0 && !showOptional && (
+                  <Button size="sm" variant="ghost" onClick={() => setShowOptional(true)} className="self-start">
+                    Mostrar regras opcionais ({[...new Set(hiddenOptional.map((f) => f.groupName))].join(', ')})
+                  </Button>
+                )}
+              </Card>
             )}
-          </Card>
 
-          {groups.length > 0 && (
-            <Card className="flex flex-col gap-5">
-              <h2 className="type-label text-muted">Ficha · Ordem Paranormal</h2>
-              {groups.map(([group, gf]) => (
-                <section key={group} aria-label={group} className="flex flex-col gap-3">
-                  <h3 className="text-sm font-semibold">{group}</h3>
-                  <div className="flex flex-wrap gap-4 [&>*]:min-w-32">
-                    {gf.map((f) => (
-                      <StatField key={f.id} field={f} value={draft.stats[f.key]} onChange={(v) => update({ stats: { ...draft.stats, [f.key]: v } })} />
-                    ))}
-                  </div>
-                </section>
-              ))}
-              {hiddenOptional.length > 0 && !showOptional && (
-                <Button size="sm" variant="ghost" onClick={() => setShowOptional(true)} className="self-start">
-                  Mostrar regras opcionais ({[...new Set(hiddenOptional.map((f) => f.groupName))].join(', ')})
-                </Button>
-              )}
-            </Card>
-          )}
-
-          {draft.kind === 'local' && (
-            <MapCard
-              name={draft.name}
-              url={mapUrl}
-              mapId={draft.mapId ?? null}
-              onPick={(path) => void pickMap(path)}
-              onClear={() => {
-                setMapUrl(null)
-                update({ mapId: null })
-              }}
-            />
-          )}
-
-          <CustomAttributes value={draft.customAttributes} onChange={(customAttributes) => update({ customAttributes })} />
-
-          <Card className="flex flex-col gap-4">
-            <TextArea label="Descrição" value={draft.description} onChange={(e) => update({ description: e.target.value })} placeholder="Aparência, o que os agentes percebem primeiro" />
-            <TextArea label="Personalidade e segredos" value={draft.personality} onChange={(e) => update({ personality: e.target.value })} placeholder="O que quer, o que esconde, como reage" />
-          </Card>
-
-          <Card className="flex flex-col gap-2">
-            <h2 className="type-label text-muted">Notas do mestre</h2>
-            <div className="rounded-md border border-border-input bg-bg px-4 py-3 [&_.ProseMirror]:min-h-24">
-              <SceneEditor
-                key={`notas-${draft.id}`}
-                initial={draft.notes ?? null}
-                label={`Notas de ${draft.name || 'ficha'}`}
-                placeholder="O que você precisa lembrar sobre esta ficha. Nomes de outras fichas viram ligação."
-                onChange={(notes) => update({ notes })}
+            {draft.kind === 'local' && (
+              <MapCard
+                name={draft.name}
+                url={mapUrl}
+                mapId={draft.mapId ?? null}
+                onPick={(path) => void pickMap(path)}
+                onClear={() => {
+                  setMapUrl(null)
+                  update({ mapId: null })
+                }}
               />
-            </div>
-          </Card>
-        </div>
+            )}
 
-        <aside aria-labelledby="mentions-h" className="flex flex-col gap-3">
-          <h2 id="mentions-h" className="type-label text-muted">
-            Aparece em
-          </h2>
-          {!draft.name.trim() && <p className="text-sm text-subtle">Dê um nome à ficha para achá-la nos textos.</p>}
-          {draft.name.trim() && mentions.data?.length === 0 && (
-            <Card>
-              <EmptyState icon={<Clapperboard />} title="Em nenhuma cena" text="Quando o nome ou um apelido aparecer no texto de uma cena, ela entra aqui sozinha." />
-            </Card>
-          )}
-          <ul className="flex flex-col gap-2">
-            {mentions.data?.map((m) => (
-              <li key={`${m.sourceType}:${m.sourceId}`}>
-                <Link
-                  to={
-                    m.sourceType === 'event'
-                      ? `/linha-do-tempo?evento=${m.sourceId}`
-                      : m.sourceType === 'clue'
-                        ? `/pistas?pista=${m.sourceId}`
-                        : m.sourceType === 'document'
-                          ? `/textos/${m.sourceId}`
-                          : m.sourceType === 'session'
-                            ? `/sessao?s=${m.sourceId}`
-                            : m.sourceType === 'entity'
-                              ? `/ficha/${m.sourceId}`
-                            : `/cenas/${m.sourceId}`
-                  }
-                  className="flex items-center gap-3 rounded-md border border-border bg-surface px-3 py-2 text-sm hover:border-border-input"
-                >
-                  {m.sourceType === 'event' ? (
-                    <CalendarClock className="size-4 text-muted" aria-hidden />
-                  ) : m.sourceType === 'clue' ? (
-                    <FileSearch className="size-4 text-muted" aria-hidden />
-                  ) : m.sourceType === 'document' ? (
-                    <FileText className="size-4 text-muted" aria-hidden />
-                  ) : m.sourceType === 'session' ? (
-                    <Dices className="size-4 text-muted" aria-hidden />
-                  ) : m.sourceType === 'entity' ? (
-                    <User className="size-4 text-muted" aria-hidden />
-                  ) : (
-                    <Clapperboard className="size-4 text-muted" aria-hidden />
-                  )}
-                  <span className="min-w-0 flex-1 truncate">{m.title}</span>
-                  {m.sourceType === 'event' || m.sourceType === 'clue' ? (
-                    <span className="text-xs text-subtle">{m.sourceType === 'event' ? 'evento' : 'pista'}</span>
-                  ) : (
-                    <span className="font-mono text-xs text-subtle" title="Vezes no texto">
-                      ×{m.hits}
-                    </span>
-                  )}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </aside>
-      </div>
+            {texts}
+          </div>
+          {mentionList}
+        </div>
+      )}
     </div>
   )
 }
