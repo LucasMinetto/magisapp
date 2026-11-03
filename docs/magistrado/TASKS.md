@@ -1,7 +1,7 @@
 # TASKS: Magistrado
 
 > Produto: [PRD.md](PRD.md) · Técnica: [TECH_SPEC.md](TECH_SPEC.md) · Memória: [PROJECT_MEMORY.md](PROJECT_MEMORY.md)
-> Status em 2026-11-03: T1 a T7 concluídas. Próxima: T8 (ameaças), depois T9. "Bloqueada" = espera uma decisão de [TECH_SPEC § Decisões pendentes](TECH_SPEC.md#decisões-pendentes).
+> Status em 2026-11-03: T1 a T8 concluídas. Próxima: T9 (rituais e itens), depois T10. "Bloqueada" = espera uma decisão de [TECH_SPEC § Decisões pendentes](TECH_SPEC.md#decisões-pendentes).
 
 ## Fase 1: base funcionando com o nome novo
 
@@ -64,12 +64,13 @@
 - **Base:** `taberna/web/src/ficha/Rolagem.tsx`.
 - **Feito:** `ficha/JanelaRolagem.tsx` (aberta pela FichaCompleta). Ataque ganhou **danos extras** (outros tipos, até 6) e ritual ganhou **tipo de dano**. No crítico só o dano da arma multiplica; os extras não. Teste digitado valida 1 a 20; soma digitada valida a faixa dos dados. A caixa fica em `dadosFisicos` da ficha; sem ela vale "é jogador". Desfazer na janela e no Histórico (e o Ctrl+Z geral). e2e com 11 verificações novas.
 
-### T8. Ameaças
+### T8. Ameaças ✅ 2026-11-03
 - **Depende de:** T5
 - **Resultado:** editor e bloco de ameaça no formato do livro, na biblioteca (com origem) e na campanha (cópia ligada a cenas e quadros como as fichas).
 - **Aceite:** cria na biblioteca, traz para a campanha, liga a uma cena e aparece na tela de sessão. O menu diz "Ameaças", não "Criaturas" (já feito na T4).
 - **Atenção:** o editor de ameaça precisa passar a editar o bloco em `sheet_data` (`blocoAmeacaSchema`). Hoje ele edita os campos do modelo em `stats`, e a ameaça vinda da biblioteca chega com `stats` vazio.
 - **Base:** `taberna/web/src/paginas/AmeacaEditor.tsx`, `taberna/web/src/componentes/BlocoAmeaca.tsx`.
+- **Feito:** tela **Biblioteca** no menu (`screens/Compendium.tsx`, rotas `/biblioteca` e `/biblioteca/ameaca/:id`): lista com busca e filtro por origem e elemento, "Origens…" para criar e apagar livros, editor com prévia do bloco, "Trazer para a campanha", "Duplicar" e "Apagar". `renderer/src/ameaca/` tem o bloco no formato do livro, o editor e o seletor de resistências, vulnerabilidades e imunidades. A ficha de ameaça da campanha edita o bloco em `sheet_data` e mostra a origem. Na Sessão, a ameaça citada na cena mostra VD, Defesa e PV e abre o bloco. A aba de rituais e itens entra na mesma tela (T9). PV atual da ameaça e rolar dali ficam na T10. e2e com 7 verificações novas.
 
 ### T9. Rituais e itens
 - **Depende de:** T5
@@ -91,6 +92,7 @@
 - **Resultado:** `campanha.json` no formato 2. O `legivel/` ganha `Agentes/`, `Rituais/` e `Itens/`, com as rolagens nas notas de sessão. O export (Word, PDF, Markdown) inclui a ficha do agente.
 - **Aceite:** o teste de ida e volta passa com todos os tipos novos. Restaurar um backup recupera a ficha com os mesmos derivados.
 - **Arquivos:** `app/src/main/{backup,vault,exporter}.ts` e testes.
+- **Atenção:** desde a T8 a ameaça é editada no bloco (`sheet_data`); os campos antigos em `stats` não mudam mais. O export e o vault precisam escrever o bloco da ameaça, não os `stats`.
 
 ### T12. Ajuda, README e e2e
 - **Depende de:** T6–T11

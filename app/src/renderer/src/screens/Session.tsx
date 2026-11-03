@@ -3,8 +3,10 @@ import { Clapperboard, Dices, ExternalLink, FileQuestion, MapPin, Minus, Plus, S
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { formatGameTime } from '@shared/gameTime'
+import type { BlocoAmeaca as Bloco } from '@shared/ordem/esquemas'
 import type { Clue, Entity, GameSession, SceneSummary, StatValue } from '@shared/types'
 import { useCampaign, useOpenCampaign } from '@/campaign'
+import { BlocoAmeaca } from '@/ameaca/BlocoAmeaca'
 import { SceneEditor } from '@/editor/SceneEditor'
 import { KIND_LABEL } from '@/lib/actions'
 import { useAutosave, useLoad } from '@/lib/data'
@@ -61,8 +63,11 @@ function QuickSheet({ id }: { id: string }) {
     setEntity(next)
     autosave.schedule(next)
   }
-  const defesa = entity.stats.defesa
-  const extra = [entity.stats.vd && `VD ${entity.stats.vd}`, typeof defesa === 'number' && defesa > 0 && `Defesa ${defesa}`].filter(Boolean)
+  // A ameaça mostra o bloco (sheet_data); as outras fichas, os campos do modelo.
+  const bloco = entity.kind === 'ameaca' && entity.sheetData ? (entity.sheetData as Bloco) : null
+  const defesa = bloco ? bloco.defesa : entity.stats.defesa
+  const vd = bloco ? bloco.vd : entity.stats.vd
+  const extra = [vd && `VD ${vd}`, typeof defesa === 'number' && defesa > 0 && `Defesa ${defesa}`, bloco && bloco.pv > 0 && `PV ${bloco.pv}`].filter(Boolean)
 
   return (
     <li className="rounded-lg border border-border bg-surface p-3">
@@ -102,6 +107,14 @@ function QuickSheet({ id }: { id: string }) {
           )
         })}
       </div>
+      {bloco && (
+        <details className="mt-2 rounded-md border border-border bg-bg px-3 py-2">
+          <summary className="cursor-pointer text-sm text-muted hover:text-fg">Bloco de {entity.name}</summary>
+          <div className="mt-2">
+            <BlocoAmeaca a={bloco} nome={entity.name} compacto />
+          </div>
+        </details>
+      )}
     </li>
   )
 }

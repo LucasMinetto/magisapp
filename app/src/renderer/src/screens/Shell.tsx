@@ -1,4 +1,5 @@
 import {
+  BookMarked,
   CalendarClock,
   CircleHelp,
   Clapperboard,
@@ -45,7 +46,8 @@ const CAMPAIGN_NAV: NavItem[] = [
   { to: '/pistas', label: 'Pistas', icon: <SearchCheck /> },
   { to: '/quadros', label: 'Quadros', icon: <Network /> },
   { to: '/textos', label: 'Textos', icon: <FileText /> },
-  { to: '/arquivos', label: 'Arquivos', icon: <FolderArchive /> }
+  { to: '/arquivos', label: 'Arquivos', icon: <FolderArchive /> },
+  { to: '/biblioteca', label: 'Biblioteca', icon: <BookMarked /> }
 ]
 const TABLE_NAV: NavItem[] = [{ to: '/sessao', label: 'Sessão', icon: <Dices /> }]
 const FOOT_NAV: NavItem[] = [

@@ -5,6 +5,7 @@ import { EntitySheet } from './screens/EntitySheet'
 import { Home } from './screens/Home'
 import { Boards } from './screens/Boards'
 import { Clues } from './screens/Clues'
+import { Compendium, CompendiumThreat } from './screens/Compendium'
 import { Files } from './screens/Files'
 import { Help } from './screens/Help'
 import { Library } from './screens/Library'
@@ -35,6 +36,8 @@ function Routed() {
         <Route path="textos" element={<Texts />} />
         <Route path="arquivos" element={<Files />} />
         <Route path="textos/:id" element={<Texts />} />
+        <Route path="biblioteca" element={<Compendium />} />
+        <Route path="biblioteca/ameaca/:id" element={<CompendiumThreat />} />
         <Route path="sessao" element={<Session />} />
         <Route path="lixeira" element={<Trash />} />
         <Route path="ajustes" element={<Settings />} />

@@ -21,6 +21,7 @@ const STEPS: [string, string, string][] = [
   ['Pistas', '/pistas', 'Imagem, onde está, quando e quem achou. "O que revela" fica escondido até você pedir.'],
   ['Quadros', '/quadros', 'O mapa mental: fichas, pistas e cenas ligadas com setas.'],
   ['Arquivos', '/arquivos', 'O PDF da aventura, tokens e mapas. Ligue o PDF à cena com a página e abra na hora certa.'],
+  ['Biblioteca', '/biblioteca', 'Ameaças no formato do livro, que valem para todas as campanhas, com a origem de cada uma. "Trazer para a campanha" faz uma cópia que você pode mudar à vontade.'],
   ['Sessão', '/sessao', 'A tela da mesa: cena atual, PV e SAN à mão, pistas da cena e as notas do dia.']
 ]
 

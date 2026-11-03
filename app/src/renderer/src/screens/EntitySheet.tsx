@@ -1,14 +1,16 @@
 import { ArrowLeft, CalendarClock, Clapperboard, Dices, FileSearch, FileText, ImagePlus, Map as MapIcon, Plus, ScrollText, Trash2, User, X } from 'lucide-react'
 import { SceneEditor } from '@/editor/SceneEditor'
 import { FichaCompleta } from '@/ficha/FichaCompleta'
+import { BlocoAmeaca } from '@/ameaca/BlocoAmeaca'
+import { EditorAmeaca } from '@/ameaca/EditorAmeaca'
 import { FileViewer } from './Material'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { useCampaign } from '@/campaign'
 import { KIND_LABEL } from '@/lib/actions'
 import { useAutosave, useLoad } from '@/lib/data'
-import { Button, Card, cx, EmptyState, ErrorNote, IconButton, Portrait, SaveIndicator, SelectField, TextArea, TextField } from '@/ui'
-import type { FichaAgente } from '@shared/ordem/esquemas'
+import { Button, Card, Chip, cx, EmptyState, ErrorNote, IconButton, Portrait, SaveIndicator, SelectField, TextArea, TextField } from '@/ui'
+import type { BlocoAmeaca as Bloco, FichaAgente } from '@shared/ordem/esquemas'
 import type { Attachment, CustomAttribute, Entity, EntityInput, SheetSize, StatValue, TemplateField } from '@shared/types'
 
 type Resource = { current: number; max: number }
@@ -237,8 +239,8 @@ const toInput = (e: Entity): EntityInput => ({
   mapId: e.mapId,
   notes: e.notes,
   sheet: e.sheet,
-  // Só a ficha completa vai junto; o bloco de ameaça ainda é editado pelos campos do modelo (T8).
-  sheetData: isFull(e) ? e.sheetData : undefined
+  // A ficha completa e o bloco de ameaça vão junto; a compacta usa os campos do modelo em `stats`.
+  sheetData: isFull(e) || e.kind === 'ameaca' ? e.sheetData : undefined
 })
 
 export function EntitySheet() {
@@ -352,6 +354,7 @@ export function EntitySheet() {
   }
 
   const full = isFull({ kind: draft.kind, sheet: draft.sheet ?? 'compacta' }) && draft.sheetData != null
+  const bloco = draft.kind === 'ameaca' && draft.sheetData ? (draft.sheetData as Bloco) : null
 
   const identity = (
     <div className="flex items-start gap-4">
@@ -541,7 +544,17 @@ export function EntitySheet() {
             {identity}
             {aliasCard}
 
-            {groups.length > 0 && (
+            {bloco && (
+              <Card className="flex flex-col gap-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="type-label text-muted">Bloco · Ordem Paranormal</h2>
+                  {loaded.data?.origin && <Chip>Da biblioteca: {loaded.data.origin.sourceName}</Chip>}
+                </div>
+                <EditorAmeaca a={bloco} aoMudar={(patch) => update({ sheetData: { ...bloco, ...patch } })} />
+              </Card>
+            )}
+
+            {!bloco && groups.length > 0 && (
               <Card className="flex flex-col gap-5">
                 <h2 className="type-label text-muted">Ficha · Ordem Paranormal</h2>
                 {groups.map(([group, gf]) => (
@@ -577,7 +590,14 @@ export function EntitySheet() {
 
             {texts}
           </div>
-          {mentionList}
+          <div className="flex flex-col gap-6">
+            {bloco && (
+              <Card>
+                <BlocoAmeaca a={bloco} nome={draft.name} />
+              </Card>
+            )}
+            {mentionList}
+          </div>
         </div>
       )}
     </div>

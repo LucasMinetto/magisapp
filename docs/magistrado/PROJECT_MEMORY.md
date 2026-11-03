@@ -5,7 +5,7 @@
 ## Propósito e status
 
 - **O que é:** app de desktop do mestre de Ordem Paranormal. Junta o **autore** (a base) com a ficha do agente, a rolagem com dados físicos e os modelos de ameaças, itens e rituais do **taberna**.
-- **Status (2026-11-03):** T1 a T7 concluídas. Ficha completa com janela de rolagem (o Magistrado rola ou o mestre digita o d20 que ficou e uma soma por tipo de dano). 116 testes e e2e 135/135. Faltam ameaças (T8), rituais e itens da biblioteca (T9). As cópias dos dois projetos estão em `_fontes/` (fora do git).
+- **Status (2026-11-03):** T1 a T8 concluídas. Ficha completa com janela de rolagem; tela Biblioteca com ameaças no formato do livro (origem, trazer para a campanha); a ficha de ameaça edita o bloco em `sheet_data` e a Sessão mostra o bloco. 116 testes e e2e 142/142. Faltam rituais e itens da biblioteca (T9) e a Sessão com iniciativa (T10). As cópias dos dois projetos estão em `_fontes/` (fora do git).
 
 ## Restrições confirmadas
 
@@ -52,4 +52,4 @@
 
 ## Próximo passo
 
-T8 (ameaças): o editor passa a editar o bloco em `sheet_data`; a ficha da ameaça pode reaproveitar a `JanelaRolagem` (`renderer/src/ficha/JanelaRolagem.tsx`). Depois T9 (rituais e itens). Depois da fusão: P1 (dados do livro), P3 (direcionar dano ao alvo), P2 (jogadores).
+T9 (rituais e itens): acrescentar as abas na tela Biblioteca (`renderer/src/screens/Compendium.tsx`) e o "colocar na ficha" (`library.copyToCampaign` com `entityId`). Depois T10 (Sessão com PV das ameaças, rolagem e iniciativa). Depois da fusão: P1 (dados do livro), P3 (direcionar dano ao alvo), P2 (jogadores).
