@@ -13,7 +13,7 @@
 - Só o mestre usa. É offline e sem servidor. A versão dos jogadores fica para depois.
 - A ficha tem o **layout do RPGpédia** com os **tokens, as fontes e os temas do autore**.
 - Fora do escopo: tela Livros, campanhas e missões do taberna, importar dados do taberna (não há dados, só modelos).
-- **Próxima etapa depois da fusão:** extrair do livro de regras os dados de ameaças, itens e rituais ([TASKS § P1](TASKS.md#depois-da-fusão-fora-deste-escopo-já-combinado)). Também depois: direcionar o dano ao alvo com resistências (P3).
+- **Próxima etapa depois da fusão:** extrair do livro de regras os dados de ameaças, itens e rituais e as regras para a tela Regras ([TASKS § P1](TASKS.md#depois-da-fusão-fora-deste-escopo-já-combinado), issue #14). Direcionar o dano ao alvo (antiga P3) foi juntado à P2 em 2026-11-04 (issue #13). A P2 está detalhada nas issues #1 a #13 e #15 e começa quando o Lucas pedir.
 
 ## Vocabulário
 
@@ -52,4 +52,4 @@
 
 ## Próximo passo
 
-T9 (rituais e itens): acrescentar as abas na tela Biblioteca (`renderer/src/screens/Compendium.tsx`) e o "colocar na ficha" (`library.copyToCampaign` com `entityId`). Depois T10 (Sessão com PV das ameaças, rolagem e iniciativa). Depois da fusão: P1 (dados do livro), P3 (direcionar dano ao alvo), P2 (jogadores).
+T9 (rituais e itens): acrescentar as abas na tela Biblioteca (`renderer/src/screens/Compendium.tsx`) e o "colocar na ficha" (`library.copyToCampaign` com `entityId`). Depois T10 (Sessão com PV das ameaças, rolagem e iniciativa). Depois da fusão: P1 (dados e regras do livro, issue #14). A P2 (jogadores, com a antiga P3) começa quando o Lucas pedir: issues #1 a #13 e #15.

@@ -106,15 +106,19 @@
 
 ## Depois da fusão (fora deste escopo, já combinado)
 
-### P1. Dados do livro de regras
+### P1. Dados e regras do livro → issue [#14](https://github.com/LucasMinetto/magistrado/issues/14)
 - Extrair do livro e cadastrar as **ameaças, os itens e os rituais** reais na biblioteca única (T4b, T8, T9), cada um com a origem do livro de onde veio. Pedido do usuário em 2026-11-02.
-- Antes de começar: confirmar quais livros (básico, Sobrevivendo ao Horror…) e o formato da extração.
+- **Ampliada em 2026-11-04:** a mesma extração cria a tela **Regras**, com todas as regras mecânicas (sem ambientação nem conselhos de como mestrar), sumário, Ctrl+K e a página do livro. A regra geral fica na tela, e as entradas ficam na biblioteca, com links. Os jogadores veem tudo menos as regras e as fichas de ameaças ([#15](https://github.com/LucasMinetto/magistrado/issues/15), na P2). Intenção em [docs/intent/tela-de-regras.md](../intent/tela-de-regras.md).
+- **Livro:** `Ordem Paranormal RPG.pdf` (341 páginas, com texto). Recortar em duas colunas, remover a marca d'água do RPGPedia (com teste) e revisar as fichas e as tabelas. Os dados vão para o git em JSON, mas o PDF não.
 - **Conferir no livro** (pedido em 2026-11-03):
   - **Crítico:** a T7 multiplica só o dano da arma; os danos extras (ex.: Energia de arma amaldiçoada) não multiplicam. Confirmar a regra e ajustar `FormularioDano` em `ficha/JanelaRolagem.tsx` se for diferente.
   - **Cobertura:** verificar se tudo o que o livro traz para ameaças, rituais e itens tem campo no Magistrado (`blocoAmeacaSchema`, `camposRitual`, `camposItem` em `shared/ordem/esquemas.ts`) e acrescentar o que faltar.
 
-### P3. Direcionar o dano ao alvo
+### P3. Direcionar o dano ao alvo → juntada à P2
 - Escolher quem recebe o dano de uma rolagem, descontar as resistências por tipo e tirar o PV. Depende das resistências das ameaças em `sheet_data` (T8). Pedido do usuário em 2026-11-03, ao revisar a T7.
+- **Juntada à P2 em 2026-11-04**, a pedido do Lucas: agora é a issue [#13](https://github.com/LucasMinetto/magistrado/issues/13), filha da [#1](https://github.com/LucasMinetto/magistrado/issues/1). É uma tela do mestre que não depende do app do jogador e pode ser feita depois da T10.
 
 ### P2. Versão dos jogadores
-- Celular e ficha compartilhada. Os ids UUID do autore já preparam o sync. Fica para depois.
+- Celular e ficha compartilhada. Os ids UUID do autore já preparam o sync.
+- **Detalhada em 2026-11-04** (entrevista com o Lucas) na issue mãe [#1](https://github.com/LucasMinetto/magistrado/issues/1), com 13 filhas (#2 a #13 e #15; a #13 é a antiga P3, e a #15 traz as regras e a biblioteca para o celular) na ordem de entrega. PWA única no GitHub Pages, o PC do mestre como servidor na Wi-Fi, HTTPS pelo DuckDNS (temporário, trocar antes de vender) e custo zero.
+- **Começa quando o Lucas pedir**, sem esperar a T9 a T13.
