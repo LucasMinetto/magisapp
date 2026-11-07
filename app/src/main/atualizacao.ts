@@ -130,8 +130,11 @@ export async function aplicarAtualizacao(): Promise<string | null> {
     mudar({ atualizando: false })
     return 'Código atualizado. Reinicie o npm run dev para ver a versão nova.'
   }
-  // Abre o Magistrado de novo pelo mesmo caminho do atalho (compila e abre) e fecha este.
-  spawn('cmd.exe', ['/c', 'npm.cmd', 'run', 'start'], { cwd: pastaApp(), detached: true, stdio: 'ignore', windowsHide: true }).unref()
+  // Abre o Magistrado de novo pelo mesmo caminho do atalho (tools/abrir-magistrado.vbs: compila e abre, sem janela de
+  // terminal) e fecha este. Sem o lançador, roda o npm direto com a janela escondida.
+  const lancador = join(raizRepo(), 'tools', 'abrir-magistrado.vbs')
+  if (existsSync(lancador)) spawn('wscript.exe', [lancador], { detached: true, stdio: 'ignore', windowsHide: true }).unref()
+  else spawn('cmd.exe', ['/c', 'npm.cmd', 'run', 'start'], { cwd: pastaApp(), detached: true, stdio: 'ignore', windowsHide: true }).unref()
   setTimeout(() => app.quit(), 300)
   return null
 }
