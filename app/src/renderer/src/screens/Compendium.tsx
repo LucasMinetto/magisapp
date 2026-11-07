@@ -10,7 +10,7 @@ import { BlocoRitual, EditorRitual, ROMANO } from '@/biblioteca/Ritual'
 import { Abas, Texto } from '@/ficha/partes'
 import { useAutosave, useLoad } from '@/lib/data'
 import { Button, Card, Chip, Dialog, EmptyState, ErrorNote, IconButton, SaveIndicator, SelectField, TextField } from '@/ui'
-import { ELEMENTOS, TIPOS_ITEM } from '@shared/ordem/esquemas'
+import { ELEMENTOS, TIPOS_ITEM, type AmeacaBiblioteca } from '@shared/ordem/esquemas'
 import { SOURCE_KINDS, type LibraryEntry, type LibraryKind, type LibrarySource, type SourceKind } from '@shared/types'
 
 const KIND_SOURCE: Record<SourceKind, string> = { oficial: 'Livro oficial', propria: 'Criação própria', outro: 'Outro livro' }
@@ -113,21 +113,8 @@ export function Compendium() {
   const [categoria, setCategoria] = useState('')
   const [showSources, setShowSources] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [importacao, setImportacao] = useState<{ ligados: string[]; sobras: string[]; jaTinham: number } | null>(null)
   const sources = useLoad(() => window.api.library.sources(), [])
   const list = useLoad(() => window.api.library.list({ kind, q, sourceId: sourceId || undefined }), [kind, q, sourceId])
-  const importarTokens = async () => {
-    setError(null)
-    try {
-      const r = await window.api.library.importTokens()
-      if (r) {
-        setImportacao(r)
-        list.reload()
-      }
-    } catch (e) {
-      setError((e as Error).message)
-    }
-  }
   const all = (list.data ?? []) as LibraryEntry[]
   const shown = all.filter((e) => {
     if (e.kind === 'ameaca') return !elemento || e.data.elemento === elemento
@@ -158,11 +145,6 @@ export function Compendium() {
           <h1 className="type-xl">Biblioteca</h1>
           <p className="text-sm text-muted">Vale para todas as campanhas. O que você traz para a campanha ou coloca numa ficha vira uma cópia.</p>
         </div>
-        {kind === 'ameaca' && (
-          <Button icon={<ImageUp className="size-4" />} onClick={() => void importarTokens()}>
-            Importar tokens…
-          </Button>
-        )}
         <Button icon={<BookMarked className="size-4" />} onClick={() => setShowSources(true)}>
           Origens…
         </Button>
@@ -205,27 +187,6 @@ export function Compendium() {
       </div>
 
       {(error || list.error || sources.error) && <ErrorNote message={(error || list.error || sources.error)!} onRetry={list.reload} />}
-
-      {importacao && kind === 'ameaca' && (
-        <Card className="flex flex-col gap-1.5 px-4 py-3 text-sm" >
-          <div className="flex items-start justify-between gap-3">
-            <p role="status">
-              {importacao.ligados.length === 0
-                ? 'Nenhuma ameaça nova recebeu token.'
-                : `${importacao.ligados.length} ${importacao.ligados.length === 1 ? 'ameaça recebeu' : 'ameaças receberam'} token: ${importacao.ligados.join(', ')}.`}
-              {importacao.jaTinham > 0 && ` ${importacao.jaTinham} já tinham token e ficaram como estavam.`}
-            </p>
-            <button type="button" className="text-xs text-muted hover:text-fg" onClick={() => setImportacao(null)}>
-              Fechar
-            </button>
-          </div>
-          {importacao.sobras.length > 0 && (
-            <p className="text-xs text-muted">
-              Sem ameaça com nome parecido ({importacao.sobras.length}): {importacao.sobras.join(', ')}. Dá para escolher o token de cada ameaça na ficha dela.
-            </p>
-          )}
-        </Card>
-      )}
 
       {list.data && shown.length === 0 && (
         <Card>
@@ -372,6 +333,49 @@ function PlaceOnSheet({ entry, onClose }: { entry: LibraryEntry<'item' | 'ritual
   )
 }
 
+/** Token da ameaça e as variantes: clicar numa variante faz dela o token principal (o retrato ao trazer para a campanha). */
+function CartaoToken({ a, aoMudar, aoEscolher, aoTirar }: { a: AmeacaBiblioteca; aoMudar: (p: Partial<AmeacaBiblioteca>) => void; aoEscolher: () => void; aoTirar: () => void }) {
+  const usar = (t: string) => aoMudar({ token: t, tokensExtras: [a.token, ...a.tokensExtras].filter((x) => x && x !== t) })
+  return (
+    <Card className="flex flex-col gap-3 px-4 py-3">
+      <div className="flex items-center gap-3">
+        {a.token ? (
+          <Token token={a.token} nome={a.nome} tamanho={64} />
+        ) : (
+          <span className="grid size-16 shrink-0 place-items-center rounded-full border border-dashed border-border text-subtle">
+            <Skull className="size-6" aria-hidden />
+          </span>
+        )}
+        <div className="flex flex-1 flex-col gap-1.5">
+          <span className="text-xs text-muted">Token: vira o retrato da ficha quando a ameaça vem para a campanha.</span>
+          <div className="flex gap-2">
+            <Button size="sm" icon={<ImageUp className="size-4" />} onClick={aoEscolher}>
+              {a.token ? 'Trocar token…' : 'Escolher token…'}
+            </Button>
+            {a.token && (
+              <Button size="sm" variant="ghost" onClick={aoTirar}>
+                Tirar
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+      {a.tokensExtras.length > 0 && (
+        <div className="flex flex-col gap-1.5">
+          <span className="text-xs text-muted">Variantes: clique para usar como token principal.</span>
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Variantes do token">
+            {a.tokensExtras.map((t, n) => (
+              <button key={t} type="button" aria-label={`Usar a variante ${n + 1}`} className="rounded-full hover:outline-2 hover:outline-accent focus-visible:outline-2 focus-visible:outline-accent" onClick={() => usar(t)}>
+                <Token token={t} nome={`${a.nome}, variante ${n + 1}`} tamanho={44} />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </Card>
+  )
+}
+
 /** Um registro da biblioteca: editar, levar para a campanha (ameaça) ou para uma ficha (item, ritual), duplicar, apagar. */
 export function CompendiumEntry() {
   const params = useParams()
@@ -488,37 +492,17 @@ export function CompendiumEntry() {
         </div>
         <div className="flex flex-col gap-3 xl:sticky xl:top-6 xl:self-start">
           {draft.kind === 'ameaca' && (
-            <Card className="flex items-center gap-3 px-4 py-3">
-              {(draft as LibraryEntry<'ameaca'>).data.token ? (
-                <Token token={(draft as LibraryEntry<'ameaca'>).data.token} nome={draft.data.nome} tamanho={64} />
-              ) : (
-                <span className="grid size-16 shrink-0 place-items-center rounded-full border border-dashed border-border text-subtle">
-                  <Skull className="size-6" aria-hidden />
-                </span>
-              )}
-              <div className="flex flex-1 flex-col gap-1.5">
-                <span className="text-xs text-muted">Token: vira o retrato da ficha quando a ameaça vem para a campanha.</span>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    icon={<ImageUp className="size-4" />}
-                    onClick={() =>
-                      void run(async () => {
-                        const e = await window.api.library.pickToken(draft.id)
-                        if (e) setDraft(e as LibraryEntry)
-                      })
-                    }
-                  >
-                    {(draft as LibraryEntry<'ameaca'>).data.token ? 'Trocar token…' : 'Escolher token…'}
-                  </Button>
-                  {(draft as LibraryEntry<'ameaca'>).data.token && (
-                    <Button size="sm" variant="ghost" onClick={() => void run(async () => setDraft((await window.api.library.clearToken(draft.id)) as LibraryEntry))}>
-                      Tirar
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </Card>
+            <CartaoToken
+              a={(draft as LibraryEntry<'ameaca'>).data}
+              aoMudar={(patch) => update(patch)}
+              aoEscolher={() =>
+                void run(async () => {
+                  const e = await window.api.library.pickToken(draft.id)
+                  if (e) setDraft(e as LibraryEntry)
+                })
+              }
+              aoTirar={() => void run(async () => setDraft((await window.api.library.clearToken(draft.id)) as LibraryEntry))}
+            />
           )}
           <Card>
             {draft.kind === 'ameaca' && <BlocoAmeaca a={(draft as LibraryEntry<'ameaca'>).data} nome={draft.data.nome} />}

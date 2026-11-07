@@ -168,8 +168,15 @@ export const blocoAmeacaSchema = z.object({
 const nomeObrigatorio = z.string().trim().min(1).max(200)
 // Página do livro de origem (0 = sem página). Fica só na biblioteca: não vai para a cópia da campanha.
 const pagina = z.coerce.number().int().min(0).max(2000).default(0)
-// token: imagem guardada em biblioteca-tokens/ (vira o retrato da ficha quando a ameaça vem para a campanha)
-export const ameacaBibliotecaSchema = blocoAmeacaSchema.extend({ nome: nomeObrigatorio, pagina, token: z.string().max(40).default('') })
+// token: a imagem principal (vira o retrato da ficha quando a ameaça vem para a campanha); tokensExtras: variantes
+// (ex.: os estágios do Anfitrião). Os dos livros vêm com o app (resources/livros-tokens); os do mestre ficam em biblioteca-tokens/.
+const nomeToken = z.string().max(40)
+export const ameacaBibliotecaSchema = blocoAmeacaSchema.extend({
+  nome: nomeObrigatorio,
+  pagina,
+  token: nomeToken.default(''),
+  tokensExtras: z.array(nomeToken).max(30).default([])
+})
 export const itemBibliotecaSchema = z.object({ ...camposItem, nome: nomeObrigatorio, pagina })
 // No livro cada ritual tem um destes: Alvo (seres/objetos), Área (cone, esfera…) ou Efeito (cria algo).
 export const ritualBibliotecaSchema = z.object({ ...camposRitual, nome: nomeObrigatorio, alvoTipo: z.enum(['Alvo', 'Área', 'Efeito']).default('Alvo'), pagina })

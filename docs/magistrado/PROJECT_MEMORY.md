@@ -55,7 +55,7 @@
 
 - **PDFs (fora do git):** `C:/Users/lucas/Meu Drive/RPG/Livros/Ordem Paranormal RPG v1-3.pdf` (332 p.; página impressa = PDF − 10) e `Sobrevivendo-ao-Horror-v1-3.pdf` (226 p.; impressa = PDF − 1).
 - **Regerar:** `cd tools/livros` e `python extrair.py "<OP.pdf>" "<SaH.pdf>"` (precisa de `pip install pymupdf`). Mudou os JSON? Suba `LIVROS_VERSAO` em `app/src/main/livros/index.ts`.
-- **Tokens do Lucas:** `C:/Users/lucas/Meu Drive/RPG/Ameaças` (pasta por elemento e por criatura). Não vão para o git.
+- **Tokens das ameaças:** arte dos livros, vem com o app. Origem: `C:/Users/lucas/Meu Drive/RPG/Ameaças`. Regerar: `python tools/livros/tokens.py "<pasta Ameaças>"` (precisa de Pillow); a ligação arquivo → ameaça é a tabela `LIGACOES` do script. Saída: `app/resources/livros-tokens/*.webp` e `app/src/main/livros/tokens.json` (vão para o git). Mudou? Suba `LIVROS_VERSAO`.
 
 ## Próximo passo
 

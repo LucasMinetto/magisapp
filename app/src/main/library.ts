@@ -24,7 +24,7 @@ import {
 } from '../shared/ordem/esquemas'
 import type { LivroDados } from './livros'
 import { itemParaFicha, origemDe, ritualParaFicha } from '../shared/ordem/biblioteca'
-import { arquivoDoToken, guardarToken, imagensDaPasta, parear } from './tokens'
+import { arquivoDoToken, guardarToken } from './tokens'
 import type { Entity, LibraryDataByKind, LibraryEntry, LibraryKind, LibrarySource, SourceKind } from '../shared/types'
 
 export const LIBRARY_VERSION = 2
@@ -114,10 +114,13 @@ function openLibraryDb(file: string): DB {
 export class LibraryStore {
   db: DB
 
-  /** `livros`: dados dos livros oficiais para semear (o app passa os de src/main/livros; os testes, nada). */
+  /**
+   * `livros`: dados dos livros oficiais para semear (o app passa os de src/main/livros; os testes, nada).
+   * `livros.tokens`: pasta com as imagens das ameaças dos livros, que vem com o app (só leitura).
+   */
   constructor(
     readonly file: string,
-    private readonly livros: { dados: LivroDados[]; versao: number } = { dados: [], versao: 0 }
+    private readonly livros: { dados: LivroDados[]; versao: number; tokens?: string } = { dados: [], versao: 0 }
   ) {
     this.db = openLibraryDb(file)
     this.semear()
@@ -128,42 +131,21 @@ export class LibraryStore {
     return join(dirname(this.file), 'biblioteca-tokens')
   }
 
+  /** O arquivo de um token: primeiro os do mestre (biblioteca-tokens/), depois os que vêm com o app. */
   tokenFile(nome: string): string | null {
-    return arquivoDoToken(this.tokensDir, nome)
-  }
-
-  /** Põe (ou tira, com null) o token de uma ameaça. */
-  setToken(id: string, src: string | null): LibraryEntry<'ameaca'> {
-    const e = this.get('ameaca', id)
-    const token = src ? guardarToken(this.tokensDir, src) : ''
-    return this.save('ameaca', { id, sourceId: e.sourceId, data: { ...e.data, token } })
+    return arquivoDoToken(this.tokensDir, nome) ?? (this.livros.tokens ? arquivoDoToken(this.livros.tokens, nome) : null)
   }
 
   /**
-   * Liga as imagens de uma pasta (e subpastas) às ameaças de nome parecido. Não troca token que a ameaça já tem.
-   * Devolve quem recebeu imagem e as imagens que não acharam ameaça.
+   * Põe uma imagem como token principal da ameaça (o anterior vira variante, para não perder a arte do livro),
+   * ou tira o principal, com null.
    */
-  importTokens(dir: string): { ligados: string[]; sobras: string[]; jaTinham: number } {
-    const ameacas = this.list('ameaca')
-    const { ligados, sobras } = parear(
-      ameacas.map((a) => ({ id: a.id, nome: a.name })),
-      imagensDaPasta(dir)
-    )
-    const nomes: string[] = []
-    let jaTinham = 0
-    this.db.transaction(() => {
-      for (const a of ameacas) {
-        const img = ligados.get(a.id)
-        if (!img) continue
-        if (a.data.token && this.tokenFile(a.data.token)) {
-          jaTinham++
-          continue
-        }
-        this.setToken(a.id, img.arquivo)
-        nomes.push(a.name)
-      }
-    })()
-    return { ligados: nomes.sort((x, y) => x.localeCompare(y)), sobras: sobras.map((i) => i.arquivo.slice(dir.length + 1)), jaTinham }
+  setToken(id: string, src: string | null): LibraryEntry<'ameaca'> {
+    const e = this.get('ameaca', id)
+    if (!src) return this.save('ameaca', { id, sourceId: e.sourceId, data: { ...e.data, token: '' } })
+    const token = guardarToken(this.tokensDir, src)
+    const extras = [e.data.token, ...e.data.tokensExtras].filter((t) => t && t !== token)
+    return this.save('ameaca', { id, sourceId: e.sourceId, data: { ...e.data, token, tokensExtras: extras } })
   }
 
   /**
@@ -196,12 +178,24 @@ export class LibraryStore {
             const { id, ...resto } = r
             const parsed = SCHEMA[kind].safeParse(resto)
             if (!parsed.success) continue
-            ins.run(id, sourceId, parsed.data.nome, JSON.stringify(parsed.data), now, now)
+            const novo = ins.run(id, sourceId, parsed.data.nome, JSON.stringify(parsed.data), now, now).changes > 0
+            if (!novo && kind === 'ameaca') this.darTokensDoLivro(id, parsed.data as LibraryDataByKind['ameaca'])
           }
         }
       }
       this.db.prepare("insert into meta (key, value) values ('livros', ?) on conflict(key) do update set value = excluded.value").run(String(versao))
     })()
+  }
+
+  /** Ameaça do livro que já estava na biblioteca, sem token nenhum: recebe os do livro. Não troca o que o mestre escolheu. */
+  private darTokensDoLivro(id: string, livro: LibraryDataByKind['ameaca']): void {
+    if (!livro.token) return
+    const row = this.db.prepare('select data from lib_threats where id = ?').get(id) as { data: string } | undefined
+    if (!row) return
+    const atual = SCHEMA.ameaca.parse(JSON.parse(row.data)) as LibraryDataByKind['ameaca']
+    if (atual.token || atual.tokensExtras.length) return
+    const data = { ...atual, token: livro.token, tokensExtras: livro.tokensExtras }
+    this.db.prepare('update lib_threats set data = ? where id = ?').run(JSON.stringify(data), id)
   }
 
   close(): void {
@@ -334,10 +328,12 @@ export class LibraryStore {
         rituais: this.list('ritual')
       }
       const arquivos: Record<string, Uint8Array> = { 'biblioteca.sqlite': readFileSync(tmp), 'biblioteca.json': strToU8(JSON.stringify(json, null, 1)) }
-      for (const a of this.list('ameaca')) {
-        const f = a.data.token ? this.tokenFile(a.data.token) : null
-        if (f) arquivos[`tokens/${a.data.token}`] = readFileSync(f)
-      }
+      // só os tokens do mestre: os dos livros vêm com o app
+      for (const a of this.list('ameaca'))
+        for (const t of [a.data.token, ...a.data.tokensExtras]) {
+          const f = t ? arquivoDoToken(this.tokensDir, t) : null
+          if (f) arquivos[`tokens/${t}`] = readFileSync(f)
+        }
       const zip = zipSync(arquivos, { level: 6 })
       writeFileSync(`${file}.parcial`, zip)
       renameSync(`${file}.parcial`, file)
@@ -399,7 +395,7 @@ const origem = origemDe
 
 /** Ameaça da biblioteca como ficha da campanha: o nome vai para a ficha, o resto para o bloco. */
 export function threatForCampaign(e: LibraryEntry<'ameaca'>): { name: string; sheetData: BlocoAmeaca; origin: Origem; token: string } {
-  const { nome, pagina: _pagina, token, ...bloco } = e.data
+  const { nome, pagina: _pagina, token, tokensExtras: _extras, ...bloco } = e.data
   return { name: nome, sheetData: bloco, origin: origem(e), token }
 }
 

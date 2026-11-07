@@ -63,9 +63,9 @@ const api: Api = {
     copyToCampaign: call('library:copyToCampaign'),
     backup: call('library:backup'),
     pickAndRestore: call('library:pickAndRestore'),
-    importTokens: call('library:importTokens'),
     pickToken: call('library:pickToken'),
-    clearToken: call('library:clearToken')
+    clearToken: call('library:clearToken'),
+    tokenToCampaign: call('library:tokenToCampaign')
   },
   scenes: {
     saveNote: call('scenes:saveNote'),

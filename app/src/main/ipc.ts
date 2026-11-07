@@ -93,7 +93,7 @@ const swap = (next: CampaignStore) => {
 
 // Biblioteca única (fora das campanhas): abre na primeira vez que alguém pede.
 let lib: LibraryStore | null = null
-const library = (): LibraryStore => (lib ??= new LibraryStore(join(app.getPath('userData'), 'biblioteca.sqlite'), { dados: LIVROS, versao: LIVROS_VERSAO }))
+const library = (): LibraryStore => (lib ??= new LibraryStore(join(app.getPath('userData'), 'biblioteca.sqlite'), { dados: LIVROS, versao: LIVROS_VERSAO, tokens: join(app.getAppPath(), 'resources', 'livros-tokens') }))
 
 /** Arquivo de um token da biblioteca (magistrado://token/<nome>). */
 export function libraryTokenFile(nome: string): string | null {
@@ -134,7 +134,7 @@ const marksDirty = (name: string) =>
   WRITES.test(name) &&
   (!name.startsWith('campaign:') || name === 'campaign:update') &&
   !name.startsWith('backup:') &&
-  (!name.startsWith('library:') || name === 'library:copyToCampaign')
+  (!name.startsWith('library:') || name === 'library:copyToCampaign' || name === 'library:tokenToCampaign')
 
 const id = z.string().uuid()
 const kind = z.enum(ENTITY_KINDS)
@@ -428,14 +428,6 @@ const channels: Record<string, [z.ZodTypeAny, (input: never, win: BrowserWindow)
       return true
     }
   ],
-  'library:importTokens': [
-    z.undefined(),
-    async (_: never, win: BrowserWindow) => {
-      const res = await dialog.showOpenDialog(win, { title: 'Pasta com os tokens das ameaças', properties: ['openDirectory'] })
-      if (res.canceled || !res.filePaths[0]) return null
-      return library().importTokens(res.filePaths[0])
-    }
-  ],
   'library:pickToken': [
     id,
     async (input: string, win: BrowserWindow) => {
@@ -449,6 +441,15 @@ const channels: Record<string, [z.ZodTypeAny, (input: never, win: BrowserWindow)
     }
   ],
   'library:clearToken': [id, (input: string) => library().setToken(input, null)],
+  // Um token da biblioteca (variante) vira anexo da campanha, para servir de retrato da ficha.
+  'library:tokenToCampaign': [
+    z.string().regex(/^[a-f0-9]{16}\.[a-z]{3,4}$/),
+    (nome: string) => {
+      const f = library().tokenFile(nome)
+      if (!f) throw new Error('Este token não está mais na biblioteca.')
+      return need().importFile(f, { imagesOnly: true }).attachment
+    }
+  ],
   'entities:save': [entityInput, (input: z.infer<typeof entityInput>) => need().saveEntity(input)],
   'entities:trash': [id, (input: string) => need().trashEntity(input)],
   'entities:peekOther': [

@@ -90,6 +90,35 @@ function StatField({ field, value, onChange }: { field: TemplateField; value: St
 }
 
 /** Retrato: clicar escolhe a imagem, soltar um arquivo também serve. */
+/** Os tokens da ameaça na biblioteca (principal e variantes): clicar copia para a campanha e vira o retrato. */
+function TokensDaBiblioteca({ libraryId, aoUsar, aoErro }: { libraryId: string; aoUsar: (a: Attachment) => void; aoErro: (m: string) => void }) {
+  // se o registro saiu da biblioteca, a ficha continua com o retrato que já tem
+  const entrada = useLoad(() => window.api.library.get({ kind: 'ameaca', id: libraryId }).catch(() => null), [libraryId])
+  const tokens = entrada.data ? [entrada.data.data.token, ...entrada.data.data.tokensExtras].filter(Boolean) : []
+  if (tokens.length < 2) return null
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-2 px-1" role="group" aria-label="Tokens da biblioteca">
+      <span className="text-xs text-muted">Outros tokens:</span>
+      {tokens.map((t, n) => (
+        <button
+          key={t}
+          type="button"
+          aria-label={`Usar o token ${n + 1} como retrato`}
+          className="rounded-full hover:outline-2 hover:outline-accent focus-visible:outline-2 focus-visible:outline-accent"
+          onClick={() =>
+            window.api.library
+              .tokenToCampaign(t)
+              .then(aoUsar)
+              .catch((e: Error) => aoErro(e.message))
+          }
+        >
+          <img src={`magistrado://token/${t}`} alt="" className="size-9 rounded-full border border-border bg-surface-raised object-cover" />
+        </button>
+      ))}
+    </div>
+  )
+}
+
 function PortraitPicker({ name, url, onPick, onClear }: { name: string; url: string | null; onPick: (path?: string) => void; onClear: () => void }) {
   const [over, setOver] = useState(false)
   return (
@@ -391,6 +420,17 @@ export function EntitySheet() {
           className="mt-1 w-full rounded-md border border-transparent bg-transparent px-1 font-serif text-muted italic hover:border-border focus:border-focus"
         />
         {pickError && <p className="mt-1 px-1 text-xs text-danger">{pickError}</p>}
+        {draft.kind === 'ameaca' && loaded.data?.origin && (
+          <TokensDaBiblioteca
+            libraryId={loaded.data.origin.libraryId}
+            aoUsar={(a) => {
+              setPortraitUrl(a.url)
+              setPickError(null)
+              update({ portraitId: a.id })
+            }}
+            aoErro={setPickError}
+          />
+        )}
       </div>
     </div>
   )
