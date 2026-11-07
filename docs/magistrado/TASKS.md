@@ -1,7 +1,7 @@
 # TASKS: Magistrado
 
 > Produto: [PRD.md](PRD.md) · Técnica: [TECH_SPEC.md](TECH_SPEC.md) · Memória: [PROJECT_MEMORY.md](PROJECT_MEMORY.md)
-> Status em 2026-11-07: T1 a T10b e P1 concluídas, publicadas como **versão 0.9.0**. Redesenho do combate ([#18](https://github.com/LucasMinetto/magistrado/issues/18)) feito em 2026-11-07, para a 0.10.0. Próxima: T11; a versão dos jogadores (P2) fica por último. A 1.0.0 sai depois da T13. Versões: [VERSOES.md](VERSOES.md). "Bloqueada" = espera uma decisão de [TECH_SPEC § Decisões pendentes](TECH_SPEC.md#decisões-pendentes).
+> Status em 2026-11-07: T1 a T10b e P1 concluídas, publicadas como **versão 0.9.0**. Redesenho do combate ([#18](https://github.com/LucasMinetto/magistrado/issues/18)) na 0.10.0. T11 e T12 feitas em 2026-11-07 (fusão fechada; o repositório ficou só com o Magistrado). Próxima: T13, o teste de mesa do Lucas; depois #13 e #17; a versão dos jogadores (P2) fica por último. A 1.0.0 sai depois da T13. Versões: [VERSOES.md](VERSOES.md). "Bloqueada" = espera uma decisão de [TECH_SPEC § Decisões pendentes](TECH_SPEC.md#decisões-pendentes).
 
 ## Fase 1: base funcionando com o nome novo
 
@@ -104,7 +104,10 @@
 
 ## Fase 4: integração e fechamento
 
-### T11. Backup, export e Obsidian com os tipos novos
+### T11. Backup, export e Obsidian com os tipos novos ✅ 2026-11-07
+- **Feito:** `shared/ordem/textoFicha.ts` monta a ficha do agente (com os derivados), o bloco da ameaça, rituais, itens, rolagens e iniciativa em seções; o cofre (`vault.ts`) e o exportar (`exporter.ts`) usam o mesmo texto. O cofre ganhou `Agentes/` (personagens de jogador), `Rituais/` e `Itens/` (os que estão nas fichas, com "Na ficha de"), e as sessões trazem o combate e as rolagens. Ameaça sai pelo bloco, não pelos `stats`. Na versão dos jogadores do exportar sai só a ficha dos agentes e as rolagens deles.
+- **campanha.json continua no formato 1:** o dump já leva todas as tabelas; o `schemaVersion` 4 marca os tipos novos e a skill criar-campanha gera formato 1. Teste de ida e volta pelo .sqlite e pelo json com ficha, derivados, bloco, rolagens e iniciativa (`fichas-no-backup.test.ts`).
+- **Biblioteca por origem:** pacote `.magistrado-biblioteca` (zip com `biblioteca.json` e os tokens do mestre). Origens → Exportar (uma origem), Exportar tudo e Importar…; a importação compara pelo id e depois pelo nome (origem e registro) e mostra muda/novo/igual/só aqui e o mesmo nome em outra origem. Sem escolha, a origem que já existe não muda. Saiu o restaurar biblioteca; o backup antes de atualizar o app virou pacote.
 - **Depende de:** T4–T9
 - **Resultado:** `campanha.json` no formato 2. O `legivel/` ganha `Agentes/`, `Rituais/` e `Itens/`, com as rolagens nas notas de sessão. O export (Word, PDF, Markdown) inclui a ficha do agente.
 - **Aceite:** o teste de ida e volta passa com todos os tipos novos. Restaurar um backup recupera a ficha com os mesmos derivados.
@@ -117,7 +120,8 @@
   - **Fora:** mesclar campo a campo dentro de um registro (vale o registro inteiro).
   - **Aceite:** exportar "Criações próprias", importar noutra biblioteca e ver tudo com tokens; importar o mesmo pacote de novo mostra o aviso e não duplica nada sem o mestre pedir.
 
-### T12. Ajuda, README e e2e
+### T12. Ajuda, README e e2e ✅ 2026-11-07
+- **Feito:** Ajuda com "A ficha do agente e as rolagens", Regras e Sessão atualizadas; README com o que o app faz; e2e cria um agente do zero (Ctrl+K), marca de jogador, muda a Força e rola; e2e do pacote (exportar, importar de novo com aviso, importar como cópia). 158 testes e e2e 195/195.
 - **Depende de:** T6–T11
 - **Resultado:** a tela Ajuda explica a ficha e as rolagens. `README.md` do Magistrado. O e2e ganha o fluxo criar agente → mudar atributo → rolar.
 - **Aceite:** o e2e completo passa.

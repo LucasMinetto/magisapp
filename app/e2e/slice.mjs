@@ -487,6 +487,26 @@ try {
   await fisicos.check()
   await page.getByText('Salvo').waitFor({ timeout: 5000 })
 
+  // T12: agente novo do zero: criar, marcar como de jogador, mudar um atributo e rolar o teste dele.
+  await page.keyboard.press('Control+k')
+  await page.getByRole('combobox').fill('Rafa Nogueira')
+  await page.getByRole('option', { name: 'Personagem «Rafa Nogueira»' }).click()
+  await page.getByText('Personagem de jogador').click()
+  await page.getByRole('list', { name: 'Lista de perícias' }).waitFor({ timeout: 5000 })
+  check('personagem de jogador novo abre na ficha completa', (await page.getByLabel('Força', { exact: true }).count()) === 1)
+  await page.getByLabel('Força', { exact: true }).fill('3')
+  await page.getByText('Salvo').waitFor({ timeout: 5000 })
+  await page.getByRole('button', { name: 'Rolar teste de Força' }).click()
+  janela = page.getByRole('dialog')
+  await janela.waitFor()
+  check('Força 3 pede o maior de 3d20', (await janela.getByText(/3d20/).count()) > 0)
+  await janela.getByLabel('Maior d20').fill('16')
+  await janela.getByRole('button', { name: 'Registrar' }).click()
+  check('o agente novo registra a rolagem', (await janela.getByRole('status', { name: 'Resultado' }).innerText()).startsWith('16'))
+  await janela.getByRole('button', { name: 'Pronto' }).click()
+  await page.getByRole('tab', { name: 'Histórico' }).click()
+  check('a rolagem fica no histórico do agente novo', (await page.getByRole('list', { name: 'Rolagens' }).getByRole('listitem').count()) === 1)
+
   await page.getByRole('link', { name: 'Fichas' }).click()
   await page.getByText('Dr. Aurélio Bastos').first().click()
   await page.getByRole('button', { name: 'Usar ficha completa' }).click()
@@ -1126,11 +1146,14 @@ try {
 
   await page.getByRole('link', { name: 'Ajuda' }).click()
   check('página de ajuda com os atalhos', await page.getByRole('rowheader', { name: 'Ctrl+K' }).waitFor({ timeout: 5000 }).then(() => true, () => false))
+  check('a ajuda explica a ficha e as rolagens', await page.getByRole('heading', { name: 'A ficha do agente e as rolagens' }).isVisible())
 
   // Acervo: trazer fichas de outra campanha (a que já existe aqui não duplica)
   await page.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: 'Fichas' }).click()
   await page.getByRole('button', { name: 'Trazer de outra campanha…' }).click()
   const bringDialog = page.getByRole('dialog', { name: 'Trazer fichas de outra campanha' })
+  // As campanhas chegam depois de o diálogo abrir: esperar a opção antes de ler a lista.
+  await bringDialog.getByLabel('Campanha').locator('option', { hasText: 'Caso do Hospital' }).first().waitFor({ state: 'attached', timeout: 5000 })
   const otherOption = (await bringDialog.getByLabel('Campanha').locator('option').allInnerTexts()).find((t) => t.startsWith('Caso do Hospital'))
   await bringDialog.getByLabel('Campanha').selectOption({ label: otherOption })
   await bringDialog.getByRole('list', { name: 'Fichas da outra campanha' }).getByText('Lia Moraes').click()

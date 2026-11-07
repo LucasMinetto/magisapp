@@ -15,14 +15,15 @@ const SHORTCUTS: [string, string][] = [
 
 const STEPS: [string, string, string][] = [
   ['Campanha', '/', 'Crie com a data em que o caso começa. Tudo na linha do tempo conta a partir dela.'],
-  ['Fichas', '/fichas', 'Personagens, ameaças, locais, grupos e lore, com o modelo de Ordem Paranormal. Escreva apelidos para o app achar o nome nos textos.'],
+  ['Fichas', '/fichas', 'Agentes, NPCs, ameaças, locais, grupos e lore. Escreva apelidos para o app achar o nome nos textos. A ficha do agente segue as regras do livro (veja abaixo).'],
   ['Cenas', '/cenas', 'Cada cena tem hora no jogo e lugar. Nomes de fichas no texto viram ligação sozinhos. O corkboard e os modelos ajudam a montar a aventura.'],
   ['Linha do tempo', '/linha-do-tempo', 'O relógio do jogo, os eventos que acontecem mesmo sem os jogadores, e as lacunas onde nada está marcado.'],
   ['Pistas', '/pistas', 'Imagem, onde está, quando e quem achou. "O que revela" fica escondido até você pedir.'],
   ['Quadros', '/quadros', 'O mapa mental: fichas, pistas e cenas ligadas com setas.'],
   ['Arquivos', '/arquivos', 'O PDF da aventura, tokens e mapas. Ligue o PDF à cena com a página e abra na hora certa.'],
-  ['Biblioteca', '/biblioteca', 'Ameaças no formato do livro, que valem para todas as campanhas, com a origem de cada uma. "Trazer para a campanha" faz uma cópia que você pode mudar à vontade.'],
-  ['Sessão', '/sessao', 'A tela da mesa: cena atual, PV e SAN à mão, pistas da cena e as notas do dia.']
+  ['Biblioteca', '/biblioteca', 'Ameaças, rituais e itens dos livros e os seus, que valem para todas as campanhas. "Trazer para a campanha" e "Colocar na ficha" fazem uma cópia que você pode mudar à vontade. Em Origens, exporte uma origem para outro computador ou outro mestre.'],
+  ['Regras', '/regras', 'As regras dos livros, com sumário, busca e a página de cada uma.'],
+  ['Sessão', '/sessao', 'A tela da mesa. Na cena: quem está nela, PV, PE e SAN à mão, pistas e as notas do dia. No combate: a ordem de iniciativa, as fichas das ameaças e um cartão por agente.']
 ]
 
 export function Help() {
@@ -47,6 +48,33 @@ export function Help() {
             </li>
           ))}
         </ol>
+      </section>
+
+      <section aria-labelledby="help-sheet" className="flex flex-col gap-2">
+        <h2 id="help-sheet" className="type-label text-muted">
+          A ficha do agente e as rolagens
+        </h2>
+        <Card className="flex flex-col gap-2 text-sm text-muted">
+          <p>
+            Marque <span className="text-fg">Personagem de jogador</span> e a ficha vira a ficha completa do agente. Um vilão também pode usá-la, por{' '}
+            <span className="text-fg">Usar ficha completa</span>. Classe, NEX e atributos calculam PV, PE, SAN, Defesa, Esquiva, Bloqueio e a DT de ritual
+            pelas regras do livro; o que vem de item ou poder entra nos campos de bônus.
+          </p>
+          <p>
+            O botão de dado ao lado de um atributo, perícia, ataque ou ritual abre a janela de rolagem. Ela tem dois jeitos:{' '}
+            <span className="text-fg">Digitar dados físicos</span>, quando o jogador rola na mesa (no teste digite só o d20 que ficou; no dano, a soma
+            de cada tipo), ou <span className="text-fg">O Magistrado rola</span>. A caixa <span className="text-fg">Rola dados físicos</span>, na ficha,
+            escolhe como a janela abre para aquele personagem.
+          </p>
+          <p>
+            Cada ponto de atributo é um d20 e vale o maior. Com atributo 0, rolam-se dois e vale o menor. No crítico, só os dados da arma se
+            multiplicam; bônus fixo e dano extra não.
+          </p>
+          <p>
+            Toda rolagem fica no Histórico da ficha, com a hora no jogo, e entra nas notas da sessão no backup e no exportar. Errou? Desfaça no próprio
+            Histórico.
+          </p>
+        </Card>
       </section>
 
       <section aria-labelledby="help-keys" className="flex flex-col gap-2">

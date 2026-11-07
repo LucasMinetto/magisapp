@@ -5,6 +5,7 @@
 ## Propósito e status
 
 - **O que é:** app de desktop do mestre de Ordem Paranormal. Junta o **autore** (a base) com a ficha do agente, a rolagem com dados físicos e os modelos de ameaças, itens e rituais do **taberna**.
+- **Status (2026-11-07, T11–T12):** fusão fechada. Repositório só com o Magistrado (sem `_fontes/` nem `replica/`). Backup, cofre e exportar com a ficha do agente, o bloco da ameaça, rituais, itens, iniciativa e rolagens; biblioteca exporta e importa por origem. Ajuda e README. 158 testes e e2e 195/195. Falta a T13 (teste de mesa do Lucas).
 - **Status (2026-11-07, #18):** combate redesenhado (ameaças fixas com cópias agrupadas, cartões dos agentes com arsenal, destaque da vez, ganchos da #13). 147 testes e e2e 185/185. Vai na 0.10.0.
 - **Status (2026-11-07, T10b):** a Sessão tem dois modos, cena (faixa do grupo, cena larga, abas Pistas · Notas · NPCs) e combate (ordem à esquerda, cartão com tudo do combatente à direita). 138 testes e e2e 181/181.
 - **Status (2026-11-07, T10):** T1 a T10 e P1 concluídas. A Sessão conduz o combate: iniciativa salva na sessão de jogo, PV de cada cópia de ameaça, PV/PE/SAN dos agentes e rolagem por perícia, teste ou ação do bloco. 138 testes e e2e 176/176. Faltam T11 a T13.
@@ -51,7 +52,7 @@
 - **Pastas (2026-11-07):** `replica/` saiu. O design (tokens, contraste) está em `design/`, a arquitetura e o esquema em `docs/arquitetura/`, e as capturas do e2e em `app/e2e/capturas/` (fora do git). Os documentos de engenharia reversa do autore (recon, research, build-log, features.csv) saíram; estão no histórico do git.
 - O rótulo "Mesa" do menu lateral e as frases "na mesa" são mesa de jogo e ficam.
 - **Modelo da ficha (T4):** agente = `is_player`; `sheet` (compacta/completa); ficha completa e bloco de ameaça em `sheet_data`, montados de `stats` enquanto não editados (ver [TECH_SPEC § Modelo de dados](TECH_SPEC.md#modelo-de-dados-novo-migração-4)).
-- **Biblioteca:** `%APPDATA%/Magistrado/biblioteca.sqlite` (`app/src/main/library.ts`), aberta só quando pedida.
+- **Biblioteca:** `%APPDATA%/Magistrado/biblioteca.sqlite` (`app/src/main/library.ts`), aberta só quando pedida. Desde a T11 não há mais restaurar biblioteca: o que vai e vem é o pacote por origem (`.magistrado-biblioteca`), que casa origem e registro pelo id e depois pelo nome.
 - **Combate (T10):** a iniciativa fica em `game_sessions.initiative` (por sessão de jogo). Cada ameaça entra como cópia com PV próprio no combatente (`pv`); o agente entra uma vez e usa o PV da ficha. Testes do bloco são lidos de "2d20+5" ou "2O+5" (`app/src/shared/ordem/sessao.ts`). Rolagens da Sessão gravam a sessão de jogo. Desde a T10b o combatente também guarda `condicoes` (as do agente com ficha completa ficam na ficha). Desde a #18 a iniciativa guarda `desafixadas` (chave do grupo = ficha) e a tela separa agentes de jogadores (`isPlayer`) do resto.
 - Git local com identidade `Lucas <lucasminetto13@gmail.com>` só neste repositório.
 - **Versões (2026-11-07):** número maior.menor.correção, publicado com `tools/publicar-versao.ps1` (`versao.json`, `HISTORICO.md`, tag e release). 0.9.0 = T1–T10b + P1; 1.0.0 depois da T13. Sem instalador: o app se atualiza pelo git (`app/src/main/atualizacao.ts`), no modelo do TEC. Ver [VERSOES.md](VERSOES.md).
@@ -64,4 +65,4 @@
 
 ## Próximo passo
 
-T11 (backup, export e Obsidian com os tipos novos, e a biblioteca por origem); depois #13 (dano ao alvo, já com os ganchos) e #17. A P2 (jogadores) fica por último, a pedido do Lucas (2026-11-07): issues #1 a #12 e #15.
+T13: o Lucas conduz uma sessão só no Magistrado (depois sai a 1.0.0); depois #13 (dano ao alvo, já com os ganchos) e #17. A P2 (jogadores) fica por último, a pedido do Lucas (2026-11-07): issues #1 a #12 e #15.

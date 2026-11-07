@@ -2,6 +2,19 @@
 
 App de desktop do mestre de **Ordem Paranormal RPG**. Prepara e conduz a mesa num lugar só: cenas com hora no jogo, linha do tempo, pistas, quadros, sessão, backup e exportação, a ficha do agente calculada pelas regras do livro, a rolagem com dados físicos e a biblioteca de ameaças, itens e rituais dos livros.
 
+## O que faz
+
+- **Preparar:** campanha com a data do caso; fichas de agentes, NPCs, ameaças, locais, grupos e lore; cenas com hora no jogo e lugar; linha do tempo com eventos e lacunas; pistas com quem achou e quando; quadros (mapa mental); arquivos (PDF da aventura, mapas, tokens). Nomes de fichas no texto viram ligação sozinhos.
+- **Ficha do agente:** classe, NEX, atributos e perícias calculam PV, PE, SAN, Defesa, Esquiva, Bloqueio e DT de ritual pelas regras do livro. Ataques, rituais, habilidades, inventário com limite por patente e carga.
+- **Rolagem:** o jogador rola os dados físicos e o mestre digita o que saiu, ou o app rola. Teste pelo maior (ou menor) d20, dano por tipo, crítico só nos dados da arma. Tudo fica no histórico da ficha e da sessão.
+- **Biblioteca:** ameaças, rituais e itens dos livros *Ordem Paranormal RPG* e *Sobrevivendo ao Horror*, com tokens e página, mais as criações do mestre. Cada registro tem uma origem; uma origem (ou tudo) vira um pacote para levar a outro computador ou mandar a outro mestre.
+- **Regras:** as regras dos livros com sumário, busca e página.
+- **Sessão:** modo cena (quem está na cena, PV/PE/SAN à mão, pistas, notas) e modo combate (iniciativa, fichas das ameaças fixas na tela, um cartão por agente).
+- **Guardar e levar:** backup automático em zip, que abre no Obsidian sem o app; exportar para PDF, Word, texto ou pasta do Obsidian, na versão do mestre ou dos jogadores. Desfazer e lixeira em tudo.
+- **Versões:** o app avisa quando há versão nova e se atualiza sozinho.
+
+Offline, um usuário, sem conta. Nada sai do computador.
+
 O planejamento está em [docs/magistrado](docs/magistrado/).
 
 ## Rodar
