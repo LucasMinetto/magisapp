@@ -6,6 +6,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { formatDuration, formatGameTime, weekdayName } from '../shared/gameTime'
 import { buildTimeline, type TimedItem } from '../shared/timeline'
 import { EXPORT_SECTIONS, type EntityKind, type ExportOptions, type StatValue } from '../shared/types'
+import { linhaDaRolagem, linhasDaIniciativa, secoesDaAmeaca, secoesDoAgente, type SecaoFicha } from '../shared/ordem/textoFicha'
 import type { CampaignStore } from './store'
 import { safeFileName } from './vault'
 
@@ -98,6 +99,15 @@ export function docToBlocks(json: string | null): Block[] {
 }
 
 // ------------------------------------------------------------ campanha -> blocos
+
+/** Seções da ficha completa ou do bloco de ameaça em blocos: título em negrito, pares, lista e parágrafos. */
+const secoesEmBlocos = (secoes: SecaoFicha[]): Block[] =>
+  secoes.flatMap((s) => [
+    { t: 'p', runs: [{ text: s.titulo, bold: true }] } as Block,
+    ...(s.pares?.length ? [{ t: 'meta', pairs: s.pares } as Block] : []),
+    ...(s.itens?.length ? [{ t: 'list', items: s.itens.map((i) => plain(i)) } as Block] : []),
+    ...(s.texto ?? []).flatMap(paras)
+  ])
 
 export function buildExport(store: CampaignStore, opts: ExportOptions): Block[] {
   const c = store.campaign()
@@ -198,7 +208,12 @@ export function buildExport(store: CampaignStore, opts: ExportOptions): Block[] 
         if (e.role) blocks.push({ t: 'p', runs: [{ text: e.role, italic: true }] })
         const portrait = file(e.portraitId)
         if (portrait) blocks.push({ t: 'image', file: portrait, alt: e.name })
-        const stats = (template?.fields ?? []).filter((f) => f.entityKind === kind).map((f) => [f.label, statText(e.stats[f.key])] as [string, string]).filter(([, v]) => v)
+        // Ficha completa e bloco de ameaça no lugar dos campos do modelo. Na versão dos jogadores só sai a ficha
+        // dos agentes deles: bloco de ameaça e ficha de vilão são do mestre.
+        const sheet = e.sheetData
+        const showSheet = sheet && (opts.gmOnly || e.isPlayer)
+        if (showSheet) blocks.push(...secoesEmBlocos('acoes' in sheet ? secoesDaAmeaca(sheet) : secoesDoAgente(sheet)))
+        const stats = (sheet ? [] : (template?.fields ?? []).filter((f) => f.entityKind === kind)).map((f) => [f.label, statText(e.stats[f.key])] as [string, string]).filter(([, v]) => v)
         const custom = e.customAttributes.map((a) => [a.label, a.value] as [string, string])
         if (stats.length + custom.length) blocks.push({ t: 'meta', pairs: [...stats, ...custom] })
         blocks.push(...paras(e.description), ...gm('Personalidade e segredos', e.personality))
@@ -234,6 +249,7 @@ export function buildExport(store: CampaignStore, opts: ExportOptions): Block[] 
   if (want.has('sessoes')) {
     const blocks: Block[] = []
     const clues = store.listClues()
+    const players = new Set(store.listEntities('personagem').filter((e) => e.isPlayer).map((e) => e.id))
     for (const s of store.listSessions()) {
       const full = store.getSession(s.id)
       blocks.push({ t: 'h2', text: `Sessão ${s.number}` })
@@ -245,6 +261,11 @@ export function buildExport(store: CampaignStore, opts: ExportOptions): Block[] 
         ]
       })
       blocks.push(...docToBlocks(full.notes))
+      const ini = store.getInitiative(s.id)
+      if (opts.gmOnly && ini.ordem.length) blocks.push({ t: 'h3', text: `Combate (rodada ${ini.rodada})` }, { t: 'list', items: linhasDaIniciativa(ini).map((l) => plain(l)) })
+      // Na versão dos jogadores, só as rolagens dos agentes deles.
+      const rolls = store.listRolls({ sessionId: s.id, limit: 5000 }).reverse().filter((r) => opts.gmOnly || (r.entityId !== null && players.has(r.entityId)))
+      if (rolls.length) blocks.push({ t: 'h3', text: 'Rolagens' }, { t: 'list', items: rolls.map((r) => plain(`${r.gameMinute !== null ? `${when(r.gameMinute).split(' · ')[1]} · ` : ''}${linhaDaRolagem(r)}`)) })
       const found = clues.filter((x) => x.foundSessionId === s.id)
       if (found.length) blocks.push({ t: 'h3', text: 'Pistas achadas' }, { t: 'list', items: found.map((x) => plain(x.title || 'Sem título')) })
     }
