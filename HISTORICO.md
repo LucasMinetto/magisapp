@@ -2,6 +2,14 @@
 
 Da versão mais recente para a mais antiga.
 
+## 0.10.0 — 07/11/2026
+
+- Combate redesenhado: ameaças e NPCs ficam fixos na tela, com alfinete para tirar e pôr
+- Cópias da mesma ameaça dividem uma ficha, com o PV, as condições e a iniciativa de cada cópia
+- A ficha da ameaça mostra Defesa, resistências, testes e ações sem precisar clicar
+- Cada agente tem um cartão com PV, PE, SAN, Defesa, condições, ataques, rituais, itens e componentes
+- Quem está na vez ganha destaque forte e a tela vai até ele
+
 ## 0.9.0 — 07/11/2026
 
 - Primeira versão numerada do Magistrado (fusão do autore com o taberna)
