@@ -1,10 +1,11 @@
 // Aba Inventário: itens, limite por patente e categoria, e carga. Portado do taberna (web/src/ficha/Inventario.tsx).
 import { Minus, Plus } from 'lucide-react'
 import { useState } from 'react'
-import { TIPOS_ITEM, type Item } from '@shared/ordem/esquemas'
+import { TIPOS_ITEM, itemSchema, type Item } from '@shared/ordem/esquemas'
 import { PATENTES } from '@shared/ordem/regras'
 import { Button, cx } from '@/ui'
 import { novoId, useFicha } from './contexto'
+import { BotaoDaBiblioteca } from './DaBiblioteca'
 import { AreaTexto, Escolha, Numero, Secao, Texto, Vazio } from './partes'
 
 const ROMANOS = ['0', 'I', 'II', 'III', 'IV']
@@ -15,7 +16,7 @@ export function Inventario() {
   const [editando, setEditando] = useState<string | null>(null)
   const mudar = (id: string, patch: Partial<Item>) => alterar({ inventario: a.inventario.map((x) => (x.id === id ? { ...x, ...patch } : x)) })
   const novo = () => {
-    const i: Item = { id: novoId(), nome: 'Novo item', tipo: filtro || 'Equipamento', categoria: 0, espacos: 1, quantidade: 1, defesa: 0, equipado: false, descricao: '' }
+    const i: Item = itemSchema.parse({ id: novoId(), nome: 'Novo item', tipo: filtro || 'Equipamento' })
     alterar({ inventario: [...a.inventario, i] })
     setEditando(i.id)
   }
@@ -55,9 +56,12 @@ export function Inventario() {
       <Secao
         titulo="Itens"
         acoes={
-          <Button size="sm" variant="ghost" icon={<Plus className="size-4" />} onClick={novo}>
-            Item
-          </Button>
+          <div className="flex gap-1">
+            <BotaoDaBiblioteca tipo="item" />
+            <Button size="sm" variant="ghost" icon={<Plus className="size-4" />} onClick={novo}>
+              Item
+            </Button>
+          </div>
         }
       >
         <div className="flex flex-wrap gap-1" role="group" aria-label="Filtrar por tipo">
@@ -85,6 +89,14 @@ export function Inventario() {
                   <Numero rotulo="Espaços" valor={i.espacos} aoMudar={(espacos) => mudar(i.id, { espacos })} />
                   <Numero rotulo="Quantidade" min={0} valor={i.quantidade} aoMudar={(q) => mudar(i.id, { quantidade: Math.max(0, q) })} />
                   {i.tipo === 'Proteção' && <Numero rotulo="Defesa" valor={i.defesa} aoMudar={(defesa) => mudar(i.id, { defesa })} />}
+                  {i.tipo === 'Arma' && (
+                    <>
+                      <Texto rotulo="Dano" valor={i.dano} placeholder="1d8" aoMudar={(dano) => mudar(i.id, { dano })} />
+                      <Texto rotulo="Crítico" valor={i.critico} placeholder="19/x3" aoMudar={(critico) => mudar(i.id, { critico })} />
+                      <Texto rotulo="Alcance" valor={i.alcance} placeholder="curto" aoMudar={(alcance) => mudar(i.id, { alcance })} />
+                      <Texto rotulo="Tipo de dano" valor={i.tipoDano} placeholder="Corte" aoMudar={(tipoDano) => mudar(i.id, { tipoDano })} />
+                    </>
+                  )}
                 </div>
                 <AreaTexto rotulo="Descrição" valor={i.descricao} linhas={2} aoMudar={(descricao) => mudar(i.id, { descricao })} />
                 <div className="flex justify-between">
@@ -112,6 +124,7 @@ export function Inventario() {
                   <div className="text-xs text-subtle">
                     {i.tipo} · Cat. {ROMANOS[i.categoria]} · {i.espacos} espaço{i.espacos === 1 ? '' : 's'}
                     {i.tipo === 'Proteção' && i.defesa ? ` · Defesa +${i.defesa}` : ''}
+                    {i.dano && ` · ${i.dano}${i.critico ? ` ${i.critico}` : ''}${i.alcance ? ` · ${i.alcance}` : ''}`}
                     {i.origem && ` · ${i.origem.sourceName}`}
                   </div>
                   {i.descricao && <div className="mt-1 line-clamp-2 text-xs text-muted">{i.descricao}</div>}

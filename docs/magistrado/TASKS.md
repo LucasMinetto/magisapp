@@ -72,7 +72,8 @@
 - **Base:** `taberna/web/src/paginas/AmeacaEditor.tsx`, `taberna/web/src/componentes/BlocoAmeaca.tsx`.
 - **Feito:** tela **Biblioteca** no menu (`screens/Compendium.tsx`, rotas `/biblioteca` e `/biblioteca/ameaca/:id`): lista com busca e filtro por origem e elemento, "Origens…" para criar e apagar livros, editor com prévia do bloco, "Trazer para a campanha", "Duplicar" e "Apagar". `renderer/src/ameaca/` tem o bloco no formato do livro, o editor e o seletor de resistências, vulnerabilidades e imunidades. A ficha de ameaça da campanha edita o bloco em `sheet_data` e mostra a origem. Na Sessão, a ameaça citada na cena mostra VD, Defesa e PV e abre o bloco. A aba de rituais e itens entra na mesma tela (T9). PV atual da ameaça e rolar dali ficam na T10. e2e com 7 verificações novas.
 
-### T9. Rituais e itens
+### T9. Rituais e itens ✅ 2026-11-07
+- **Feito:** abas Ameaças, Rituais e Itens na Biblioteca (`?tipo=`), filtros por origem, elemento, círculo, tipo e categoria; `/biblioteca/:tipo/:id` com editor, bloco no formato do livro e "Colocar na ficha" (diálogo com as fichas completas da campanha). Item ganhou dano, crítico, alcance, tipo de dano, proficiência, empunhadura e elemento; os três registros ganharam `pagina` (fica só na biblioteca). e2e: duplicar, colocar na ficha, apagar da biblioteca e conferir que continua na ficha. Dentro da ficha, as abas Inventário e Rituais têm "Da biblioteca" (busca, origem, elemento; marca o que já está na ficha); a cópia é feita no próprio editor da ficha (`shared/ordem/biblioteca.ts`), sem brigar com o salvamento automático.
 - **Depende de:** T5
 - **Resultado:** abas de rituais (elemento, círculo, execução, Discente e Verdadeiro) e de itens (tipo, categoria, espaço) na biblioteca, com filtro por origem e botão "colocar na ficha".
 - **Aceite:** um ritual ou item colocado na ficha continua lá mesmo se for apagado da biblioteca.
@@ -106,7 +107,12 @@
 
 ## Depois da fusão (fora deste escopo, já combinado)
 
-### P1. Dados e regras do livro → issue [#14](https://github.com/LucasMinetto/magistrado/issues/14)
+### P1. Dados e regras do livro → issue [#14](https://github.com/LucasMinetto/magistrado/issues/14) ✅ 2026-11-07
+- **Feito:** `tools/livros/extrair.py` (Python + PyMuPDF) lê os PDFs *Ordem Paranormal RPG v1.3* e *Sobrevivendo ao Horror v1.3* e gera `app/src/main/livros/{oprpg,sah}.json` (98 rituais, 180 itens, 96 ameaças, com a página) e `app/src/renderer/src/regras/regras.json` (58 seções de regras). A biblioteca semeia os registros com ids fixos na migração 2 (tabela `meta`): só acrescenta o que falta, não desfaz edição nem apagamento do mestre; para mandar dados novos, suba `LIVROS_VERSAO`. Tela **Regras** (`/regras`): sumário por livro e capítulo, busca com trecho e página, subtítulos; as entradas da biblioteca saem do texto e a seção liga para a Biblioteca. Ctrl+K acha regras e registros da biblioteca.
+- **Marca d'água:** o PDF do *Sobrevivendo* traz nome e e-mail de terceiro em todas as páginas; `pdf.py` descarta toda linha com e-mail e `livros.test.ts` garante que nenhum JSON tem e-mail.
+- **Conferido:** crítico (livro, Combate: multiplica só os dados da arma; bônus fixo e dados extras não) bate com a T7. Cobertura: armas ganharam os campos que faltavam; ameaças e rituais cabem nos campos atuais.
+- **Tokens:** "Importar tokens…" (aba Ameaças) liga as imagens de uma pasta às ameaças de nome parecido (`main/tokens.ts`); a imagem é copiada para `biblioteca-tokens/` ao lado do banco, entra no backup da biblioteca e vira o retrato da ficha ao trazer a ameaça. Cada ameaça também escolhe ou tira o seu token.
+- **Fora:** fichas das missões do *Sobrevivendo* (são do roteiro), ambientação, conselhos de mestrar, descrição narrativa das ameaças.
 - Extrair do livro e cadastrar as **ameaças, os itens e os rituais** reais na biblioteca única (T4b, T8, T9), cada um com a origem do livro de onde veio. Pedido do usuário em 2026-11-02.
 - **Ampliada em 2026-11-04:** a mesma extração cria a tela **Regras**, com todas as regras mecânicas (sem ambientação nem conselhos de como mestrar), sumário, Ctrl+K e a página do livro. A regra geral fica na tela, e as entradas ficam na biblioteca, com links. Os jogadores veem tudo menos as regras e as fichas de ameaças ([#15](https://github.com/LucasMinetto/magistrado/issues/15), na P2). Intenção em [docs/intent/tela-de-regras.md](../intent/tela-de-regras.md).
 - **Livro:** `Ordem Paranormal RPG.pdf` (341 páginas, com texto). Recortar em duas colunas, remover a marca d'água do RPGPedia (com teste) e revisar as fichas e as tabelas. Os dados vão para o git em JSON, mas o PDF não.

@@ -1,12 +1,16 @@
 import * as RadixDialog from '@radix-ui/react-dialog'
 import { Command } from 'cmdk'
-import { CalendarClock, Clapperboard, FileDown, FileSearch, FileText, Home, MapPin, Plus, Search, SearchCheck, Skull, User, Users } from 'lucide-react'
+import { BookMarked, CalendarClock, Clapperboard, FileDown, FileSearch, FileText, Home, MapPin, Package, Plus, Scale, Search, SearchCheck, Skull, Sparkles, User, Users } from 'lucide-react'
 import { Fragment, useEffect, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router'
 import { useCampaign } from '@/campaign'
 import { createEntity, createScene, KIND_LABEL } from '@/lib/actions'
 import { useExportDialog } from './ExportDialog'
-import type { EntityKind, SearchResult } from '@shared/types'
+import { buscar, carregarRegras, type Achado } from '@/regras/dados'
+import type { EntityKind, LibraryEntry, LibraryKind, SearchResult } from '@shared/types'
+
+const LIB_ICON: Record<LibraryKind, ReactNode> = { ameaca: <Skull />, ritual: <Sparkles />, item: <Package /> }
+const LIB_LABEL: Record<LibraryKind, string> = { ameaca: 'Ameaça', ritual: 'Ritual', item: 'Item' }
 
 const KIND_ICON: Record<EntityKind, ReactNode> = {
   personagem: <User />,
@@ -45,6 +49,8 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
   const [results, setResults] = useState<SearchResult[]>([])
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState('')
+  const [regras, setRegras] = useState<Achado[]>([])
+  const [biblioteca, setBiblioteca] = useState<LibraryEntry[]>([])
 
   useEffect(() => {
     if (!open) setQ('')
@@ -69,6 +75,28 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
       clearTimeout(t)
     }
   }, [q, version])
+
+  // Regras dos livros e Biblioteca: também respondem ao Ctrl+K.
+  useEffect(() => {
+    if (q.trim().length < 2) {
+      setRegras([])
+      setBiblioteca([])
+      return
+    }
+    let alive = true
+    const t = setTimeout(() => {
+      carregarRegras()
+        .then((ss) => alive && setRegras(buscar(ss, q, 6)))
+        .catch(() => alive && setRegras([]))
+      Promise.all((['ameaca', 'ritual', 'item'] as const).map((kind) => window.api.library.list({ kind, q })))
+        .then((ls) => alive && setBiblioteca(ls.flatMap((l) => (l as LibraryEntry[]).slice(0, 4))))
+        .catch(() => alive && setBiblioteca([]))
+    }, 120)
+    return () => {
+      alive = false
+      clearTimeout(t)
+    }
+  }, [q])
 
   const go = (to: string) => {
     onOpenChange(false)
@@ -122,7 +150,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
             </div>
             <Command.List className="max-h-[min(420px,60vh)] overflow-auto p-2">
               {error && <div className="px-3 py-2 text-sm text-danger">{error}</div>}
-              {q.trim() && results.length === 0 && !error && (
+              {q.trim() && results.length === 0 && regras.length === 0 && biblioteca.length === 0 && !error && (
                 <div className="px-3 py-2 text-sm text-muted">Nada com «{q.trim()}». Criar algo com esse nome?</div>
               )}
               {results.length > 0 && (
@@ -158,6 +186,42 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
                   ))}
                 </Command.Group>
               )}
+              {biblioteca.length > 0 && (
+                <Command.Group heading="Biblioteca" className="[&_[cmdk-group-heading]]:type-label [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-subtle">
+                  {biblioteca.map((e) => (
+                    <Command.Item key={`lib:${e.kind}:${e.id}`} value={`lib:${e.kind}:${e.id}`} onSelect={() => go(`/biblioteca/${e.kind}/${e.id}`)} className={itemClass}>
+                      {LIB_ICON[e.kind]}
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate">{e.name}</div>
+                        <div className="truncate text-xs text-subtle">
+                          {LIB_LABEL[e.kind]} · {e.sourceName}
+                          {e.data.pagina > 0 && `, p. ${e.data.pagina}`}
+                        </div>
+                      </div>
+                    </Command.Item>
+                  ))}
+                </Command.Group>
+              )}
+              {regras.length > 0 && (
+                <Command.Group heading="Regras" className="[&_[cmdk-group-heading]]:type-label [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-subtle">
+                  {regras.map((a, i) => (
+                    <Command.Item
+                      key={`regra:${i}`}
+                      value={`regra:${i}`}
+                      onSelect={() => go(`/regras/${a.secao.id}?q=${encodeURIComponent(q.trim())}${a.ancora ? `#${a.ancora}` : ''}`)}
+                      className={itemClass}
+                    >
+                      <Scale />
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate">{a.rotulo}</div>
+                        <div className="truncate text-xs text-subtle">
+                          p. {a.pagina} · <Snippet text={a.trecho} />
+                        </div>
+                      </div>
+                    </Command.Item>
+                  ))}
+                </Command.Group>
+              )}
               <Command.Group heading={q.trim() ? 'Criar' : 'Ir para'} className="[&_[cmdk-group-heading]]:type-label [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-subtle">
                 {!q.trim() && (
                   <>
@@ -172,6 +236,12 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
                     </Command.Item>
                     <Command.Item value="go:tempo" onSelect={() => go('/linha-do-tempo')} className={itemClass}>
                       <CalendarClock /> Linha do tempo
+                    </Command.Item>
+                    <Command.Item value="go:biblioteca" onSelect={() => go('/biblioteca')} className={itemClass}>
+                      <BookMarked /> Biblioteca
+                    </Command.Item>
+                    <Command.Item value="go:regras" onSelect={() => go('/regras')} className={itemClass}>
+                      <Scale /> Regras
                     </Command.Item>
                     <Command.Item
                       value="do:exportar"

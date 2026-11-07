@@ -31,5 +31,6 @@ npm.cmd run build && node e2e/slice.mjs
 ## Pastas
 
 - `app/`: o app Electron (React, SQLite).
+- `tools/livros/`: extrai dos PDFs dos livros os rituais, itens, ameaças e regras (`python extrair.py <livro básico> <Sobrevivendo ao Horror>`). Os PDFs não vão para o git.
 - `replica/`: arquitetura, esquema e o design (tokens, temas, `contrast.py`) herdados do autore.
 - `docs/magistrado/`: PRD, especificação técnica, tarefas e memória do projeto.

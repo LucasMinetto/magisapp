@@ -2,7 +2,7 @@ import { app, BrowserWindow, net, protocol, shell } from 'electron'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { recentCoverFile } from './campaigns'
-import { autoBackupTick, closeCurrent, closeLibrary, currentStore, registerIpc } from './ipc'
+import { autoBackupTick, closeCurrent, closeLibrary, currentStore, libraryTokenFile, registerIpc } from './ipc'
 
 // Testes isolam as configurações (campanhas recentes) numa pasta temporária.
 if (process.env.MAGISTRADO_USER_DATA) app.setPath('userData', process.env.MAGISTRADO_USER_DATA)
@@ -18,7 +18,9 @@ function serveAttachments(): void {
         ? currentStore()?.attachmentFile(url.pathname.slice(1))?.file
         : url.host === 'capa'
           ? recentCoverFile(decodeURIComponent(url.pathname.slice(1)))
-          : null
+          : url.host === 'token'
+            ? libraryTokenFile(url.pathname.slice(1))
+            : null
     if (!file) return new Response('Anexo não encontrado', { status: 404 })
     const res = await net.fetch(pathToFileURL(file).toString())
     if (url.host !== 'anexo') return res

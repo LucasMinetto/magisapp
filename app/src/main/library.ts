@@ -7,7 +7,7 @@ import Database from 'better-sqlite3'
 import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate'
 import { copyFileSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import type { z } from 'zod'
 import { newId, nowIso, type DB } from './db'
 import { BACKUP_EXT } from './backup'
@@ -16,17 +16,18 @@ import {
   ameacaBibliotecaSchema,
   fichaAgenteSchema,
   itemBibliotecaSchema,
-  itemSchema,
   ritualBibliotecaSchema,
-  ritualDaFichaSchema,
   type BlocoAmeaca,
   type Item,
   type Origem,
   type RitualDaFicha
 } from '../shared/ordem/esquemas'
+import type { LivroDados } from './livros'
+import { itemParaFicha, origemDe, ritualParaFicha } from '../shared/ordem/biblioteca'
+import { arquivoDoToken, guardarToken, imagensDaPasta, parear } from './tokens'
 import type { Entity, LibraryDataByKind, LibraryEntry, LibraryKind, LibrarySource, SourceKind } from '../shared/types'
 
-export const LIBRARY_VERSION = 1
+export const LIBRARY_VERSION = 2
 export const OWN_SOURCE_NAME = 'Criações próprias'
 
 /** Migração n leva a biblioteca da versão n-1 para n (pragma user_version). */
@@ -55,7 +56,9 @@ const MIGRATIONS: Record<number, string> = {
       );
       create index lib_threats_source on lib_threats (source_id, name);
       create index lib_items_source on lib_items (source_id, name);
-      create index lib_rituals_source on lib_rituals (source_id, name);`
+      create index lib_rituals_source on lib_rituals (source_id, name);`,
+  // 2: guarda até qual versão dos dados dos livros a biblioteca já recebeu.
+  2: `create table meta (key text primary key, value text not null);`
 }
 
 const TABLE: Record<LibraryKind, string> = { ameaca: 'lib_threats', item: 'lib_items', ritual: 'lib_rituals' }
@@ -111,8 +114,94 @@ function openLibraryDb(file: string): DB {
 export class LibraryStore {
   db: DB
 
-  constructor(readonly file: string) {
+  /** `livros`: dados dos livros oficiais para semear (o app passa os de src/main/livros; os testes, nada). */
+  constructor(
+    readonly file: string,
+    private readonly livros: { dados: LivroDados[]; versao: number } = { dados: [], versao: 0 }
+  ) {
     this.db = openLibraryDb(file)
+    this.semear()
+  }
+
+  /** Pasta das imagens dos tokens, ao lado do banco. */
+  get tokensDir(): string {
+    return join(dirname(this.file), 'biblioteca-tokens')
+  }
+
+  tokenFile(nome: string): string | null {
+    return arquivoDoToken(this.tokensDir, nome)
+  }
+
+  /** Põe (ou tira, com null) o token de uma ameaça. */
+  setToken(id: string, src: string | null): LibraryEntry<'ameaca'> {
+    const e = this.get('ameaca', id)
+    const token = src ? guardarToken(this.tokensDir, src) : ''
+    return this.save('ameaca', { id, sourceId: e.sourceId, data: { ...e.data, token } })
+  }
+
+  /**
+   * Liga as imagens de uma pasta (e subpastas) às ameaças de nome parecido. Não troca token que a ameaça já tem.
+   * Devolve quem recebeu imagem e as imagens que não acharam ameaça.
+   */
+  importTokens(dir: string): { ligados: string[]; sobras: string[]; jaTinham: number } {
+    const ameacas = this.list('ameaca')
+    const { ligados, sobras } = parear(
+      ameacas.map((a) => ({ id: a.id, nome: a.name })),
+      imagensDaPasta(dir)
+    )
+    const nomes: string[] = []
+    let jaTinham = 0
+    this.db.transaction(() => {
+      for (const a of ameacas) {
+        const img = ligados.get(a.id)
+        if (!img) continue
+        if (a.data.token && this.tokenFile(a.data.token)) {
+          jaTinham++
+          continue
+        }
+        this.setToken(a.id, img.arquivo)
+        nomes.push(a.name)
+      }
+    })()
+    return { ligados: nomes.sort((x, y) => x.localeCompare(y)), sobras: sobras.map((i) => i.arquivo.slice(dir.length + 1)), jaTinham }
+  }
+
+  /**
+   * Acrescenta os registros dos livros que ainda não estão na biblioteca, uma vez por versão dos dados.
+   * Usa ids fixos: o que o mestre editou fica como está; o que apagou só volta quando a versão dos dados subir.
+   */
+  semear(): void {
+    const { dados, versao } = this.livros
+    if (!dados.length) return
+    const atual = Number((this.db.prepare("select value from meta where key = 'livros'").get() as { value: string } | undefined)?.value ?? 0)
+    if (atual >= versao) return
+    const now = nowIso()
+    const tabelas: [keyof Omit<LivroDados, 'fonte'>, LibraryKind][] = [
+      ['ameacas', 'ameaca'],
+      ['itens', 'item'],
+      ['rituais', 'ritual']
+    ]
+    this.db.transaction(() => {
+      for (const livro of dados) {
+        const porNome = this.db.prepare('select id from sources where name = ? collate nocase').get(livro.fonte.nome) as { id: string } | undefined
+        const sourceId = porNome?.id ?? `livro-${livro.fonte.sigla.toLowerCase()}`
+        if (!porNome) {
+          this.db
+            .prepare("insert into sources (id, name, kind, abbreviation, created_at, updated_at) values (?, ?, 'oficial', ?, ?, ?)")
+            .run(sourceId, livro.fonte.nome, livro.fonte.sigla, now, now)
+        }
+        for (const [campo, kind] of tabelas) {
+          const ins = this.db.prepare(`insert or ignore into ${TABLE[kind]} (id, source_id, name, data, created_at, updated_at) values (?, ?, ?, ?, ?, ?)`)
+          for (const r of livro[campo]) {
+            const { id, ...resto } = r
+            const parsed = SCHEMA[kind].safeParse(resto)
+            if (!parsed.success) continue
+            ins.run(id, sourceId, parsed.data.nome, JSON.stringify(parsed.data), now, now)
+          }
+        }
+      }
+      this.db.prepare("insert into meta (key, value) values ('livros', ?) on conflict(key) do update set value = excluded.value").run(String(versao))
+    })()
   }
 
   close(): void {
@@ -244,7 +333,12 @@ export class LibraryStore {
         itens: this.list('item'),
         rituais: this.list('ritual')
       }
-      const zip = zipSync({ 'biblioteca.sqlite': readFileSync(tmp), 'biblioteca.json': strToU8(JSON.stringify(json, null, 1)) }, { level: 6 })
+      const arquivos: Record<string, Uint8Array> = { 'biblioteca.sqlite': readFileSync(tmp), 'biblioteca.json': strToU8(JSON.stringify(json, null, 1)) }
+      for (const a of this.list('ameaca')) {
+        const f = a.data.token ? this.tokenFile(a.data.token) : null
+        if (f) arquivos[`tokens/${a.data.token}`] = readFileSync(f)
+      }
+      const zip = zipSync(arquivos, { level: 6 })
       writeFileSync(`${file}.parcial`, zip)
       renameSync(`${file}.parcial`, file)
       return file
@@ -260,7 +354,7 @@ export class LibraryStore {
   restore(file: string): void {
     let entries: Record<string, Uint8Array>
     try {
-      entries = unzipSync(readFileSync(file), { filter: (f) => f.name === 'biblioteca.sqlite' || f.name === 'biblioteca.json' })
+      entries = unzipSync(readFileSync(file), { filter: (f) => f.name === 'biblioteca.sqlite' || f.name === 'biblioteca.json' || f.name.startsWith('tokens/') })
     } catch {
       throw new Error('Não deu para ler este arquivo. Ele é um backup da biblioteca do Magistrado?')
     }
@@ -284,39 +378,44 @@ export class LibraryStore {
       this.db.close()
       for (const f of ['', '-wal', '-shm']) rmSync(`${this.file}${f}`, { force: true })
       copyFileSync(tmp, this.file)
+      for (const [nome, dados] of Object.entries(entries)) {
+        const base = nome.slice('tokens/'.length)
+        if (!nome.startsWith('tokens/') || !/^[a-f0-9]{16}\.[a-z]{3,4}$/.test(base)) continue
+        mkdirSync(this.tokensDir, { recursive: true })
+        if (!existsSync(join(this.tokensDir, base))) writeFileSync(join(this.tokensDir, base), dados)
+      }
     } finally {
       rmSync(tmp, { force: true })
       // Reabre sempre: com o backup novo, ou com a mesma de antes se algo falhou antes de trocar.
       if (!this.db.open) this.db = openLibraryDb(this.file)
     }
+    this.semear()
   }
 }
 
 // ------------------------------------------------------------ cópia para a campanha
 
-const origem = (e: LibraryEntry): Origem => ({ libraryId: e.id, sourceId: e.sourceId, sourceName: e.sourceName })
+const origem = origemDe
 
 /** Ameaça da biblioteca como ficha da campanha: o nome vai para a ficha, o resto para o bloco. */
-export function threatForCampaign(e: LibraryEntry<'ameaca'>): { name: string; sheetData: BlocoAmeaca; origin: Origem } {
-  const { nome, ...bloco } = e.data
-  return { name: nome, sheetData: bloco, origin: origem(e) }
+export function threatForCampaign(e: LibraryEntry<'ameaca'>): { name: string; sheetData: BlocoAmeaca; origin: Origem; token: string } {
+  const { nome, pagina: _pagina, token, ...bloco } = e.data
+  return { name: nome, sheetData: bloco, origin: origem(e), token }
 }
 
 /** Item da biblioteca no inventário de uma ficha: id novo, um de quantidade, guardado. */
-export function itemForSheet(e: LibraryEntry<'item'>): Item {
-  return itemSchema.parse({ ...e.data, id: newId(), quantidade: 1, equipado: false, origem: origem(e) })
-}
+export const itemForSheet = (e: LibraryEntry<'item'>): Item => itemParaFicha(e, newId())
 
 /** Ritual da biblioteca na ficha: id novo e a origem. */
-export function ritualForSheet(e: LibraryEntry<'ritual'>): RitualDaFicha {
-  const { alvoTipo: _alvoTipo, ...ritual } = e.data
-  return ritualDaFichaSchema.parse({ ...ritual, id: newId(), origem: origem(e) })
-}
+export const ritualForSheet = (e: LibraryEntry<'ritual'>): RitualDaFicha => ritualParaFicha(e, newId())
 
 /** Ameaça vira ficha nova; item e ritual entram na ficha completa escolhida. Sempre uma cópia. */
 export function copyToCampaign(store: CampaignStore, lib: LibraryStore, input: { kind: LibraryKind; id: string; entityId?: string }): Entity {
   if (input.kind === 'ameaca') {
     const t = threatForCampaign(lib.get('ameaca', input.id))
+    // o token da biblioteca vira o retrato da ficha (uma cópia na campanha)
+    const tokenFile = t.token ? lib.tokenFile(t.token) : null
+    const portraitId = tokenFile ? store.importFile(tokenFile, { imagesOnly: true }).attachment.id : null
     return store.saveEntity(
       {
         kind: 'ameaca',
@@ -327,7 +426,7 @@ export function copyToCampaign(store: CampaignStore, lib: LibraryStore, input: {
         stats: {},
         description: '',
         personality: '',
-        portraitId: null,
+        portraitId,
         customAttributes: [],
         sheetData: t.sheetData
       },

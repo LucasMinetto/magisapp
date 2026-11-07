@@ -13,3 +13,6 @@ _fontes/
 # Capturas: só referência local
 replica/screens/
 replica/clone-screens/
+
+# Python (tools/livros)
+__pycache__/

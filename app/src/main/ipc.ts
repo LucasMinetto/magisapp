@@ -24,6 +24,8 @@ import {
 import { CampaignStore, IMAGE_EXTENSIONS, IMPORT_EXTENSIONS } from './store'
 import { join } from 'node:path'
 import { copyToCampaign, LibraryStore } from './library'
+import { LIVROS, LIVROS_VERSAO } from './livros'
+import { TOKEN_EXTENSIONS } from './tokens'
 import { iniciativaSchema, rolagemSchema, type Iniciativa, type RolagemInput } from '../shared/ordem/esquemas'
 import {
   ATTACHMENT_KINDS,
@@ -91,7 +93,12 @@ const swap = (next: CampaignStore) => {
 
 // Biblioteca única (fora das campanhas): abre na primeira vez que alguém pede.
 let lib: LibraryStore | null = null
-const library = (): LibraryStore => (lib ??= new LibraryStore(join(app.getPath('userData'), 'biblioteca.sqlite')))
+const library = (): LibraryStore => (lib ??= new LibraryStore(join(app.getPath('userData'), 'biblioteca.sqlite'), { dados: LIVROS, versao: LIVROS_VERSAO }))
+
+/** Arquivo de um token da biblioteca (magistrado://token/<nome>). */
+export function libraryTokenFile(nome: string): string | null {
+  return library().tokenFile(nome)
+}
 
 export function closeLibrary(): void {
   lib?.close()
@@ -421,6 +428,27 @@ const channels: Record<string, [z.ZodTypeAny, (input: never, win: BrowserWindow)
       return true
     }
   ],
+  'library:importTokens': [
+    z.undefined(),
+    async (_: never, win: BrowserWindow) => {
+      const res = await dialog.showOpenDialog(win, { title: 'Pasta com os tokens das ameaças', properties: ['openDirectory'] })
+      if (res.canceled || !res.filePaths[0]) return null
+      return library().importTokens(res.filePaths[0])
+    }
+  ],
+  'library:pickToken': [
+    id,
+    async (input: string, win: BrowserWindow) => {
+      const res = await dialog.showOpenDialog(win, {
+        title: 'Token da ameaça',
+        properties: ['openFile'],
+        filters: [{ name: 'Imagens', extensions: TOKEN_EXTENSIONS }]
+      })
+      if (res.canceled || !res.filePaths[0]) return null
+      return library().setToken(input, res.filePaths[0])
+    }
+  ],
+  'library:clearToken': [id, (input: string) => library().setToken(input, null)],
   'entities:save': [entityInput, (input: z.infer<typeof entityInput>) => need().saveEntity(input)],
   'entities:trash': [id, (input: string) => need().trashEntity(input)],
   'entities:peekOther': [

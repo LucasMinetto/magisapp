@@ -5,6 +5,7 @@ import {
   Clapperboard,
   Clock,
   Dices,
+  Scale,
   FileText,
   FolderArchive,
   FolderOpen,
@@ -49,7 +50,10 @@ const CAMPAIGN_NAV: NavItem[] = [
   { to: '/arquivos', label: 'Arquivos', icon: <FolderArchive /> },
   { to: '/biblioteca', label: 'Biblioteca', icon: <BookMarked /> }
 ]
-const TABLE_NAV: NavItem[] = [{ to: '/sessao', label: 'Sessão', icon: <Dices /> }]
+const TABLE_NAV: NavItem[] = [
+  { to: '/sessao', label: 'Sessão', icon: <Dices /> },
+  { to: '/regras', label: 'Regras', icon: <Scale /> }
+]
 const FOOT_NAV: NavItem[] = [
   { to: '/lixeira', label: 'Lixeira', icon: <Trash2 /> },
   { to: '/ajustes', label: 'Ajustes', icon: <Settings /> },

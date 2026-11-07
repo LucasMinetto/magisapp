@@ -1,15 +1,17 @@
 // Biblioteca: ameaças (T8), rituais e itens (T9) que valem para todas as campanhas. Trazer para a campanha faz uma cópia.
-import { ArrowLeft, BookMarked, Copy, Plus, Search, Skull, Trash2, UserPlus } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router'
+import { ArrowLeft, BookMarked, Copy, ImageUp, Package, Plus, Search, Skull, Sparkles, Trash2, UserPlus } from 'lucide-react'
+import { useEffect, useState, type ReactNode } from 'react'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { useCampaign } from '@/campaign'
 import { BlocoAmeaca } from '@/ameaca/BlocoAmeaca'
 import { EditorAmeaca } from '@/ameaca/EditorAmeaca'
+import { BlocoItem, CATEGORIAS, EditorItem, resumoItem } from '@/biblioteca/Item'
+import { BlocoRitual, EditorRitual, ROMANO } from '@/biblioteca/Ritual'
 import { Abas, Texto } from '@/ficha/partes'
 import { useAutosave, useLoad } from '@/lib/data'
 import { Button, Card, Chip, Dialog, EmptyState, ErrorNote, IconButton, SaveIndicator, SelectField, TextField } from '@/ui'
-import { ELEMENTOS, type AmeacaBiblioteca } from '@shared/ordem/esquemas'
-import { SOURCE_KINDS, type LibraryEntry, type LibrarySource, type SourceKind } from '@shared/types'
+import { ELEMENTOS, TIPOS_ITEM } from '@shared/ordem/esquemas'
+import { SOURCE_KINDS, type LibraryEntry, type LibraryKind, type LibrarySource, type SourceKind } from '@shared/types'
 
 const KIND_SOURCE: Record<SourceKind, string> = { oficial: 'Livro oficial', propria: 'Criação própria', outro: 'Outro livro' }
 
@@ -83,23 +85,67 @@ function Sources({ open, onClose, sources, onChanged }: { open: boolean; onClose
   )
 }
 
+const TABS: { id: LibraryKind; texto: string; novo: string; vazio: string }[] = [
+  { id: 'ameaca', texto: 'Ameaças', novo: 'Nova ameaça', vazio: 'Nenhuma ameaça' },
+  { id: 'ritual', texto: 'Rituais', novo: 'Novo ritual', vazio: 'Nenhum ritual' },
+  { id: 'item', texto: 'Itens', novo: 'Novo item', vazio: 'Nenhum item' }
+]
+const ICON: Record<LibraryKind, ReactNode> = { ameaca: <Skull />, ritual: <Sparkles />, item: <Package /> }
+const isKind = (v: string | null | undefined): v is LibraryKind => v === 'ameaca' || v === 'ritual' || v === 'item'
+const tokenUrl = (t: string) => `magistrado://token/${t}`
+
+function Token({ token, nome, tamanho = 40 }: { token: string; nome: string; tamanho?: number }) {
+  if (!token) return null
+  return <img src={tokenUrl(token)} alt={`Token de ${nome}`} width={tamanho} height={tamanho} className="shrink-0 rounded-full border border-border bg-surface-raised object-cover" style={{ width: tamanho, height: tamanho }} />
+}
+
 export function Compendium() {
   const navigate = useNavigate()
+  const [params, setParams] = useSearchParams()
+  const tipo = params.get('tipo')
+  const kind: LibraryKind = isKind(tipo) ? tipo : 'ameaca'
+  const tab = TABS.find((t) => t.id === kind)!
   const [q, setQ] = useState('')
   const [sourceId, setSourceId] = useState('')
   const [elemento, setElemento] = useState('')
+  const [circulo, setCirculo] = useState('')
+  const [tipoItem, setTipoItem] = useState('')
+  const [categoria, setCategoria] = useState('')
   const [showSources, setShowSources] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [importacao, setImportacao] = useState<{ ligados: string[]; sobras: string[]; jaTinham: number } | null>(null)
   const sources = useLoad(() => window.api.library.sources(), [])
-  const list = useLoad(() => window.api.library.list({ kind: 'ameaca', q, sourceId: sourceId || undefined }), [q, sourceId])
-  const shown = (list.data ?? []).filter((a) => !elemento || a.data.elemento === elemento)
+  const list = useLoad(() => window.api.library.list({ kind, q, sourceId: sourceId || undefined }), [kind, q, sourceId])
+  const importarTokens = async () => {
+    setError(null)
+    try {
+      const r = await window.api.library.importTokens()
+      if (r) {
+        setImportacao(r)
+        list.reload()
+      }
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+  const all = (list.data ?? []) as LibraryEntry[]
+  const shown = all.filter((e) => {
+    if (e.kind === 'ameaca') return !elemento || e.data.elemento === elemento
+    if (e.kind === 'ritual') {
+      const r = (e as LibraryEntry<'ritual'>).data
+      return (!elemento || r.elemento === elemento) && (!circulo || String(r.circulo) === circulo)
+    }
+    const i = (e as LibraryEntry<'item'>).data
+    return (!tipoItem || i.tipo === tipoItem) && (!categoria || String(i.categoria) === categoria)
+  })
+  const filtered = Boolean(q || sourceId || elemento || circulo || tipoItem || categoria)
 
   const create = async () => {
     const own = sources.data?.find((s) => s.builtin) ?? sources.data?.[0]
     if (!own) return
     try {
-      const e = await window.api.library.save({ kind: 'ameaca', sourceId: sourceId || own.id, data: { nome: 'Nova ameaça' } })
-      navigate(`/biblioteca/ameaca/${e.id}`)
+      const e = await window.api.library.save({ kind, sourceId: sourceId || own.id, data: { nome: tab.novo } })
+      navigate(`/biblioteca/${kind}/${e.id}`)
     } catch (e) {
       setError((e as Error).message)
     }
@@ -110,17 +156,22 @@ export function Compendium() {
       <div className="flex flex-wrap items-center gap-2">
         <div className="mr-auto">
           <h1 className="type-xl">Biblioteca</h1>
-          <p className="text-sm text-muted">Vale para todas as campanhas. O que você traz para a campanha vira uma cópia.</p>
+          <p className="text-sm text-muted">Vale para todas as campanhas. O que você traz para a campanha ou coloca numa ficha vira uma cópia.</p>
         </div>
+        {kind === 'ameaca' && (
+          <Button icon={<ImageUp className="size-4" />} onClick={() => void importarTokens()}>
+            Importar tokens…
+          </Button>
+        )}
         <Button icon={<BookMarked className="size-4" />} onClick={() => setShowSources(true)}>
           Origens…
         </Button>
         <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => void create()} disabled={!sources.data}>
-          Nova ameaça
+          {tab.novo}
         </Button>
       </div>
 
-      <Abas rotulo="Tipo de registro" abas={[{ id: 'ameaca', texto: 'Ameaças' }]} atual="ameaca" aoMudar={() => {}} />
+      <Abas rotulo="Tipo de registro" abas={TABS} atual={kind} aoMudar={(id) => setParams({ tipo: id }, { replace: true })} />
 
       <div className="flex flex-wrap items-end gap-3">
         <label className="relative block w-72">
@@ -134,20 +185,57 @@ export function Compendium() {
           />
         </label>
         <SelectField label="Origem" empty="Todas as origens" value={sourceId} onChange={(e) => setSourceId(e.target.value)} options={(sources.data ?? []).map((s) => ({ value: s.id, label: s.name }))} />
-        <SelectField label="Elemento" empty="Todos os elementos" value={elemento} onChange={(e) => setElemento(e.target.value)} options={ELEMENTOS.map((x) => ({ value: x, label: x }))} />
+        {kind !== 'item' && (
+          <SelectField label="Elemento" empty="Todos os elementos" value={elemento} onChange={(e) => setElemento(e.target.value)} options={ELEMENTOS.map((x) => ({ value: x, label: x }))} />
+        )}
+        {kind === 'ritual' && (
+          <SelectField label="Círculo" empty="Todos os círculos" value={circulo} onChange={(e) => setCirculo(e.target.value)} options={[1, 2, 3, 4].map((c) => ({ value: String(c), label: `${c}º círculo` }))} />
+        )}
+        {kind === 'item' && (
+          <>
+            <SelectField label="Tipo" empty="Todos os tipos" value={tipoItem} onChange={(e) => setTipoItem(e.target.value)} options={TIPOS_ITEM.map((x) => ({ value: x, label: x }))} />
+            <SelectField label="Categoria" empty="Todas" value={categoria} onChange={(e) => setCategoria(e.target.value)} options={CATEGORIAS.map((c, n) => ({ value: String(n), label: c }))} />
+          </>
+        )}
+        {list.data && (
+          <span className="pb-2 text-xs text-subtle">
+            {shown.length} {shown.length === 1 ? 'registro' : 'registros'}
+          </span>
+        )}
       </div>
 
       {(error || list.error || sources.error) && <ErrorNote message={(error || list.error || sources.error)!} onRetry={list.reload} />}
 
+      {importacao && kind === 'ameaca' && (
+        <Card className="flex flex-col gap-1.5 px-4 py-3 text-sm" >
+          <div className="flex items-start justify-between gap-3">
+            <p role="status">
+              {importacao.ligados.length === 0
+                ? 'Nenhuma ameaça nova recebeu token.'
+                : `${importacao.ligados.length} ${importacao.ligados.length === 1 ? 'ameaça recebeu' : 'ameaças receberam'} token: ${importacao.ligados.join(', ')}.`}
+              {importacao.jaTinham > 0 && ` ${importacao.jaTinham} já tinham token e ficaram como estavam.`}
+            </p>
+            <button type="button" className="text-xs text-muted hover:text-fg" onClick={() => setImportacao(null)}>
+              Fechar
+            </button>
+          </div>
+          {importacao.sobras.length > 0 && (
+            <p className="text-xs text-muted">
+              Sem ameaça com nome parecido ({importacao.sobras.length}): {importacao.sobras.join(', ')}. Dá para escolher o token de cada ameaça na ficha dela.
+            </p>
+          )}
+        </Card>
+      )}
+
       {list.data && shown.length === 0 && (
         <Card>
           <EmptyState
-            icon={<Skull />}
-            title={list.data.length === 0 && !q && !sourceId ? 'Nenhuma ameaça na biblioteca' : 'Nenhuma ameaça com esses filtros'}
-            text="Cadastre a ameaça uma vez aqui e traga uma cópia para cada campanha que precisar dela."
+            icon={ICON[kind]}
+            title={filtered ? `${tab.vazio} com esses filtros` : `${tab.vazio} na biblioteca`}
+            text="Cadastre uma vez aqui e use uma cópia em cada campanha que precisar."
             action={
               <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => void create()}>
-                Nova ameaça
+                {tab.novo}
               </Button>
             }
           />
@@ -155,18 +243,14 @@ export function Compendium() {
       )}
 
       <ul className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3">
-        {shown.map((a) => (
-          <li key={a.id}>
-            <Link to={`/biblioteca/ameaca/${a.id}`} className="flex flex-col gap-1.5 rounded-lg border border-border bg-surface p-4 hover:border-border-input">
-              <span className="flex items-start justify-between gap-2">
-                <span className="type-lg min-w-0 truncate">{a.name}</span>
-                <span className="shrink-0 font-mono text-sm font-semibold">VD {a.data.vd}</span>
+        {shown.map((e) => (
+          <li key={e.id}>
+            <Link to={`/biblioteca/${e.kind}/${e.id}`} className="flex flex-col gap-1.5 rounded-lg border border-border bg-surface p-4 hover:border-border-input">
+              <EntryCard e={e} />
+              <span className="truncate text-xs text-subtle">
+                {e.sourceName}
+                {e.data.pagina > 0 && `, p. ${e.data.pagina}`}
               </span>
-              <span className="flex flex-wrap items-center gap-2 text-xs text-muted">
-                {a.data.elemento && <Chip>{a.data.elemento}</Chip>}
-                PV {a.data.pv} · Defesa {a.data.defesa}
-              </span>
-              <span className="truncate text-xs text-subtle">{a.sourceName}</span>
             </Link>
           </li>
         ))}
@@ -177,26 +261,142 @@ export function Compendium() {
   )
 }
 
-/** Uma ameaça da biblioteca: editar, trazer para a campanha aberta, duplicar, apagar. */
-export function CompendiumThreat() {
-  const { id = '' } = useParams()
+function EntryCard({ e }: { e: LibraryEntry }) {
+  if (e.kind === 'ameaca') {
+    const a = (e as LibraryEntry<'ameaca'>).data
+    return (
+      <>
+        <span className="flex items-start justify-between gap-2">
+          <Token token={a.token} nome={e.name} />
+          <span className="type-lg min-w-0 flex-1 truncate">{e.name}</span>
+          <span className="shrink-0 font-mono text-sm font-semibold">VD {a.vd}</span>
+        </span>
+        <span className="flex flex-wrap items-center gap-2 text-xs text-muted">
+          {a.elemento && <Chip>{a.elemento}</Chip>}
+          PV {a.pv} · Defesa {a.defesa}
+        </span>
+      </>
+    )
+  }
+  if (e.kind === 'ritual') {
+    const r = (e as LibraryEntry<'ritual'>).data
+    return (
+      <>
+        <span className="flex items-start justify-between gap-2">
+          <span className="type-lg min-w-0 truncate">{e.name}</span>
+          <span className="shrink-0 font-serif text-sm font-semibold text-subtle" title={`${r.circulo}º círculo`}>
+            {ROMANO[r.circulo]}
+          </span>
+        </span>
+        <span className="flex flex-wrap items-center gap-2 text-xs text-muted">
+          {r.elemento && <Chip>{r.elemento}</Chip>}
+          {[r.execucao, r.alcance].filter(Boolean).join(' · ')}
+        </span>
+      </>
+    )
+  }
+  const i = (e as LibraryEntry<'item'>).data
+  return (
+    <>
+      <span className="type-lg min-w-0 truncate">{e.name}</span>
+      <span className="truncate text-xs text-muted">{resumoItem(i)}</span>
+    </>
+  )
+}
+
+/** Escolher a ficha completa (agente ou vilão) que recebe o item ou o ritual. */
+function PlaceOnSheet({ entry, onClose }: { entry: LibraryEntry<'item' | 'ritual'>; onClose: () => void }) {
+  const { changed } = useCampaign()
+  const fichas = useLoad(() => window.api.entities.list({ kind: 'personagem' }), [])
+  const [entityId, setEntityId] = useState('')
+  const [done, setDone] = useState<{ id: string; name: string } | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const completas = (fichas.data ?? []).filter((f) => f.sheet === 'completa')
+  const what = entry.kind === 'item' ? 'o item' : 'o ritual'
+  const place = () => {
+    setBusy(true)
+    setError(null)
+    window.api.library
+      .copyToCampaign({ kind: entry.kind, id: entry.id, entityId })
+      .then((e) => {
+        changed()
+        setDone({ id: e.id, name: e.name })
+      })
+      .catch((e: Error) => setError(e.message))
+      .finally(() => setBusy(false))
+  }
+  return (
+    <Dialog
+      open
+      onOpenChange={(o) => !o && onClose()}
+      title={`Colocar ${entry.name} numa ficha`}
+      description={`A ficha recebe uma cópia: ${what} continua nela mesmo se for apagado da biblioteca.`}
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose}>
+            Fechar
+          </Button>
+          <Button variant="primary" disabled={!entityId || busy} onClick={place}>
+            Colocar na ficha
+          </Button>
+        </>
+      }
+    >
+      <div className="flex flex-col gap-3">
+        {fichas.data && completas.length === 0 && <p className="text-sm text-muted">Nenhuma ficha completa nesta campanha. Itens e rituais entram na ficha de agentes e vilões.</p>}
+        {completas.length > 0 && (
+          <SelectField
+            label="Ficha"
+            empty="Escolha a ficha"
+            value={entityId}
+            onChange={(e) => {
+              setEntityId(e.target.value)
+              setDone(null)
+            }}
+            options={completas.map((f) => ({ value: f.id, label: f.isPlayer ? `${f.name} (agente)` : f.name }))}
+          />
+        )}
+        {done && (
+          <p className="text-sm text-success" role="status">
+            Pronto: {entry.name} está na ficha de{' '}
+            <Link to={`/ficha/${done.id}`} className="underline">
+              {done.name}
+            </Link>
+            .
+          </p>
+        )}
+        {(error || fichas.error) && <ErrorNote message={(error || fichas.error)!} />}
+      </div>
+    </Dialog>
+  )
+}
+
+/** Um registro da biblioteca: editar, levar para a campanha (ameaça) ou para uma ficha (item, ritual), duplicar, apagar. */
+export function CompendiumEntry() {
+  const params = useParams()
+  const kind: LibraryKind = isKind(params.kind) ? params.kind : 'ameaca'
+  const id = params.id ?? ''
   const navigate = useNavigate()
   const { changed } = useCampaign()
-  const loaded = useLoad(() => window.api.library.get({ kind: 'ameaca', id }), [id])
+  const loaded = useLoad(() => window.api.library.get({ kind, id }), [kind, id])
   const sources = useLoad(() => window.api.library.sources(), [])
-  const [draft, setDraft] = useState<LibraryEntry<'ameaca'> | null>(null)
+  const [draft, setDraft] = useState<LibraryEntry | null>(null)
+  const [placing, setPlacing] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const autosave = useAutosave((e: LibraryEntry<'ameaca'>) => window.api.library.save({ kind: 'ameaca', id: e.id, sourceId: e.sourceId, data: e.data }))
+  const autosave = useAutosave((e: LibraryEntry) => window.api.library.save({ kind: e.kind, id: e.id, sourceId: e.sourceId, data: e.data }))
 
   useEffect(() => {
-    if (loaded.data) setDraft(loaded.data)
+    if (loaded.data) setDraft(loaded.data as LibraryEntry)
   }, [loaded.data])
 
   if (loaded.error) return <div className="p-6"><ErrorNote message={loaded.error} onRetry={loaded.reload} /></div>
-  if (!draft) return null
+  if (!draft || draft.id !== id) return null
 
-  const update = (patch: Partial<AmeacaBiblioteca>, sourceId = draft.sourceId) => {
-    const next = { ...draft, sourceId, name: patch.nome ?? draft.name, data: { ...draft.data, ...patch } }
+  const back = `/biblioteca?tipo=${kind}`
+  const update = (patch: Record<string, unknown>, sourceId = draft.sourceId) => {
+    const data = { ...draft.data, ...patch } as LibraryEntry['data']
+    const next = { ...draft, sourceId, name: data.nome, data } as LibraryEntry
     setDraft(next)
     autosave.schedule(next)
   }
@@ -209,37 +409,44 @@ export function CompendiumThreat() {
       setError((e as Error).message)
     }
   }
+  const sourceName = sources.data?.find((s) => s.id === draft.sourceId)?.name ?? draft.sourceName
 
   return (
     <div className="mx-auto flex max-w-[1400px] flex-col gap-6 px-6 py-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link to="/biblioteca" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-fg">
+        <Link to={back} className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-fg">
           <ArrowLeft className="size-4" aria-hidden /> Biblioteca
         </Link>
         <div className="flex flex-wrap items-center gap-3">
           <SaveIndicator state={autosave.state} error={autosave.error} />
-          <Button
-            variant="primary"
-            size="sm"
-            icon={<UserPlus className="size-4" />}
-            onClick={() =>
-              void run(async () => {
-                const e = await window.api.library.copyToCampaign({ kind: 'ameaca', id: draft.id })
-                changed()
-                navigate(`/ficha/${e.id}`)
-              })
-            }
-          >
-            Trazer para a campanha
-          </Button>
+          {kind === 'ameaca' ? (
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<UserPlus className="size-4" />}
+              onClick={() =>
+                void run(async () => {
+                  const e = await window.api.library.copyToCampaign({ kind: 'ameaca', id: draft.id })
+                  changed()
+                  navigate(`/ficha/${e.id}`)
+                })
+              }
+            >
+              Trazer para a campanha
+            </Button>
+          ) : (
+            <Button variant="primary" size="sm" icon={<UserPlus className="size-4" />} onClick={() => void run(async () => setPlacing(true))}>
+              Colocar na ficha
+            </Button>
+          )}
           <Button
             size="sm"
             icon={<Copy className="size-4" />}
             onClick={() =>
               void run(async () => {
                 const own = sources.data?.find((s) => s.builtin)
-                const e = await window.api.library.save({ kind: 'ameaca', sourceId: own?.id ?? draft.sourceId, data: { ...draft.data, nome: `${draft.data.nome} (cópia)` } })
-                navigate(`/biblioteca/ameaca/${e.id}`)
+                const e = await window.api.library.save({ kind, sourceId: own?.id ?? draft.sourceId, data: { ...draft.data, nome: `${draft.data.nome} (cópia)` } })
+                navigate(`/biblioteca/${kind}/${e.id}`)
               })
             }
           >
@@ -251,9 +458,9 @@ export function CompendiumThreat() {
             icon={<Trash2 className="size-4" />}
             onClick={() =>
               void run(async () => {
-                if (!window.confirm(`Apagar "${draft.data.nome}" da biblioteca? As cópias que já estão nas campanhas continuam lá.`)) return
-                await window.api.library.remove({ kind: 'ameaca', id: draft.id })
-                navigate('/biblioteca')
+                if (!window.confirm(`Apagar "${draft.data.nome}" da biblioteca? As cópias que já estão nas campanhas e nas fichas continuam lá.`)) return
+                await window.api.library.remove({ kind, id: draft.id })
+                navigate(back)
               })
             }
           >
@@ -274,15 +481,53 @@ export function CompendiumThreat() {
               options={(sources.data ?? [{ id: draft.sourceId, name: draft.sourceName }]).map((s) => ({ value: s.id, label: s.name }))}
             />
           </div>
-          {!draft.data.nome.trim() && <p className="text-sm text-danger">Dê um nome à ameaça: sem nome ela não é salva.</p>}
-          <EditorAmeaca a={draft.data} aoMudar={(patch) => update(patch)} />
+          {!draft.data.nome.trim() && <p className="text-sm text-danger">Dê um nome: sem nome o registro não é salvo.</p>}
+          {draft.kind === 'ameaca' && <EditorAmeaca a={(draft as LibraryEntry<'ameaca'>).data} aoMudar={(patch) => update(patch)} />}
+          {draft.kind === 'ritual' && <EditorRitual r={(draft as LibraryEntry<'ritual'>).data} aoMudar={(patch) => update(patch)} />}
+          {draft.kind === 'item' && <EditorItem i={(draft as LibraryEntry<'item'>).data} aoMudar={(patch) => update(patch)} />}
         </div>
-        <div className="xl:sticky xl:top-6 xl:self-start">
+        <div className="flex flex-col gap-3 xl:sticky xl:top-6 xl:self-start">
+          {draft.kind === 'ameaca' && (
+            <Card className="flex items-center gap-3 px-4 py-3">
+              {(draft as LibraryEntry<'ameaca'>).data.token ? (
+                <Token token={(draft as LibraryEntry<'ameaca'>).data.token} nome={draft.data.nome} tamanho={64} />
+              ) : (
+                <span className="grid size-16 shrink-0 place-items-center rounded-full border border-dashed border-border text-subtle">
+                  <Skull className="size-6" aria-hidden />
+                </span>
+              )}
+              <div className="flex flex-1 flex-col gap-1.5">
+                <span className="text-xs text-muted">Token: vira o retrato da ficha quando a ameaça vem para a campanha.</span>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    icon={<ImageUp className="size-4" />}
+                    onClick={() =>
+                      void run(async () => {
+                        const e = await window.api.library.pickToken(draft.id)
+                        if (e) setDraft(e as LibraryEntry)
+                      })
+                    }
+                  >
+                    {(draft as LibraryEntry<'ameaca'>).data.token ? 'Trocar token…' : 'Escolher token…'}
+                  </Button>
+                  {(draft as LibraryEntry<'ameaca'>).data.token && (
+                    <Button size="sm" variant="ghost" onClick={() => void run(async () => setDraft((await window.api.library.clearToken(draft.id)) as LibraryEntry))}>
+                      Tirar
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </Card>
+          )}
           <Card>
-            <BlocoAmeaca a={draft.data} nome={draft.data.nome} />
+            {draft.kind === 'ameaca' && <BlocoAmeaca a={(draft as LibraryEntry<'ameaca'>).data} nome={draft.data.nome} />}
+            {draft.kind === 'ritual' && <BlocoRitual r={(draft as LibraryEntry<'ritual'>).data} fonte={sourceName} />}
+            {draft.kind === 'item' && <BlocoItem i={(draft as LibraryEntry<'item'>).data} fonte={sourceName} />}
           </Card>
         </div>
       </div>
+      {placing && draft.kind !== 'ameaca' && <PlaceOnSheet entry={draft as LibraryEntry<'item' | 'ritual'>} onClose={() => setPlacing(false)} />}
     </div>
   )
 }

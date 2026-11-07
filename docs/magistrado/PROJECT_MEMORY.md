@@ -5,6 +5,7 @@
 ## Propósito e status
 
 - **O que é:** app de desktop do mestre de Ordem Paranormal. Junta o **autore** (a base) com a ficha do agente, a rolagem com dados físicos e os modelos de ameaças, itens e rituais do **taberna**.
+- **Status (2026-11-07):** T1 a T9 e P1 concluídas: Biblioteca com ameaças, rituais e itens dos dois livros (com página e tokens) e a tela Regras. 127 testes e e2e 153/153. Faltam T10 a T13.
 - **Status (2026-11-03):** T1 a T8 concluídas. Ficha completa com janela de rolagem; tela Biblioteca com ameaças no formato do livro (origem, trazer para a campanha); a ficha de ameaça edita o bloco em `sheet_data` e a Sessão mostra o bloco. 116 testes e e2e 142/142. Faltam rituais e itens da biblioteca (T9) e a Sessão com iniciativa (T10). As cópias dos dois projetos estão em `_fontes/` (fora do git).
 
 ## Restrições confirmadas
@@ -50,6 +51,12 @@
 - **Biblioteca:** `%APPDATA%/Magistrado/biblioteca.sqlite` (`app/src/main/library.ts`), aberta só quando pedida.
 - Git local com identidade `Lucas <lucasminetto13@gmail.com>` só neste repositório.
 
+## Dados dos livros
+
+- **PDFs (fora do git):** `C:/Users/lucas/Meu Drive/RPG/Livros/Ordem Paranormal RPG v1-3.pdf` (332 p.; página impressa = PDF − 10) e `Sobrevivendo-ao-Horror-v1-3.pdf` (226 p.; impressa = PDF − 1).
+- **Regerar:** `cd tools/livros` e `python extrair.py "<OP.pdf>" "<SaH.pdf>"` (precisa de `pip install pymupdf`). Mudou os JSON? Suba `LIVROS_VERSAO` em `app/src/main/livros/index.ts`.
+- **Tokens do Lucas:** `C:/Users/lucas/Meu Drive/RPG/Ameaças` (pasta por elemento e por criatura). Não vão para o git.
+
 ## Próximo passo
 
-T9 (rituais e itens): acrescentar as abas na tela Biblioteca (`renderer/src/screens/Compendium.tsx`) e o "colocar na ficha" (`library.copyToCampaign` com `entityId`). Depois T10 (Sessão com PV das ameaças, rolagem e iniciativa). Depois da fusão: P1 (dados e regras do livro, issue #14). A P2 (jogadores, com a antiga P3) começa quando o Lucas pedir: issues #1 a #13 e #15.
+T10 (Sessão com PV das ameaças, rolagem e iniciativa). A P2 (jogadores, com a antiga P3) começa quando o Lucas pedir: issues #1 a #13 e #15.

@@ -623,6 +623,11 @@ export interface Api {
     backup(): Promise<string>
     /** Escolhe um backup da biblioteca e troca a atual por ele. false se cancelar. */
     pickAndRestore(): Promise<boolean>
+    /** Escolhe uma pasta e liga as imagens às ameaças de nome parecido. null se cancelar. */
+    importTokens(): Promise<{ ligados: string[]; sobras: string[]; jaTinham: number } | null>
+    /** Escolhe a imagem do token de uma ameaça. null se cancelar. */
+    pickToken(id: string): Promise<LibraryEntry<'ameaca'> | null>
+    clearToken(id: string): Promise<LibraryEntry<'ameaca'>>
   }
   scenes: {
     saveNote(input: { id?: string; sceneId: string; title: string; body: string }): Promise<SceneNote>

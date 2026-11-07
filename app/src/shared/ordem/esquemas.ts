@@ -70,6 +70,15 @@ const camposItem = {
   categoria: z.coerce.number().int().min(0).max(4).default(0),
   espacos: z.coerce.number().default(1),
   defesa: numero,
+  // Armas: dano "1d8", crítico "19/x3", alcance "curto", tipo de dano, proficiência e empunhadura.
+  dano: texto,
+  tipoDano: texto,
+  critico: texto,
+  alcance: texto,
+  proficiencia: texto,
+  empunhadura: texto,
+  // Itens amaldiçoados.
+  elemento: texto,
   descricao: texto
 }
 
@@ -157,10 +166,13 @@ export const blocoAmeacaSchema = z.object({
 
 // Registros da biblioteca: o nome é obrigatório (é o que aparece na lista).
 const nomeObrigatorio = z.string().trim().min(1).max(200)
-export const ameacaBibliotecaSchema = blocoAmeacaSchema.extend({ nome: nomeObrigatorio })
-export const itemBibliotecaSchema = z.object({ ...camposItem, nome: nomeObrigatorio })
+// Página do livro de origem (0 = sem página). Fica só na biblioteca: não vai para a cópia da campanha.
+const pagina = z.coerce.number().int().min(0).max(2000).default(0)
+// token: imagem guardada em biblioteca-tokens/ (vira o retrato da ficha quando a ameaça vem para a campanha)
+export const ameacaBibliotecaSchema = blocoAmeacaSchema.extend({ nome: nomeObrigatorio, pagina, token: z.string().max(40).default('') })
+export const itemBibliotecaSchema = z.object({ ...camposItem, nome: nomeObrigatorio, pagina })
 // No livro cada ritual tem um destes: Alvo (seres/objetos), Área (cone, esfera…) ou Efeito (cria algo).
-export const ritualBibliotecaSchema = z.object({ ...camposRitual, nome: nomeObrigatorio, alvoTipo: z.enum(['Alvo', 'Área', 'Efeito']).default('Alvo') })
+export const ritualBibliotecaSchema = z.object({ ...camposRitual, nome: nomeObrigatorio, alvoTipo: z.enum(['Alvo', 'Área', 'Efeito']).default('Alvo'), pagina })
 
 /** Rolagem com dados físicos: o mestre digitou os valores, o app calculou. */
 export const rolagemSchema = z.object({
