@@ -1,4 +1,4 @@
-// Estado compartilhado pelas partes da ficha completa. Portado do taberna (web/src/ficha/contexto.tsx).
+// Estado compartilhado pelas partes da ficha completa.
 import { createContext, useContext } from 'react'
 import type { FichaAgente } from '@shared/ordem/esquemas'
 import { CLASSES, derivados } from '@shared/ordem/regras'

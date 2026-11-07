@@ -4,15 +4,11 @@ dist/
 *.log
 .DS_Store
 
-# Cópias locais do autore e do taberna, só para consulta
-_fontes/
-
 # Memória de trabalho das tarefas (planning-with-files)
 .planning/
 
-# Capturas: só referência local
-replica/screens/
-replica/clone-screens/
+# Capturas do e2e: só referência local
+app/e2e/capturas/
 
 # Python (tools/livros)
 __pycache__/

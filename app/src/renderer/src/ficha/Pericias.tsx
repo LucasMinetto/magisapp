@@ -1,5 +1,4 @@
 // Coluna 2 da ficha completa: modificador de testes e as 28 perícias do livro, com treino e bônus.
-// Portado do taberna (web/src/ficha/Pericias.tsx).
 import { Dices, Minus, Plus, Search } from 'lucide-react'
 import { useState } from 'react'
 import { ATRIBUTOS, PERICIAS, TREINOS, dadosDoTeste } from '@shared/ordem/regras'

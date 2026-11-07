@@ -1,4 +1,4 @@
-// Aba Habilidades: poderes de classe, trilha, origem e paranormais. Portado do taberna (web/src/ficha/Habilidades.tsx).
+// Aba Habilidades: poderes de classe, trilha, origem e paranormais.
 import { ChevronDown, Plus } from 'lucide-react'
 import { useState } from 'react'
 import type { Habilidade } from '@shared/ordem/esquemas'

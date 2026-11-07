@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Contrast check for replica-design tokens. Standard library only.
+"""Contrast check for the Magistrado design tokens. Standard library only.
 
 Every text colour in your token file, checked against the backgrounds it sits
 on, with the WCAG 2 contrast ratio. Run it after every palette change,
 including the rebrand, because a new palette is where contrast breaks.
 
-    python3 contrast.py replica/design/tokens.json
+    python3 contrast.py design/tokens.json
     python3 contrast.py tokens.json --json
     python3 contrast.py "#6b7280" "#ffffff"        # one pair
 

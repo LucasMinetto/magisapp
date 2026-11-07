@@ -1,4 +1,4 @@
-// Aba Histórico: rolagens desta ficha, com desfazer. Portado do taberna (web/src/ficha/Historico.tsx).
+// Aba Histórico: rolagens desta ficha, com desfazer.
 import { useCampaign } from '@/campaign'
 import { useLoad } from '@/lib/data'
 import { Undo2 } from 'lucide-react'

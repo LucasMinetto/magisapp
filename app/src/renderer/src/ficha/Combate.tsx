@@ -1,5 +1,4 @@
 // Aba Combate: Defesa, Esquiva, Bloqueio, PE por turno, deslocamento e ataques.
-// Portado do taberna (web/src/ficha/Combate.tsx).
 import { Plus } from 'lucide-react'
 import { useState } from 'react'
 import type { Ataque } from '@shared/ordem/esquemas'

@@ -9,7 +9,7 @@
 - **Depende de:** nada (Q4 e Q7 decididas: histórico do zero, remoto `github.com/LucasMinetto/magistrado`)
 - **Resultado:** `Magistrado/` é um repositório git com `app/` e `replica/` copiados de `_fontes/autore` (`replica/` mantida com esse nome porque o e2e e os scripts de tokens usam o caminho), `docs/` preservado e `_fontes/` no `.gitignore`. O primeiro commit cita `autore@28fa658` e `taberna@71f7b1c`.
 - **Aceite:** `npm.cmd install`, `npm.cmd run typecheck`, `npm.cmd test` e `node e2e/slice.mjs` passam em `app/` sem mudar nada no código.
-- **Arquivos:** `app/**`, `replica/**`, `.gitignore`, `.gitattributes`, `README.md`.
+- **Arquivos:** `app/**`, `replica/**` (hoje `design/` e `docs/arquitetura/`), `.gitignore`, `.gitattributes`, `README.md`.
 
 ### T2. Renomear Mesa → Magistrado ✅ 2026-11-03
 - **Depende de:** T1

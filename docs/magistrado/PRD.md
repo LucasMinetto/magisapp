@@ -7,7 +7,7 @@
 
 Lucas mestra mesas de **Ordem Paranormal RPG** usando dois programas próprios:
 
-- **autore** (github.com/LucasMinetto/autore): app de desktop para preparar e conduzir a mesa. Tem cenas com hora no jogo, linha do tempo, pistas, quadros (mapa mental), corkboard, menções automáticas, busca, sessão, exportar e backup. Está maduro: todos os itens *must* e *should* foram entregues (`replica/build-log.md`).
+- **autore** (github.com/LucasMinetto/autore): app de desktop para preparar e conduzir a mesa. Tem cenas com hora no jogo, linha do tempo, pistas, quadros (mapa mental), corkboard, menções automáticas, busca, sessão, exportar e backup. Está maduro: todos os itens *must* e *should* foram entregues.
 - **taberna** (github.com/LucasMinetto/taberna): app web local com a **ficha do agente** calculada pelas regras do livro, **rolagem com dados físicos** e os modelos de **ameaças, itens e rituais**. Não foi finalizado: os modelos existem, mas os dados do livro ainda não foram cadastrados.
 
 Com dois programas, a preparação e a condução ficam divididas. O **Magistrado** junta os dois num app só, com o autore como base.
@@ -69,8 +69,8 @@ Um app de desktop chamado **Magistrado**, num **repositório novo**, que parte d
 
 ## Restrições e dependências
 
-- **Repositório novo.** Os repositórios originais no GitHub não podem ser alterados. As cópias locais em `_fontes/` podem ser usadas livremente (confirmado).
-- Desktop Windows, offline, um usuário, sem conta (herdado do autore, `replica/architecture.md`).
+- **Repositório novo.** Os repositórios originais no GitHub não podem ser alterados. As cópias locais foram usadas na fusão e apagadas em 2026-11-07.
+- Desktop Windows, offline, um usuário, sem conta (`docs/arquitetura/arquitetura.md`).
 - Nada de arte, texto ou código do RPGpédia. Só o layout é a referência (`handoff-ficha-rpgpedia.md`, seção "O que não copiar").
 
 ## Suposições

@@ -1,5 +1,5 @@
 // Coluna 1 da ficha completa: identidade, hexágono de atributos, PV/SAN/PE e condições.
-// Portado do taberna (web/src/ficha/Identidade.tsx); o retrato e o nome ficam com a tela da ficha.
+// O retrato e o nome ficam com a tela da ficha.
 import { useState } from 'react'
 import { ATRIBUTOS, CLASSES, CONDICOES, NEX_VALORES, NOMES_CLASSES, ORIGENS, TRILHAS, dadosDoTeste, type Classe, type Formula } from '@shared/ordem/regras'
 import { cx } from '@/ui'

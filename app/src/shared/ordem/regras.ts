@@ -1,5 +1,5 @@
 // Regras de Ordem Paranormal usadas pela ficha (conferidas no livro de regras).
-// Funções puras, portadas do taberna (taberna@71f7b1c, shared/regras.ts). Rodam na tela e no processo principal.
+// Funções puras. Rodam na tela e no processo principal.
 
 export type Atributo = 'agi' | 'for' | 'int' | 'pre' | 'vig'
 export type Atributos = Record<Atributo, number>

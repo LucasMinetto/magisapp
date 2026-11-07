@@ -1,4 +1,4 @@
-// Clica na fatia vertical de ponta a ponta e salva capturas para o /replica-diff.
+// Clica na fatia vertical de ponta a ponta e salva capturas em app/e2e/capturas/ (fora do git).
 //   npm run build && node e2e/slice.mjs
 // Usa pastas temporárias: não toca nas suas campanhas nem nas configurações do app.
 import { strFromU8, unzipSync } from 'fflate'
@@ -11,7 +11,7 @@ import { _electron as electron } from 'playwright'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const appDir = join(here, '..')
-const shots = join(appDir, '..', 'replica', 'clone-screens')
+const shots = join(appDir, 'e2e', 'capturas')
 mkdirSync(shots, { recursive: true })
 const tmp = mkdtempSync(join(tmpdir(), 'magistrado-e2e-'))
 

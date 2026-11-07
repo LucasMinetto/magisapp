@@ -6,7 +6,7 @@
 
 tokens.css   variáveis CSS (--color-bg, --space-4, --text-sm...), para qualquer CSS
 tailwind.css bloco @theme do Tailwind v4: bg-surface, text-muted, rounded-md, text-sm...
-Rodar de novo depois de cada mudança em tokens.json (inclusive a do /replica-brand).
+Rodar de novo depois de cada mudança em tokens.json.
 """
 
 import json

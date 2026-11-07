@@ -1,4 +1,4 @@
-// Bloco de estatísticas de uma ameaça no formato do livro de regras (portado de taberna/web/src/componentes/BlocoAmeaca.tsx).
+// Bloco de estatísticas de uma ameaça no formato do livro de regras.
 import type { ReactNode } from 'react'
 import { Chip } from '@/ui'
 import type { Acao, BlocoAmeaca as Bloco } from '@shared/ordem/esquemas'

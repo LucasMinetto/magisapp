@@ -1,5 +1,4 @@
-// Esquemas da ficha completa, da ameaça, de itens, rituais e rolagens. Portados do taberna
-// (taberna@71f7b1c, shared/esquemas.ts) para zod 4. O nome e o retrato ficam na ficha do app
+// Esquemas da ficha completa, da ameaça, de itens, rituais e rolagens, em zod 4. O nome e o retrato ficam na ficha do app
 // (entities.name, portrait_id); aqui só o que é de Ordem Paranormal.
 import { z } from 'zod'
 import { PATENTES } from './regras'
@@ -282,7 +281,7 @@ export function fichaDeStats(stats: Record<string, Stat>): FichaAgente {
   })
 }
 
-/** Bloco de ameaça a partir dos campos do modelo de criatura que o autore já tinha. */
+/** Bloco de ameaça a partir dos campos do modelo de criatura que a ficha antiga já tinha. */
 export function ameacaDeStats(stats: Record<string, Stat>): BlocoAmeaca {
   const acoes = Array.isArray(stats.acoes) ? stats.acoes : []
   return blocoAmeacaSchema.parse({

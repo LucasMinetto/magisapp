@@ -1,5 +1,5 @@
-// Ficha completa de agente ou NPC vilão, em três colunas. Portado do taberna (web/src/paginas/FichaPagina.tsx).
-// A tela da ficha (EntitySheet) cuida de salvar, do retrato, do nome e das notas do autore; aqui fica o que é de Ordem.
+// Ficha completa de agente ou NPC vilão, em três colunas.
+// A tela da ficha (EntitySheet) cuida de salvar, do retrato, do nome e das notas; aqui fica o que é de Ordem.
 import { useState, type ReactNode } from 'react'
 import type { FichaAgente } from '@shared/ordem/esquemas'
 import { derivados } from '@shared/ordem/regras'
@@ -105,7 +105,7 @@ export function FichaCompleta({
   )
 }
 
-// A aparência e a personalidade ficam nos campos do autore (descrição e personalidade), que valem para qualquer ficha.
+// A aparência e a personalidade ficam nos campos gerais da ficha (descrição e personalidade), que valem para qualquer ficha.
 function Investigacao() {
   const { a, alterar } = useFicha()
   const mudar = (k: 'historico' | 'objetivo' | 'anotacoes', v: string) => alterar({ investigacao: { ...a.investigacao, [k]: v } })

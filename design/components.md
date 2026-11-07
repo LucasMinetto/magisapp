@@ -2,7 +2,7 @@
 
 Base acessível: **Radix UI** (Dialog, DropdownMenu, ContextMenu, Tabs, Tooltip, Popover, ToggleGroup, ScrollArea) + **cmdk** para a paleta. Ícones: **Lucide** (ISC). Fontes empacotadas no app, offline, via `@fontsource`: Inter, Source Serif 4, IBM Plex Mono (todas OFL).
 
-Nada de arte, ícones, fontes ou textos do Autor. Todo rótulo e estado vazio abaixo é texto nosso.
+Nada de arte, ícones, fontes ou textos de outros apps. Todo rótulo e estado vazio abaixo é texto nosso.
 
 Regras para todos:
 - **Cores:** só por papel (`bg-surface`, `text-muted`, `border-border`), nunca hex no componente.
@@ -10,7 +10,7 @@ Regras para todos:
 - **Movimento:** `fast` (120ms) para hover e `base` (200ms) para abrir e fechar. Tudo respeita `prefers-reduced-motion`.
 - **Alvo de clique:** mínimo de 32px. Tamanhos em px a 100% de zoom.
 
-Telas: `S..` = do recon (Autor), `N..` = novas do clone.
+Telas: `S..` e `N..` são os códigos das telas do app.
 
 ---
 

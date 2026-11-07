@@ -1,4 +1,4 @@
-// Os mesmos casos de taberna/shared/regras.test.ts (taberna@71f7b1c), com os mesmos valores.
+// Casos conferidos com os exemplos do livro.
 import { describe, expect, it } from 'vitest'
 import {
   dadosDoDano,

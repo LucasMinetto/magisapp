@@ -1,13 +1,8 @@
 # Magistrado
 
-App de desktop do mestre de **Ordem Paranormal RPG**. Prepara e conduz a mesa num lugar só: cenas com hora no jogo, linha do tempo, pistas, quadros, sessão, backup e exportação, e (em construção) a ficha do agente calculada pelas regras do livro, a rolagem com dados físicos e a biblioteca de ameaças, itens e rituais.
+App de desktop do mestre de **Ordem Paranormal RPG**. Prepara e conduz a mesa num lugar só: cenas com hora no jogo, linha do tempo, pistas, quadros, sessão, backup e exportação, a ficha do agente calculada pelas regras do livro, a rolagem com dados físicos e a biblioteca de ameaças, itens e rituais dos livros.
 
-Nasceu da junção de dois projetos:
-
-- **autore** (`autore@28fa658`): a base. Todo o app de mestre veio daqui.
-- **taberna** (`taberna@71f7b1c`): a ficha do agente, as regras, a rolagem e os modelos de ameaças, itens e rituais, que estão sendo portados.
-
-Os repositórios originais continuam como estão. O planejamento está em [docs/magistrado](docs/magistrado/).
+O planejamento está em [docs/magistrado](docs/magistrado/).
 
 ## Rodar
 
@@ -36,5 +31,6 @@ A versão instalada está em `app/package.json` e o histórico em [HISTORICO.md]
 
 - `app/`: o app Electron (React, SQLite).
 - `tools/livros/`: extrai dos PDFs dos livros os rituais, itens, ameaças e regras (`python extrair.py <livro básico> <Sobrevivendo ao Horror>`). Os PDFs não vão para o git. `python tokens.py <pasta Ameaças>` reduz as imagens das ameaças para `app/resources/livros-tokens/`.
-- `replica/`: arquitetura, esquema e o design (tokens, temas, `contrast.py`) herdados do autore.
+- `design/`: tokens de cor e tipo, temas e o teste de contraste (`contrast.py`).
+- `docs/arquitetura/`: arquitetura de partida e esquema do banco.
 - `docs/magistrado/`: PRD, especificação técnica, tarefas e memória do projeto.

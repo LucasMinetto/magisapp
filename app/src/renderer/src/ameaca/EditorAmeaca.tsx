@@ -1,4 +1,4 @@
-// Formulário do bloco de ameaça (portado de taberna/web/src/paginas/AmeacaEditor.tsx). O nome fica com quem usa:
+// Formulário do bloco de ameaça. O nome fica com quem usa:
 // na biblioteca é um campo do registro, na campanha é o nome da ficha.
 import { Plus, X } from 'lucide-react'
 import { Button, IconButton } from '@/ui'

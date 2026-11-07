@@ -1,4 +1,4 @@
-// Aba Inventário: itens, limite por patente e categoria, e carga. Portado do taberna (web/src/ficha/Inventario.tsx).
+// Aba Inventário: itens, limite por patente e categoria, e carga.
 import { Minus, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { TIPOS_ITEM, itemSchema, type Item } from '@shared/ordem/esquemas'

@@ -1,5 +1,4 @@
 // Etiquetas (tipos de dano, condições) guardadas como texto no formato do livro: "Balístico 5, Sangue 10" ou "Morte, Fogo".
-// Portado de taberna/web/src/componentes/SeletorTags.tsx.
 import { useState } from 'react'
 import { cx } from '@/ui'
 import { TIPOS_DANO } from '@shared/ordem/regras'

@@ -1,4 +1,4 @@
-// Aba Rituais: rituais conhecidos, com DT, custo e dano por forma. Portado do taberna (web/src/ficha/Rituais.tsx).
+// Aba Rituais: rituais conhecidos, com DT, custo e dano por forma.
 // "Da biblioteca" traz uma cópia de um ritual da biblioteca (DaBiblioteca.tsx).
 import { Plus } from "lucide-react";
 import { useState } from "react";

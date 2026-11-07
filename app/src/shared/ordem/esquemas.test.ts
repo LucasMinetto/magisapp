@@ -3,7 +3,7 @@ import { ameacaDeStats, fichaAgenteSchema, fichaDeStats, rolagemSchema, ritualBi
 import { derivados } from './regras'
 
 describe('esquemas da ficha', () => {
-  it('ficha vazia ganha os padrões do taberna e calcula os derivados', () => {
+  it('ficha vazia ganha os padrões e calcula os derivados', () => {
     const f = fichaAgenteSchema.parse({ classe: 'Combatente' })
     expect(f.nex).toBe(5)
     expect(f.atributos).toEqual({ agi: 1, for: 1, int: 1, pre: 1, vig: 1 })

@@ -9,11 +9,11 @@
 - **Status (2026-11-07, T10b):** a Sessão tem dois modos, cena (faixa do grupo, cena larga, abas Pistas · Notas · NPCs) e combate (ordem à esquerda, cartão com tudo do combatente à direita). 138 testes e e2e 181/181.
 - **Status (2026-11-07, T10):** T1 a T10 e P1 concluídas. A Sessão conduz o combate: iniciativa salva na sessão de jogo, PV de cada cópia de ameaça, PV/PE/SAN dos agentes e rolagem por perícia, teste ou ação do bloco. 138 testes e e2e 176/176. Faltam T11 a T13.
 - **Status (2026-11-07):** T1 a T9 e P1 concluídas: Biblioteca com ameaças, rituais e itens dos dois livros (com página e tokens) e a tela Regras. 127 testes e e2e 153/153. Faltam T10 a T13.
-- **Status (2026-11-03):** T1 a T8 concluídas. Ficha completa com janela de rolagem; tela Biblioteca com ameaças no formato do livro (origem, trazer para a campanha); a ficha de ameaça edita o bloco em `sheet_data` e a Sessão mostra o bloco. 116 testes e e2e 142/142. Faltam rituais e itens da biblioteca (T9) e a Sessão com iniciativa (T10). As cópias dos dois projetos estão em `_fontes/` (fora do git).
+- **Status (2026-11-03):** T1 a T8 concluídas. Ficha completa com janela de rolagem; tela Biblioteca com ameaças no formato do livro (origem, trazer para a campanha); a ficha de ameaça edita o bloco em `sheet_data` e a Sessão mostra o bloco. 116 testes e e2e 142/142. Faltam rituais e itens da biblioteca (T9) e a Sessão com iniciativa (T10).
 
 ## Restrições confirmadas
 
-- **Repositório novo.** Não alterar nem dar push em `LucasMinetto/autore` e `LucasMinetto/taberna` no GitHub. As cópias locais em `_fontes/` podem ser usadas e modificadas.
+- **Repositório novo.** Não alterar nem dar push em `LucasMinetto/autore` e `LucasMinetto/taberna` no GitHub. As cópias locais (`_fontes/`) foram apagadas em 2026-11-07, com a fusão concluída; o código dos originais fica no GitHub.
 - Só o mestre usa. É offline e sem servidor. A versão dos jogadores fica para depois.
 - A ficha tem o **layout do RPGpédia** com os **tokens, as fontes e os temas do autore**.
 - Fora do escopo: tela Livros, campanhas e missões do taberna, importar dados do taberna (não há dados, só modelos).
@@ -31,7 +31,7 @@
 
 ## Arquitetura (resumo)
 
-- Electron + React 19 + SQLite (better-sqlite3), IPC validado com zod. Detalhes em [TECH_SPEC § Sistema atual](TECH_SPEC.md#sistema-atual) e em `_fontes/autore/replica/architecture.md`.
+- Electron + React 19 + SQLite (better-sqlite3), IPC validado com zod. Detalhes em [TECH_SPEC § Sistema atual](TECH_SPEC.md#sistema-atual) e em `docs/arquitetura/arquitetura.md`.
 - O taberna é **portado** (regras, esquemas, telas), não acoplado. O servidor Fastify dele não entra.
 
 ## Comandos (do autore, valem para `app/`)
@@ -48,7 +48,7 @@
 - Todas decididas em 2026-11-02, Q1 a Q7 ([TECH_SPEC § Decididas](TECH_SPEC.md#decididas-em-2026-11-02)). A Q5 trouxe o painel de iniciativa do taberna para a tela de sessão.
 - Repositório: **github.com/LucasMinetto/magistrado** (vazio em 2026-11-02). Histórico do zero.
 - Sem compatibilidade com `.mesa` (não há campanhas reais).
-- `replica/` (arquitetura e design herdados) fica com esse nome: o e2e grava em `replica/clone-screens/` e os scripts de tokens citam `replica/design`.
+- **Pastas (2026-11-07):** `replica/` saiu. O design (tokens, contraste) está em `design/`, a arquitetura e o esquema em `docs/arquitetura/`, e as capturas do e2e em `app/e2e/capturas/` (fora do git). Os documentos de engenharia reversa do autore (recon, research, build-log, features.csv) saíram; estão no histórico do git.
 - O rótulo "Mesa" do menu lateral e as frases "na mesa" são mesa de jogo e ficam.
 - **Modelo da ficha (T4):** agente = `is_player`; `sheet` (compacta/completa); ficha completa e bloco de ameaça em `sheet_data`, montados de `stats` enquanto não editados (ver [TECH_SPEC § Modelo de dados](TECH_SPEC.md#modelo-de-dados-novo-migração-4)).
 - **Biblioteca:** `%APPDATA%/Magistrado/biblioteca.sqlite` (`app/src/main/library.ts`), aberta só quando pedida.

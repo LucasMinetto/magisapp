@@ -1,6 +1,5 @@
 // Janela de rolagem (T7). Duas formas: o Magistrado rola, ou o mestre digita o que saiu nos dados físicos.
 // No teste digita-se só o d20 que ficou; no dano, uma soma por tipo (cada alvo resiste a um tipo).
-// Refeita a partir do taberna (web/src/ficha/Rolagem.tsx), que pedia cada dado.
 import { useState, type FormEvent, type ReactNode } from 'react'
 import { useCampaign } from '@/campaign'
 import { Button, cx, Dialog } from '@/ui'

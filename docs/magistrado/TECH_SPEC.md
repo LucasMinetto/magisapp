@@ -7,17 +7,17 @@ Legenda: **[confirmado]** = decidido com o usuário · **[recomendação]** = pr
 
 ## Sistema atual
 
-As cópias locais estão em `_fontes/`: `autore` no commit `28fa658` e `taberna` no commit `71f7b1c`, ambos de 2026-11-02.
+A fusão partiu de `autore@28fa658` e `taberna@71f7b1c` (2026-11-02). As cópias locais foram apagadas em 2026-11-07.
 
 ### autore (base)
 
-- Electron 45 + electron-vite 6, React 19, react-router 8, Tailwind 4, TipTap 3, @xyflow/react 12.12.0, better-sqlite3 13, zod 4, vitest 5, Playwright para e2e (`_fontes/autore/app/package.json`). O nome interno do pacote é `mesa`.
-- **Uma campanha é uma pasta** `<nome>.mesa/` com `campanha.sqlite`, `anexos/` e `.lock` (`replica/architecture.md`).
+- Electron 45 + electron-vite 6, React 19, react-router 8, Tailwind 4, TipTap 3, @xyflow/react 12.12.0, better-sqlite3 13, zod 4, vitest 5, Playwright para e2e. O nome interno do pacote é `mesa`.
+- **Uma campanha é uma pasta** `<nome>.mesa/` com `campanha.sqlite`, `anexos/` e `.lock` (`docs/arquitetura/arquitetura.md`).
 - Esquema em `app/src/main/schema.sql`, migrações em `app/src/main/db.ts`, versão 3. Antes de migrar, o app grava uma cópia do banco.
 - Fichas: tabela `entities` com `kind in ('personagem','criatura','local','grupo','lore')` e `stats` em JSON, descritos por `system_templates` e `template_fields`. O modelo Ordem Paranormal é sincronizado ao abrir (`syncOrdemTemplate`, `app/src/main/seed.ts`).
 - O renderer só fala com o processo principal por IPC validado com zod (`app/src/main/ipc.ts`, `app/src/preload/index.ts`), com sandbox e contextIsolation ligados.
 - Já existem: menções automáticas, busca FTS5, desfazer global, lixeira, backup `.mesa-backup` (banco + anexos + `legivel/` + `campanha.json` formato 1), exportar, tela de Sessão (N03, sem iniciativa nem rolagens), Arquivos (PDF).
-- Tokens de design: `replica/design/tokens.json`, gerador `build_tokens.py` e teste de contraste `contrast.py`.
+- Tokens de design: `design/tokens.json`, gerador `build_tokens.py` e teste de contraste `contrast.py`.
 
 ### taberna (o que vem dele)
 
@@ -33,10 +33,9 @@ As cópias locais estão em `_fontes/`: `autore` no commit `28fa658` e `taberna`
 2. **[confirmado: Q4, Q7]** A pasta `C:\Users\lucas\Desktop\Magistrado` vira a raiz do repositório novo (remoto `github.com/LucasMinetto/magistrado`):
    ```
    Magistrado/
-     app/        cópia de _fontes/autore/app (renomeada)
-     design/     cópia de _fontes/autore/replica/design
-     docs/       docs/magistrado/ + histórico de referência do autore (replica/*.md)
-     _fontes/    só consulta, no .gitignore
+     app/        o app Electron
+     design/     tokens, temas e contraste
+     docs/       docs/magistrado/ e docs/arquitetura/
    ```
    O histórico começa do zero, e o primeiro commit registra os commits de origem (`autore@28fa658`, `taberna@71f7b1c`).
 3. **[recomendação]** **Portar** o código do taberna, sem acoplar. O taberna não entra como dependência nem roda o servidor: as regras e os esquemas são copiados e adaptados para a estrutura do autore.

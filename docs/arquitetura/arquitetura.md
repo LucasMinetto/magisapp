@@ -1,7 +1,6 @@
-# Arquitetura: app de mestre para Ordem Paranormal (inspirado nas funções do Autor)
+# Arquitetura do Magistrado
 
-Lê: `recon.md`, `features.csv`, `research.md`. Esquema: `schema.sql` (testado em SQLite, 22 tabelas).
-Data: 2026-11-02. Nome do app: provisório, a definir no `/replica-brand`.
+Esquema do banco: `schema.sql` (testado em SQLite, 22 tabelas). Documento de partida (2026-11-02); o que mudou depois está em `docs/magistrado/TECH_SPEC.md`.
 
 ## A forma do app
 
@@ -21,7 +20,7 @@ A lista de campanhas recentes, o tema e a configuração de backup ficam em `set
 | camada | escolha | por quê |
 | --- | --- | --- |
 | app desktop | Electron + electron-vite + TypeScript | você já tem Node 24; Tauri exigiria Rust, que não está instalado; o Autor também é Electron, então o desempenho é o mesmo que você já vê |
-| interface | React 18 + Tailwind (tokens do `/replica-design`) | o ecossistema com mais peças prontas para editor e canvas |
+| interface | React 18 + Tailwind (tokens de `design/tokens.json`) | o ecossistema com mais peças prontas para editor e canvas |
 | editor de texto | TipTap 2 (ProseMirror) | rich text sólido; as menções automáticas viram "decorations" sem sintaxe de link |
 | canvas | @xyflow/react (React Flow) | nós, arestas, zoom e mini-mapa prontos; o "Arranjar" sai com elkjs |
 | banco | SQLite via better-sqlite3 | um arquivo, offline, rápido, transações síncronas, FTS5 para busca |
@@ -181,4 +180,4 @@ Tarefas em segundo plano (no processo principal):
    - Backup em arquivo com `legivel/` (Obsidian) e `campanha.json`, restaurar incluído. O gerador de Markdown é o mesmo do "exportar para Obsidian".
    - Ações do projeto (S15b).
 7. **Could.** Outros sistemas, versão dos jogadores (sync), Owlbear, idiomas, IA, skins, tutoriais.
-8. **Correções do `/replica-entrepreneur`.** Para uso próprio, pode pular. Se for abrir o app para outros mestres, rodar antes.
+8. **Antes de vender:** revisar privacidade, licenças e termos de uso.
