@@ -1,7 +1,7 @@
 // Estado compartilhado pelas partes da ficha completa.
 import { createContext, useContext } from 'react'
 import type { FichaAgente } from '@shared/ordem/esquemas'
-import { CLASSES, derivados } from '@shared/ordem/regras'
+import { temTabela, derivados } from '@shared/ordem/regras'
 
 export type Derivados = ReturnType<typeof derivados>
 
@@ -45,11 +45,11 @@ export function useFicha() {
 
 // Classes com tabela calculam PV/PE/SAN; as outras usam os máximos digitados.
 export function maximos(a: FichaAgente, d: Derivados) {
-  const temTabela = a.classe in CLASSES
+  const comTabela = temTabela(a.classe)
   return {
-    pv: temTabela ? d.pv.total : a.pvMax,
-    pe: temTabela ? d.pe.total : a.peMax,
-    san: temTabela ? d.san.total : a.sanMax
+    pv: comTabela ? d.pv.total : a.pvMax,
+    pe: comTabela ? d.pe.total : a.peMax,
+    san: comTabela ? d.san.total : a.sanMax
   }
 }
 

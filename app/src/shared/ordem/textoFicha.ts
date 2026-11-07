@@ -1,7 +1,7 @@
 // A ficha completa e o bloco de ameaça em seções de texto, para o cofre do Obsidian (Markdown) e o exportar
 // (Word, PDF, texto). Um formato só, para os dois saírem iguais. Funções puras.
 import type { BlocoAmeaca, FichaAgente, Item, RitualDaFicha } from './esquemas'
-import { ATRIBUTOS, bonusPericia, CLASSES, CUSTO_CIRCULO, derivados, patentePorPrestigio, TREINOS } from './regras'
+import { ATRIBUTOS, bonusPericia, CUSTO_CIRCULO, derivados, patentePorPrestigio, temTabela, TREINOS } from './regras'
 
 export interface SecaoFicha {
   titulo: string
@@ -22,7 +22,7 @@ const secao = (s: SecaoFicha): SecaoFicha[] => (s.pares?.length || s.itens?.leng
 /** PV/PE/SAN máximos: classes com tabela calculam; as outras usam os máximos digitados. */
 export function maximosDaFicha(f: FichaAgente) {
   const d = derivados(f)
-  const tabela = f.classe in CLASSES
+  const tabela = temTabela(f.classe)
   return { d, pv: tabela ? d.pv.total : f.pvMax, pe: tabela ? d.pe.total : f.peMax, san: tabela ? d.san.total : f.sanMax }
 }
 
@@ -57,7 +57,7 @@ export function detalhesDoRitual(r: RitualDaFicha): SecaoFicha[] {
       ]
     }),
     ...secao({ titulo: 'Efeito', texto: [r.efeito].filter(Boolean) }),
-    ...secao({ titulo: 'Discente (+2 PE)', texto: [r.discente, r.danoDiscente && `Dano: ${r.danoDiscente}`].filter(Boolean) as string[] }),
+    ...secao({ titulo: 'Discente', texto: [r.discente, r.danoDiscente && `Dano: ${r.danoDiscente}`].filter(Boolean) as string[] }),
     ...secao({ titulo: 'Verdadeiro', texto: [r.verdadeiro, r.danoVerdadeiro && `Dano: ${r.danoVerdadeiro}`].filter(Boolean) as string[] })
   ]
 }
@@ -94,7 +94,7 @@ export function secoesDoAgente(f: FichaAgente): SecaoFicha[] {
   return [
     ...secao({
       titulo: 'Agente',
-      pares: [...par('Jogador', f.jogador), ...par('Origem', f.origem), ...par('Classe', f.classe), ...par('Trilha', f.trilha), ['NEX', `${f.nex}%`], ['Patente', patentePorPrestigio(f.prestigio).nome], ...par('Prestígio', f.prestigio)]
+      pares: [...par('Jogador', f.jogador), ...par('Origem', f.origem), ...par('Classe', f.classe), ...par('Trilha', f.trilha), f.classe === 'Sobrevivente' ? ['Estágio', String(f.estagio)] : ['NEX', `${f.nex}%`], ['Patente', patentePorPrestigio(f.prestigio).nome], ...par('Prestígio', f.prestigio)]
     }),
     { titulo: 'Atributos', pares: ATRIBUTOS.map((a) => [a.sigla, String(f.atributos[a.id])] as [string, string]) },
     {

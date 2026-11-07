@@ -47,6 +47,7 @@ const NOVO_ATAQUE = (): Ataque => ({
   id: novoId(),
   nome: 'Novo ataque',
   pericia: 'Luta',
+  arremesso: false,
   bonusAtaque: 0,
   dano: '1d6',
   tipoDano: 'Impacto',
@@ -102,6 +103,12 @@ function Ataques() {
                   <Texto rotulo="Alcance" valor={at.alcance} aoMudar={(alcance) => mudar(at.id, { alcance })} />
                   <Numero rotulo="Crítico (margem)" valor={at.margemCritico} aoMudar={(v) => mudar(at.id, { margemCritico: Math.min(20, Math.max(2, v || 20)) })} />
                   <Numero rotulo="Multiplicador" valor={at.multCritico} aoMudar={(v) => mudar(at.id, { multCritico: Math.min(5, Math.max(2, v || 2)) })} />
+                  {at.pericia !== 'Luta' && (
+                    <label className="col-span-2 flex items-center gap-2 text-sm">
+                      <input type="checkbox" checked={at.arremesso} onChange={(e) => mudar(at.id, { arremesso: e.target.checked })} className="size-4 accent-(--color-accent)" />
+                      Arma de arremesso (soma a Força no dano)
+                    </label>
+                  )}
                 </div>
                 {at.danosExtras.map((x, i) => {
                   const mudarExtra = (p: Partial<typeof x>) => mudar(at.id, { danosExtras: at.danosExtras.map((y, j) => (j === i ? { ...y, ...p } : y)) })

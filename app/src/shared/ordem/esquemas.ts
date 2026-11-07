@@ -29,6 +29,8 @@ export const ataqueSchema = z.object({
   tipoDano: texto,
   // Outros tipos de dano do mesmo golpe (ex.: arma amaldiçoada: +2d6 de Energia). Não multiplicam no crítico.
   danosExtras: z.array(z.object({ dano: texto, tipoDano: texto })).max(6).default([]),
+  // Arma de arremesso: ataca com Pontaria, mas soma a Força no dano como as corpo a corpo (livro, p. 82).
+  arremesso: z.boolean().default(false),
   margemCritico: z.coerce.number().int().min(2).max(20).default(20),
   multCritico: z.coerce.number().int().min(2).max(5).default(2),
   alcance: texto,
@@ -98,6 +100,8 @@ export const fichaAgenteSchema = z.object({
   classe: texto,
   trilha: texto,
   nex: z.coerce.number().min(0).max(100).default(5),
+  // Só do sobrevivente (Sobrevivendo ao Horror): sobe um estágio por missão, de 1 a 5.
+  estagio: z.coerce.number().int().min(1).max(5).default(1),
   prestigio: numero,
   atributos: atributosSchema.default({ agi: 1, for: 1, int: 1, pre: 1, vig: 1 }),
   pericias: z.record(z.string().max(60), z.object({ treino: numero, extra: numero })).default({}),

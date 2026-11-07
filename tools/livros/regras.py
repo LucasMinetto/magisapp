@@ -61,7 +61,7 @@ OP_FIM = {
     'Interlúdio': (103, None),
     'Rituais': (132, 'Lista de Rituais'),
     'Itens Amaldiçoados': (158, 'Itens Amaldiçoados Especiais'),
-    'Arbitrando Regras': (180, None),
+    'Arbitrando Regras': (181, 'Regras Opcionais'),
     'Regras Opcionais': (185, None),
     'Fichas de Ameaças': (191, None),
     'Perigos': (303, None),
@@ -81,6 +81,7 @@ SAH = [
     ('Sobreviventes', 'Equipamentos', 38),
     ('Sobreviventes', 'Poderes Paranormais', 47),
     ('O Horror', 'Novas Ações de Investigação', 82),
+    ('O Horror', 'Atributos Negativos', 82),
     ('O Horror', 'Eventos de Investigação', 83),
     ('O Horror', 'Medo em Jogo', 88),
     ('O Horror', 'Perseguições', 91),
@@ -99,11 +100,22 @@ SAH = [
     ('Regras Opcionais', 'Combate Narrativo', 120),
 ]
 SAH_FIM = {
+    'Atributos Negativos': (82, 'Novas Ações de Investigação'),
     'Poderes Paranormais': (48, None),
     'Equipamentos': (46, None),
     'Vida Além da Ordem': (98, None),
     'Combate Narrativo': (124, None),
     'Poderes Gerais': (37, None),
+}
+
+
+# Linhas que o PDF põe na ordem errada (a coluna se mistura). Cada uma é conferida na página do livro.
+CORRECOES: dict[str, list[tuple[str, str]]] = {
+    # Livro, p. 17-18: a linha "algum momento, você se envolveu em um assunto da Ordem" é do Criminoso, não do Chef.
+    'Origens': [
+        ('se en-\n\nalgum momento, você se envolveu em um assunto da Ordem volvesse', 'se envolvesse'),
+        ('criminosa. Em\n\n@p 18\n\n— talvez', 'criminosa. Em algum momento, você se envolveu em um assunto da Ordem\n\n@p 18\n\n— talvez'),
+    ],
 }
 
 
@@ -123,8 +135,14 @@ def _inline(spans) -> str:
         if not t.strip():
             out += t
             continue
-        if 'd20' in s.font:  # o glifo do dado: "–O" é –1d20, "OO" é 2d20
-            out += f'{len(t.strip())}d20'
+        if 'd20' in s.font:  # o glifo do dado: "–O" é –1d20, "OO" é 2d20; "3O" (número antes) é 3d20
+            n = re.search(r'(\d+)$', out)
+            if n and len(t.strip()) == 1:
+                out = out[: n.start()] + f'{n.group(1)}d20'
+            else:
+                out += f'{len(t.strip())}d20'
+            continue
+        if 'OutroLado' in s.font and t.strip() in ('I', 'b'):  # marcador de lista do livro (glifo), não é texto
             continue
         if 'Semibold' in s.font or ('Bold' in s.font and 'Warnock' in s.font and len(t.strip()) < 45):
             out += f'**{t.strip()}** ' if not t.startswith(' ') else f' **{t.strip()}** '
@@ -246,6 +264,10 @@ def extrair(livro: Livro, nome_livro: str, secoes: list[tuple], fins: dict, excl
                 # não achou o título do fim: para antes da página do fim
                 k1 = next((i for i, l in enumerate(linhas) if l.pdf == fim), k1)
         md = secao_md(linhas[k0:k1], excluir)
+        for errado, certo in CORRECOES.get(titulo_s, []):
+            if errado not in md:
+                raise SystemExit(f'Correção de "{titulo_s}" não achou o trecho: {errado[:60]!r}')
+            md = md.replace(errado, certo)
         if not md.strip():
             continue
         out.append({

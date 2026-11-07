@@ -74,7 +74,7 @@
    "alvoTipo": "Alvo",
    "duracao": "veja texto",
    "resistencia": "",
-   "efeito": "Você faz o sacrifício supremo e se entrega ao Sangue, sendo devorado em uma monstruosidade bestial por completo. Você fica mais forte, rápido e resistente, em troca de uma mente nublada pela raiva e uma aparência animalesca, sentindo os músculos rasgando, os ossos ficando protuberantes e a sua pele endurecendo em uma estrutura de couro rubro.\n\nVocê recebe faro, visão no escuro, cura acelerada 10, +10 em testes de ataque e rolagens de dano corpo a corpo e na Defesa, 30 PV temporários e seus ataques desarmados causam 1 dado de dano adicional e são considerados letais (sendo de corte, impacto ou perfuração à sua escolha no momento em que atacar). Após invocar o ritual, você não pode fazer mais fazer ações que demandem foco e concentração (como conjurar um ritual). Além disso, devido a sua aparência e estado violento, você sofre –3O em testes de perícias para interação social, como Diplomacia e Enganação.\n\nDiferente de outros rituais, este não possui fim. A cada rodada, você sente um pedaço da sua mente sendo devorado. Todas as suas memórias, pensamentos e existência sendo mastigados e consumidos pela intensidade do Sangue. As palavras fazem cada vez menos sentido, assim como falar e compreender os outros se torna cada vez mais impossível no meio da tormenta dos sentimentos. Suas emoções se convertem em um oceano de Sangue, tudo é tão intenso, todo toque é dor extrema, todo ataque é euforia, todo movimento é adrenalina… e finalmente, quando a cena em que conjurou o ritual acaba, o mínimo controle que você tinha de suas ações também se vai e você se torna, permanentemente, uma criatura de Sangue, sacrificando seu personagem para o Outro Lado e o perdendo para sempre.",
+   "efeito": "Você faz o sacrifício supremo e se entrega ao Sangue, sendo devorado em uma monstruosidade bestial por completo. Você fica mais forte, rápido e resistente, em troca de uma mente nublada pela raiva e uma aparência animalesca, sentindo os músculos rasgando, os ossos ficando protuberantes e a sua pele endurecendo em uma estrutura de couro rubro.\n\nVocê recebe faro, visão no escuro, cura acelerada 10, +10 em testes de ataque e rolagens de dano corpo a corpo e na Defesa, 30 PV temporários e seus ataques desarmados causam 1 dado de dano adicional e são considerados letais (sendo de corte, impacto ou perfuração à sua escolha no momento em que atacar). Após invocar o ritual, você não pode fazer mais fazer ações que demandem foco e concentração (como conjurar um ritual). Além disso, devido a sua aparência e estado violento, você sofre –3d20 em testes de perícias para interação social, como Diplomacia e Enganação.\n\nDiferente de outros rituais, este não possui fim. A cada rodada, você sente um pedaço da sua mente sendo devorado. Todas as suas memórias, pensamentos e existência sendo mastigados e consumidos pela intensidade do Sangue. As palavras fazem cada vez menos sentido, assim como falar e compreender os outros se torna cada vez mais impossível no meio da tormenta dos sentimentos. Suas emoções se convertem em um oceano de Sangue, tudo é tão intenso, todo toque é dor extrema, todo ataque é euforia, todo movimento é adrenalina… e finalmente, quando a cena em que conjurou o ritual acaba, o mínimo controle que você tinha de suas ações também se vai e você se torna, permanentemente, uma criatura de Sangue, sacrificando seu personagem para o Outro Lado e o perdendo para sempre.",
    "discente": "(+5 PE): muda os bônus para +20 e os PV temporários para 50. Requer afinidade.",
    "verdadeiro": "",
    "danoNormal": "",
@@ -134,7 +134,7 @@
    "alvoTipo": "Alvo",
    "duracao": "sustentada",
    "resistencia": "",
-   "efeito": "Por mais assustadora que seja a morte, você sabe que a melhor maneira de lidar com ela é aceitando o que ela tem a oferecer. Ao conjurar este ritual, você cobre o seu corpo com o fedor da Morte, parando suas funções biológicas e passando a cheirar como um cadáver apodrecendo. Seu coração para de bater, seus pulmões deixam de inflar, seu sangue cessa de fluir. Tudo fica, temporariamente, sendo sustentado pelo Lodo da Morte.\n\nNesse estado, qualquer animal se afasta de você instintivamente, como se você fosse uma fonte de doenças pútridas, e você sofre –3O em Diplomacia. Além disso, você recebe +5 em Furtividade, por se parecer com um corpo qualquer no cenário, e +10 em testes de Enganação para se fingir de morto. Em uma cena de furtividade (p. 92), enquanto você ficar parado, sua visibilidade é considerada 1 ponto menor.\n\nNa prática, você não está morto nem é um morto-vivo, não está imune a doenças ou outros efeitos biológicos, ainda precisa dormir etc. Ter seu corpo sustentado pelo Lodo é terrível; para cada rodada em que mantêm esse ritual, você sofre 1d4 pontos de dano de Morte que ignora resistências.",
+   "efeito": "Por mais assustadora que seja a morte, você sabe que a melhor maneira de lidar com ela é aceitando o que ela tem a oferecer. Ao conjurar este ritual, você cobre o seu corpo com o fedor da Morte, parando suas funções biológicas e passando a cheirar como um cadáver apodrecendo. Seu coração para de bater, seus pulmões deixam de inflar, seu sangue cessa de fluir. Tudo fica, temporariamente, sendo sustentado pelo Lodo da Morte.\n\nNesse estado, qualquer animal se afasta de você instintivamente, como se você fosse uma fonte de doenças pútridas, e você sofre –3d20 em Diplomacia. Além disso, você recebe +5 em Furtividade, por se parecer com um corpo qualquer no cenário, e +10 em testes de Enganação para se fingir de morto. Em uma cena de furtividade (p. 92), enquanto você ficar parado, sua visibilidade é considerada 1 ponto menor.\n\nNa prática, você não está morto nem é um morto-vivo, não está imune a doenças ou outros efeitos biológicos, ainda precisa dormir etc. Ter seu corpo sustentado pelo Lodo é terrível; para cada rodada em que mantêm esse ritual, você sofre 1d4 pontos de dano de Morte que ignora resistências.",
    "discente": "(+4 PE): muda o alcance para toque e o alvo para 1 ser voluntário.",
    "verdadeiro": "(+9 PE): muda o alcance para curto e o alvo para até 5 seres voluntários. Requer afinidade.",
    "danoNormal": "1d4",
@@ -390,7 +390,7 @@
    "proficiencia": "Táticas",
    "empunhadura": "Leve",
    "elemento": "",
-   "descricao": "Uma lâmina projetada para ser fixada em um fuzil ou arma similar. Você pode gastar uma ação de movimento para fixar a baioneta em uma arma de fogo de duas mãos. Se fizer isso, a baioneta se torna uma arma de duas mãos ágil e seu dano aumenta para 1d6. Você ainda pode atacar com a arma de fogo, mas sofre –O em ataques à distância com ela.",
+   "descricao": "Uma lâmina projetada para ser fixada em um fuzil ou arma similar. Você pode gastar uma ação de movimento para fixar a baioneta em uma arma de fogo de duas mãos. Se fizer isso, a baioneta se torna uma arma de duas mãos ágil e seu dano aumenta para 1d6. Você ainda pode atacar com a arma de fogo, mas sofre –1d20 em ataques à distância com ela.",
    "pagina": 38,
    "id": "2583f25f-aa70-539e-b18d-db55ead067a2"
   },
@@ -492,7 +492,7 @@
    "proficiencia": "Táticas",
    "empunhadura": "Uma mão",
    "elemento": "",
-   "descricao": "Uma versão de calibre superior da tradicional pistola. Sua potência e recuo impõem uma penalidade de –O em testes de ataque; empunhá-la com as duas mãos anula essa penalidade.",
+   "descricao": "Uma versão de calibre superior da tradicional pistola. Sua potência e recuo impõem uma penalidade de –1d20 em testes de ataque; empunhá-la com as duas mãos anula essa penalidade.",
    "pagina": 38,
    "id": "5f80237d-66b8-5cb9-b50c-79b3d0f6f617"
   },
@@ -509,7 +509,7 @@
    "proficiencia": "Táticas",
    "empunhadura": "Duas mãos",
    "elemento": "",
-   "descricao": "Geralmente usada para caça, essa versão da espingarda conta com dois canos paralelos, cada um com um gatilho e capacidade para um cartucho. Ao contrário de outras armas de fogo, você precisa gastar uma ação de movimento para recarregar a espingarda de cano duplo após disparar seus dois cartuchos. Quando ataca com essa arma, você pode disparar os dois canos no mesmo alvo; se fizer isso, sofre –O no teste de ataque, mas o dano da arma aumenta para 6d6.",
+   "descricao": "Geralmente usada para caça, essa versão da espingarda conta com dois canos paralelos, cada um com um gatilho e capacidade para um cartucho. Ao contrário de outras armas de fogo, você precisa gastar uma ação de movimento para recarregar a espingarda de cano duplo após disparar seus dois cartuchos. Quando ataca com essa arma, você pode disparar os dois canos no mesmo alvo; se fizer isso, sofre –1d20 no teste de ataque, mas o dano da arma aumenta para 6d6.",
    "pagina": 38,
    "id": "ded74366-79fe-5370-9900-96a40d0619fb"
   },
@@ -849,7 +849,7 @@
    "proficiencia": "",
    "empunhadura": "",
    "elemento": "",
-   "descricao": "Uma ferramenta medieval cuja utilidade a manteve ativa até os dias de hoje, um estrepe é uma peça de metal com quatro pontas afiadas, construída de modo que uma ponta sempre fique voltada para cima. Usar um saco de estrepes em combate exige uma ação padrão para cobrir um quadrado de 1,5m de lado. Um ser que pise numa área coberta de estrepes sofre 1d4 pontos de dano de perfuração e fica lento por um dia. Em uma cena de perseguição, você pode aplicar os estrepes como parte de sua ação, mas sofre –O em seu teste nessa rodada. Um perseguidor que pise nos estrepes sofre –O em testes de perseguição até o fim da cena. Tanto em combate quanto em perseguição, passar em um teste de Reflexos (DT Agi) evita os estrepes. Os estrepes não afetam seres capazes de resistir a todo o seu dano.",
+   "descricao": "Uma ferramenta medieval cuja utilidade a manteve ativa até os dias de hoje, um estrepe é uma peça de metal com quatro pontas afiadas, construída de modo que uma ponta sempre fique voltada para cima. Usar um saco de estrepes em combate exige uma ação padrão para cobrir um quadrado de 1,5m de lado. Um ser que pise numa área coberta de estrepes sofre 1d4 pontos de dano de perfuração e fica lento por um dia. Em uma cena de perseguição, você pode aplicar os estrepes como parte de sua ação, mas sofre –1d20 em seu teste nessa rodada. Um perseguidor que pise nos estrepes sofre –1d20 em testes de perseguição até o fim da cena. Tanto em combate quanto em perseguição, passar em um teste de Reflexos (DT Agi) evita os estrepes. Os estrepes não afetam seres capazes de resistir a todo o seu dano.",
    "pagina": 40,
    "id": "cc53e2d8-42b5-5fb6-b8ee-d500411a61d4"
   },
@@ -1036,7 +1036,7 @@
    "proficiencia": "",
    "empunhadura": "",
    "elemento": "",
-   "descricao": "Alimentados por uma bateria, estes óculos permitem enxergar no escuro, como se o personagem tivesse visão no escuro. Entretanto, o usuário recebe –O em testes de resistência contra a condição ofuscado e efeitos baseados em luz (como uma granada de atordoamento).",
+   "descricao": "Alimentados por uma bateria, estes óculos permitem enxergar no escuro, como se o personagem tivesse visão no escuro. Entretanto, o usuário recebe –1d20 em testes de resistência contra a condição ofuscado e efeitos baseados em luz (como uma granada de atordoamento).",
    "pagina": 40,
    "id": "18c8abc5-c1d4-5fb5-9436-320c407e2069"
   },
@@ -1359,7 +1359,7 @@
    "proficiencia": "",
    "empunhadura": "",
    "elemento": "Sangue",
-   "descricao": "Ninguém sabe que tipo de “cientista louco” desenvolveu esse aparato, composto por dois aneis metálicos de tamanhos adaptáveis, banhados em símbolos de Sangue e conectados por uma sanfona de tecido humano. Você pode usar esse item e uma ação padrão para reconectar um braço, perna ou cabeça decepados de uma pessoa ou animal, desde que o ferimento tenha ocorrido em até três rodadas. Reconectar a parte perdida não cura PV mas, se o alvo estava morrendo ou morto, ele perde estas condições e fica inconsciente e com 1 PV. Se o conector for removido, a parte é novamente decepada e não poderá ser reconectada por este item novamente. Quando é usado, o conector tem uma chance de 25% de conceder uma fagulha de “vida própria” à parte reconectada. Se isso acontecer e a parte for uma perna, o alvo ficará lento, pois o membro tentará andar em outras direções por conta prória. Se a parte for um braço, o alvo sofrerá uma penalidade de –O em testes que exijam o uso daquele braço, pois o membro tentará tatear ao redor ou até mesmo atrapalhar a ação. Por fim, se a parte era a cabeça, no início de cada cena de grande tensão (como um combate ou uma perseguição), o alvo tem 25% de chance de ficar confuso. Há boatos de que estes efeitos podem ser removidos da parte reconectada, mas não se sabe exatamente como.",
+   "descricao": "Ninguém sabe que tipo de “cientista louco” desenvolveu esse aparato, composto por dois aneis metálicos de tamanhos adaptáveis, banhados em símbolos de Sangue e conectados por uma sanfona de tecido humano. Você pode usar esse item e uma ação padrão para reconectar um braço, perna ou cabeça decepados de uma pessoa ou animal, desde que o ferimento tenha ocorrido em até três rodadas. Reconectar a parte perdida não cura PV mas, se o alvo estava morrendo ou morto, ele perde estas condições e fica inconsciente e com 1 PV. Se o conector for removido, a parte é novamente decepada e não poderá ser reconectada por este item novamente. Quando é usado, o conector tem uma chance de 25% de conceder uma fagulha de “vida própria” à parte reconectada. Se isso acontecer e a parte for uma perna, o alvo ficará lento, pois o membro tentará andar em outras direções por conta prória. Se a parte for um braço, o alvo sofrerá uma penalidade de –1d20 em testes que exijam o uso daquele braço, pois o membro tentará tatear ao redor ou até mesmo atrapalhar a ação. Por fim, se a parte era a cabeça, no início de cada cena de grande tensão (como um combate ou uma perseguição), o alvo tem 25% de chance de ficar confuso. Há boatos de que estes efeitos podem ser removidos da parte reconectada, mas não se sabe exatamente como.",
    "pagina": 57,
    "id": "3602a1e5-8a05-5737-97ba-99469937ae9c"
   },
@@ -1410,7 +1410,7 @@
    "proficiencia": "",
    "empunhadura": "",
    "elemento": "Energia",
-   "descricao": "Esta pequena placa metálica foi\n\nadquirida de corpos de criaturas como o Ciborgue, e polida ritualisticamente até se tornar reflexiva. Um espelho refletor pode ser usado para refletir imagens em ângulos impossíveis; você pode gastar uma ação de movimento para observar um ponto ou ser fora de seu ângulo de visão em alcance médio; quando faz isso você recebe +O em Percepção e tem uma chance de enxergar mesmo objetos e seres com cobertura total. Além disso, quando sofre dano de Energia, você pode sacrificar o espelho para evitar esse dano e refleti-lo de volta à sua origem.",
+   "descricao": "Esta pequena placa metálica foi\n\nadquirida de corpos de criaturas como o Ciborgue, e polida ritualisticamente até se tornar reflexiva. Um espelho refletor pode ser usado para refletir imagens em ângulos impossíveis; você pode gastar uma ação de movimento para observar um ponto ou ser fora de seu ângulo de visão em alcance médio; quando faz isso você recebe +1d20 em Percepção e tem uma chance de enxergar mesmo objetos e seres com cobertura total. Além disso, quando sofre dano de Energia, você pode sacrificar o espelho para evitar esse dano e refleti-lo de volta à sua origem.",
    "pagina": 61,
    "id": "9b2b47c5-131d-52b6-90db-0db4d2e5a3b0"
   },
@@ -1461,7 +1461,7 @@
    "proficiencia": "",
    "empunhadura": "",
    "elemento": "Morte",
-   "descricao": "Este item é uma fotografia que retrata um dos últimos momentos de uma pessoa antes de sua morte (como um condenado sendo preparado para a forca ou um paciente terminal prestes a expirar). Existem diversas versões deste item, algumas uma simples foto em papel, outras um quadro adornado por uma sólida moldura ou mesmo uma imagem digital. Cada instantâneo mortal retrata pessoas diferentes, em circunstâncias de morte variadas. Se estiver empunhando um instantâneo mortal e fizer um teste de perícia para procurar pistas, você pode olhar fixamente para a imagem e gastar 1 PE. Se o teste for de uma perícia relacionada às circunstâncias de morte da fotografia, a imagem da pessoa irá se mover discretamente, apontando em uma direção útil para o teste (efetivamente concedendo +O no teste). Por exemplo, um teste de Crime para encontrar uma pista pode receber o bônus se você estiver segurando um instantâneo mortal com a imagem de um criminoso. O mestre tem a palavra final sobre as perícias que se relacionam a um determinado instantâneo mortal.",
+   "descricao": "Este item é uma fotografia que retrata um dos últimos momentos de uma pessoa antes de sua morte (como um condenado sendo preparado para a forca ou um paciente terminal prestes a expirar). Existem diversas versões deste item, algumas uma simples foto em papel, outras um quadro adornado por uma sólida moldura ou mesmo uma imagem digital. Cada instantâneo mortal retrata pessoas diferentes, em circunstâncias de morte variadas. Se estiver empunhando um instantâneo mortal e fizer um teste de perícia para procurar pistas, você pode olhar fixamente para a imagem e gastar 1 PE. Se o teste for de uma perícia relacionada às circunstâncias de morte da fotografia, a imagem da pessoa irá se mover discretamente, apontando em uma direção útil para o teste (efetivamente concedendo +1d20 no teste). Por exemplo, um teste de Crime para encontrar uma pista pode receber o bônus se você estiver segurando um instantâneo mortal com a imagem de um criminoso. O mestre tem a palavra final sobre as perícias que se relacionam a um determinado instantâneo mortal.",
    "pagina": 59,
    "id": "551f9776-48d6-5ea4-946c-8979c36d1d83"
   },

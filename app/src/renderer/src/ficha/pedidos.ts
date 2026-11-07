@@ -18,8 +18,8 @@ export function rolagensDoAtaque(a: FichaAgente, at: Ataque, mod = { dados: 0, b
   const atributo = PERICIAS.find((p) => p.nome === at.pericia)?.atributo ?? 'for'
   const t = dadosDoTeste(a.atributos[atributo], mod.dados)
   const bonus = bonusPericia(a, at.pericia) + at.bonusAtaque + mod.bonus
-  // Ataque corpo a corpo (Luta) soma FOR ao dano.
-  const somaFor = at.pericia === 'Luta' ? a.atributos.for : 0
+  // Corpo a corpo (Luta) e arremesso somam FOR ao dano; disparo e fogo, não (livro, p. 82).
+  const somaFor = at.pericia === 'Luta' || at.arremesso ? a.atributos.for : 0
   const expr = lerExpressao(at.dano)
   const extras = at.danosExtras.filter((x) => x.dano.trim())
   const textoDano = [descreverExpressao({ ...expr, fixo: expr.fixo + somaFor }), ...extras.map((x) => descreverExpressao(lerExpressao(x.dano)))].join(' + ')

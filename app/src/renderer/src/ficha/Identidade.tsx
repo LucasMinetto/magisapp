@@ -1,7 +1,7 @@
 // Coluna 1 da ficha completa: identidade, hexágono de atributos, PV/SAN/PE e condições.
 // O retrato e o nome ficam com a tela da ficha.
 import { useState } from 'react'
-import { ATRIBUTOS, CLASSES, CONDICOES, NEX_VALORES, NOMES_CLASSES, ORIGENS, TRILHAS, dadosDoTeste, type Classe, type Formula } from '@shared/ordem/regras'
+import { ATRIBUTOS, CONDICOES, ESTAGIOS, NEX_VALORES, NOMES_CLASSES, ORIGENS, TRILHAS, dadosDoTeste, temTabela, type Classe, type Formula } from '@shared/ordem/regras'
 import { cx } from '@/ui'
 import { useFicha } from './contexto'
 import { Escolha, Numero, Rastreador, Secao, Texto } from './partes'
@@ -19,12 +19,16 @@ export function Identidade() {
         <Escolha rotulo="Origem" livre valor={a.origem} opcoes={ORIGENS} aoMudar={(origem) => alterar({ origem })} />
         <Escolha rotulo="Classe" valor={a.classe} opcoes={['', ...NOMES_CLASSES, 'Sobrevivente']} aoMudar={(classe) => alterar({ classe, trilha: '' })} />
         <Escolha key={a.classe} rotulo="Trilha" livre valor={a.trilha} opcoes={TRILHAS[a.classe as Classe] ?? []} aoMudar={(trilha) => alterar({ trilha })} />
-        <Escolha
-          rotulo="NEX"
-          valor={String(a.nex)}
-          opcoes={NEX_VALORES.map((n) => ({ valor: String(n), texto: `${n}%` }))}
-          aoMudar={(n) => alterar({ nex: Number(n) })}
-        />
+        {a.classe === 'Sobrevivente' ? (
+          <Escolha rotulo="Estágio" valor={String(a.estagio)} opcoes={ESTAGIOS.map((n) => ({ valor: String(n), texto: String(n) }))} aoMudar={(n) => alterar({ estagio: Number(n), nex: 0 })} />
+        ) : (
+          <Escolha
+            rotulo="NEX"
+            valor={String(a.nex)}
+            opcoes={NEX_VALORES.map((n) => ({ valor: String(n), texto: `${n}%` }))}
+            aoMudar={(n) => alterar({ nex: Number(n) })}
+          />
+        )}
       </div>
       <Atributos />
       <Recursos />
@@ -99,7 +103,7 @@ function Atributos() {
 
 function Recursos() {
   const { a, alterar, d, max } = useFicha()
-  const temTabela = a.classe in CLASSES
+  const comTabela = temTabela(a.classe)
   const itens = [
     { id: 'pv', nome: 'Vida', f: d.pv },
     { id: 'san', nome: 'Sanidade', f: d.san },
@@ -114,9 +118,9 @@ function Recursos() {
         return (
           <div key={r.id} className="flex flex-col gap-2">
             <Rastreador rotulo={r.nome} cor={r.id} atual={atual} max={max[r.id]} temp={temp} alerta={alerta} aoMudar={(v) => alterar({ [`${r.id}Atual`]: v })} />
-            <p className="text-xs text-subtle">{temTabela ? <FormulaTexto f={r.f} /> : 'Classe sem tabela: o máximo é o digitado.'}</p>
+            <p className="text-xs text-subtle">{comTabela ? <FormulaTexto f={r.f} /> : 'Classe sem tabela: o máximo é o digitado.'}</p>
             <div className="grid grid-cols-[1fr_1fr_1fr_auto] items-end gap-2">
-              {!temTabela ? (
+              {!comTabela ? (
                 <Numero rotulo="Máximo" valor={a[`${r.id}Max`]} aoMudar={(v) => alterar({ [`${r.id}Max`]: v })} />
               ) : (
                 <span />

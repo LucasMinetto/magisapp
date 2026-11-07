@@ -35,7 +35,7 @@ beforeEach(() => {
       nex: 25,
       atributos: { agi: 2, for: 1, int: 3, pre: 3, vig: 1 },
       pericias: { Ocultismo: { treino: 10, extra: 2 } },
-      ataques: [{ id: 'a1', nome: 'Faca', pericia: 'Luta', bonusAtaque: 0, dano: '1d4', tipoDano: 'Corte', danosExtras: [], margemCritico: 19, multCritico: 2, alcance: '', notas: '' }],
+      ataques: [{ id: 'a1', nome: 'Faca', pericia: 'Luta', bonusAtaque: 0, dano: '1d4', tipoDano: 'Corte', danosExtras: [], arremesso: false, margemCritico: 19, multCritico: 2, alcance: '', notas: '' }],
       rituais: [
         { id: 'r1', nome: 'Amaldiçoar Arma', elemento: 'Sangue', circulo: 1, execucao: 'padrão', alcance: 'toque', alvo: '1 arma', duracao: 'cena', resistencia: '', efeito: 'A arma causa +1d6 de Sangue.', discente: '', verdadeiro: '', danoNormal: '', danoDiscente: '', danoVerdadeiro: '', tipoDano: '' }
       ],

@@ -43,7 +43,19 @@ class Linha:
 
     @property
     def text(self) -> str:
-        return ''.join(s.text for s in self.spans).strip()
+        # O glifo do dado (fonte com "d20"): "–O" é –1d20, "OO" é 2d20, "3O" é 3d20. O marcador de lista do livro
+        # ("I" ou "b" na fonte OutroLado) não é texto.
+        out = ''
+        for s in self.spans:
+            t = s.text
+            if 'd20' in s.font and t.strip():
+                n = re.search(r'(\d+)$', out)
+                out = out[: n.start()] + f'{n.group(1)}d20' if n and len(t.strip()) == 1 else out + f'{len(t.strip())}d20'
+            elif 'OutroLado' in s.font and t.strip() in ('I', 'b'):
+                continue
+            else:
+                out += t
+        return out.strip()
 
     @property
     def font(self) -> str:

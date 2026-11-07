@@ -61,6 +61,10 @@ describe('regras de Ordem Paranormal', () => {
     expect(dadosDoTeste(3)).toEqual({ quantidade: 3, regra: 'maior' })
     expect(dadosDoTeste(0)).toEqual({ quantidade: 2, regra: 'menor' })
     expect(dadosDoTeste(0, 1)).toEqual({ quantidade: 1, regra: 'maior' })
+    // Penalidade que deixaria menos de 1 dado: rola como se fosse bônus e fica com o pior (livro, p. 12).
+    expect(dadosDoTeste(2, -2)).toEqual({ quantidade: 4, regra: 'menor' })
+    expect(dadosDoTeste(1, -1)).toEqual({ quantidade: 2, regra: 'menor' })
+    expect(dadosDoTeste(3, -1)).toEqual({ quantidade: 2, regra: 'maior' })
     expect(resolverTeste([4, 17, 9], 'maior', 10).total).toBe(27)
     expect(resolverTeste([4, 17], 'menor', 0).total).toBe(4)
   })
@@ -94,5 +98,13 @@ describe('regras de Ordem Paranormal', () => {
     expect(rolarDados(3, 20, sempreMax)).toEqual([20, 20, 20])
     expect(rolarExpressao(lerExpressao('2d6+1d4+2'), 1, () => 0)).toEqual([[1, 1], [1]])
     for (const v of rolarDados(200, 6)) expect(v >= 1 && v <= 6).toBe(true)
+  })
+
+  it('sobrevivente (Sobrevivendo ao Horror, p. 30): 8+VIG PV, 2+PRE PE, 8 SAN e o ganho por estágio', () => {
+    const f = { ...kash, classe: 'Sobrevivente', nex: 0, estagio: 3, atributos: { agi: 1, for: 1, int: 1, pre: 2, vig: 2 } }
+    const d = derivados(f)
+    expect([d.pv.total, d.pe.total, d.san.total]).toEqual([8 + 2 + 4, 2 + 2 + 2, 8 + 4])
+    expect(d.limitePe).toBe(1)
+    expect(d.dtRitual).toBe(10 + 1 + 2)
   })
 })
