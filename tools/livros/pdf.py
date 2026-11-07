@@ -156,6 +156,9 @@ def juntar(linhas: list[str]) -> str:
             continue
         if out.endswith('-') and len(out) > 1 and out[-2].isalpha() and t[:1].islower():
             out = out[:-1] + t
+        elif out.endswith('-') and t.startswith('-') and t[1:2].isalpha():
+            # palavra com hífen quebrada no hífen: o livro repete o hífen na linha seguinte ("flash-" / "-bang")
+            out = out + t[1:]
         elif out:
             out += ' ' + t
         else:

@@ -62,6 +62,15 @@ def corrige_itens(sigla: str, xs: list[dict]) -> list[dict]:
                 i['nome'] = 'A Primeira Adaga'
             if n == 'tablet do saber custoso':
                 i['nome'] = 'Tábula do saber custoso'
+        if sigla == 'OPRPG' and n == 'medidor de estabilidade da membrana':
+            # Livro, p. 66-67: a frase continua no alto da coluna seguinte; o que vem depois é a tabela ao lado.
+            corte = 'ainda pode não ter sido'
+            if corte not in i['descricao']:
+                raise SystemExit('Medidor de estabilidade: o texto mudou, confira a correção.')
+            i['descricao'] = i['descricao'].split(corte)[0] + corte + (
+                ' afetado por manifestações, assim como um lugar com a Membrana protegida por conter uma criatura'
+                ' poderosa vinda de outro lugar.'
+            )
         if fold(i['nome']) in vistos:
             continue
         vistos.add(fold(i['nome']))

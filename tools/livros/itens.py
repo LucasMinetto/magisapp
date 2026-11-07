@@ -146,6 +146,11 @@ def descricoes(livro: Livro, ini: int, fim: int) -> dict[str, tuple[str, int]]:
             out[fold(atual)] = (texto, pagina)
 
     for l in linhas:
+        # Subitem de lista ("I Atordoamento. Também chamadas…"): o marcador é um glifo de outra fonte e a linha é
+        # do texto da entrada atual (granadas, medicamentos…). Sem isto a primeira linha de cada subitem se perdia.
+        if atual and l.spans and 'OutroLado' in l.spans[0].font and l.spans[0].text.strip() in ('I', 'b') and len(l.spans) > 1:
+            corpo.append(Linha(l.pagina, l.pdf, l.x, l.y, l.x1, l.col, l.spans[1:]))
+            continue
         if eh_titulo_entrada(l):
             fecha()
             atual = l.spans[0].text.strip().rstrip('.')
@@ -301,6 +306,10 @@ def amaldicoados(livro: Livro, ini: int, fim: int, fonte_nome=('DaisyWheel', 'Ke
     fecha()
     for i in out:
         i.pop('_y', None)
+        # "Exceto quando indicado o contrário, contam como itens de categoria II" (livro, p. 148): o texto pode dizer outra.
+        m = re.search(r'\bde categoria (IV|III|II|I)\b', i['descricao'])
+        if m:
+            i['categoria'] = ROMANOS[m.group(1)]
     return out
 
 
