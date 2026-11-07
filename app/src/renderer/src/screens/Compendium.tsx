@@ -1,28 +1,31 @@
 // Biblioteca: ameaças (T8), rituais e itens (T9) que valem para todas as campanhas. Trazer para a campanha faz uma cópia.
-import { ArrowLeft, BookMarked, Copy, ImageUp, Package, Plus, Search, Skull, Sparkles, Trash2, UserPlus } from 'lucide-react'
+import { ArrowLeft, BookMarked, Copy, Download, ImageUp, Package, Plus, Search, Skull, Sparkles, Trash2, Upload, UserPlus } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { useCampaign } from '@/campaign'
 import { BlocoAmeaca } from '@/ameaca/BlocoAmeaca'
 import { EditorAmeaca } from '@/ameaca/EditorAmeaca'
 import { BlocoItem, CATEGORIAS, EditorItem, resumoItem } from '@/biblioteca/Item'
+import { ImportarPacote, resultadoDaImportacao } from '@/biblioteca/Pacote'
 import { BlocoRitual, EditorRitual, ROMANO } from '@/biblioteca/Ritual'
 import { Abas, Texto } from '@/ficha/partes'
 import { useAutosave, useLoad } from '@/lib/data'
 import { Button, Card, Chip, Dialog, EmptyState, ErrorNote, IconButton, SaveIndicator, SelectField, TextField } from '@/ui'
 import { ELEMENTOS, TIPOS_ITEM, type AmeacaBiblioteca } from '@shared/ordem/esquemas'
-import { SOURCE_KINDS, type LibraryEntry, type LibraryKind, type LibrarySource, type SourceKind } from '@shared/types'
+import { SOURCE_KINDS, type ImportPreview, type LibraryEntry, type LibraryKind, type LibrarySource, type SourceKind } from '@shared/types'
 
 const KIND_SOURCE: Record<SourceKind, string> = { oficial: 'Livro oficial', propria: 'Criação própria', outro: 'Outro livro' }
 
 /** Livros e outras origens: criar e apagar (a "Criações próprias" vem com o app). */
-function Sources({ open, onClose, sources, onChanged }: { open: boolean; onClose: () => void; sources: LibrarySource[]; onChanged: () => void }) {
+function Sources({ open, onClose, sources, onChanged, onImport }: { open: boolean; onClose: () => void; sources: LibrarySource[]; onChanged: () => void; onImport: (p: ImportPreview) => void }) {
   const [name, setName] = useState('')
   const [kind, setKind] = useState<SourceKind>('oficial')
   const [abbreviation, setAbbreviation] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [aviso, setAviso] = useState<string | null>(null)
   const act = async (job: () => Promise<unknown>) => {
     setError(null)
+    setAviso(null)
     try {
       await job()
       onChanged()
@@ -30,16 +33,34 @@ function Sources({ open, onClose, sources, onChanged }: { open: boolean; onClose
       setError((e as Error).message)
     }
   }
+  const exportar = (sourceIds?: string[]) =>
+    void act(async () => {
+      const file = await window.api.library.exportPackage({ sourceIds })
+      if (file) setAviso(`Pacote salvo em ${file}`)
+    })
+  const importar = () =>
+    void act(async () => {
+      const preview = await window.api.library.pickPackage()
+      if (preview) onImport(preview)
+    })
   return (
     <Dialog
       open={open}
       onOpenChange={(o) => !o && onClose()}
       title="Origens"
-      description="De onde vem cada registro: um livro, as suas criações ou outro material."
+      description="De onde vem cada registro: um livro, as suas criações ou outro material. Exporte uma origem para levar a outro computador ou mandar a outro mestre."
       footer={
-        <Button variant="ghost" onClick={onClose}>
-          Fechar
-        </Button>
+        <>
+          <Button icon={<Upload className="size-4" />} onClick={importar} className="mr-auto">
+            Importar…
+          </Button>
+          <Button icon={<Download className="size-4" />} onClick={() => exportar()}>
+            Exportar tudo
+          </Button>
+          <Button variant="ghost" onClick={onClose}>
+            Fechar
+          </Button>
+        </>
       }
     >
       <div className="flex flex-col gap-4">
@@ -53,6 +74,9 @@ function Sources({ open, onClose, sources, onChanged }: { open: boolean; onClose
               <span className="text-xs text-subtle">
                 {KIND_SOURCE[s.kind]} · {s.count} {s.count === 1 ? 'registro' : 'registros'}
               </span>
+              <IconButton label={`Exportar a origem ${s.name}`} onClick={() => exportar([s.id])} disabled={s.count === 0}>
+                <Download className="size-4" />
+              </IconButton>
               {!s.builtin && (
                 <IconButton label={`Apagar a origem ${s.name}`} onClick={() => void act(() => window.api.library.deleteSource(s.id))}>
                   <Trash2 className="size-4" />
@@ -80,6 +104,11 @@ function Sources({ open, onClose, sources, onChanged }: { open: boolean; onClose
           </Button>
         </form>
         {error && <ErrorNote message={error} />}
+        {aviso && (
+          <p role="status" className="text-sm break-all text-muted">
+            {aviso}
+          </p>
+        )}
       </div>
     </Dialog>
   )
@@ -112,6 +141,8 @@ export function Compendium() {
   const [tipoItem, setTipoItem] = useState('')
   const [categoria, setCategoria] = useState('')
   const [showSources, setShowSources] = useState(false)
+  const [importing, setImporting] = useState<ImportPreview | null>(null)
+  const [imported, setImported] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const sources = useLoad(() => window.api.library.sources(), [])
   const list = useLoad(() => window.api.library.list({ kind, q, sourceId: sourceId || undefined }), [kind, q, sourceId])
@@ -152,6 +183,12 @@ export function Compendium() {
           {tab.novo}
         </Button>
       </div>
+
+      {imported && (
+        <p role="status" className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-muted">
+          {imported}
+        </p>
+      )}
 
       <Abas rotulo="Tipo de registro" abas={TABS} atual={kind} aoMudar={(id) => setParams({ tipo: id }, { replace: true })} />
 
@@ -217,7 +254,28 @@ export function Compendium() {
         ))}
       </ul>
 
-      <Sources open={showSources} onClose={() => setShowSources(false)} sources={sources.data ?? []} onChanged={sources.reload} />
+      <Sources
+        open={showSources}
+        onClose={() => setShowSources(false)}
+        sources={sources.data ?? []}
+        onChanged={sources.reload}
+        onImport={(p) => {
+          setShowSources(false)
+          setImporting(p)
+        }}
+      />
+      {importing && (
+        <ImportarPacote
+          preview={importing}
+          onClose={() => setImporting(null)}
+          onDone={(r) => {
+            setImporting(null)
+            setImported(resultadoDaImportacao(r))
+            sources.reload()
+            list.reload()
+          }}
+        />
+      )}
     </div>
   )
 }

@@ -24,9 +24,10 @@ import {
 } from './campaigns'
 import { CampaignStore, IMAGE_EXTENSIONS, IMPORT_EXTENSIONS } from './store'
 import { join } from 'node:path'
-import { copyToCampaign, LibraryStore } from './library'
+import { copyToCampaign, LibraryStore, PACOTE_EXT } from './library'
 import { LIVROS, LIVROS_VERSAO } from './livros'
 import { TOKEN_EXTENSIONS } from './tokens'
+import { safeFileName } from './vault'
 import { iniciativaSchema, rolagemSchema, type Iniciativa, type RolagemInput } from '../shared/ordem/esquemas'
 import {
   ATTACHMENT_KINDS,
@@ -48,7 +49,8 @@ import {
   type LibraryKind,
   type SheetSize,
   type SourceKind,
-  type TrashType
+  type TrashType,
+  type ImportChoice
 } from '../shared/types'
 
 let store: CampaignStore | null = null
@@ -415,19 +417,38 @@ const channels: Record<string, [z.ZodTypeAny, (input: never, win: BrowserWindow)
     (input: { kind: LibraryKind; id: string; entityId?: string }) => copyToCampaign(need(), library(), input)
   ],
   'library:backup': [z.undefined(), () => library().backup(backupConfig().dir)],
-  'library:pickAndRestore': [
+  // Pacote da biblioteca: exporta as origens escolhidas (todas, sem sourceIds) para onde o mestre mandar.
+  'library:exportPackage': [
+    z.object({ sourceIds: z.array(id).max(200).optional() }),
+    async (input: { sourceIds?: string[] }, win: BrowserWindow) => {
+      const sources = library().sources()
+      const one = input.sourceIds?.length === 1 ? sources.find((s) => s.id === input.sourceIds![0]) : undefined
+      const res = await dialog.showSaveDialog(win, {
+        title: 'Exportar da biblioteca',
+        defaultPath: join(app.getPath('documents'), `${safeFileName(one ? one.name : 'Biblioteca do Magistrado', 'Biblioteca')}${PACOTE_EXT}`),
+        filters: [{ name: 'Pacote da biblioteca', extensions: [PACOTE_EXT.slice(1)] }]
+      })
+      if (res.canceled || !res.filePath) return null
+      return library().exportPackage(res.filePath, input.sourceIds)
+    }
+  ],
+  'library:pickPackage': [
     z.undefined(),
     async (_: never, win: BrowserWindow) => {
       const res = await dialog.showOpenDialog(win, {
-        title: 'Restaurar a biblioteca',
-        defaultPath: backupConfig().dir,
+        title: 'Importar para a biblioteca',
+        defaultPath: app.getPath('documents'),
         properties: ['openFile'],
-        filters: [{ name: 'Backup da biblioteca', extensions: ['magistrado-backup', 'zip'] }]
+        filters: [{ name: 'Pacote da biblioteca', extensions: [PACOTE_EXT.slice(1), 'zip'] }]
       })
-      if (res.canceled || !res.filePaths[0]) return false
-      library().restore(res.filePaths[0])
-      return true
+      if (res.canceled || !res.filePaths[0]) return null
+      return library().previewImport(res.filePaths[0])
     }
+  ],
+  // O arquivo vem de um pickPackage anterior; a escolha vale só para as origens que já existem aqui.
+  'library:importPackage': [
+    z.object({ file: z.string().min(1).max(2000), choices: z.record(z.string().max(64), z.enum(['atualizar', 'copia'])) }),
+    (input: { file: string; choices: Record<string, ImportChoice> }) => library().importPackage(input.file, input.choices)
   ],
   'library:pickToken': [
     id,

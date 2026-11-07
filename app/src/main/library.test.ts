@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
@@ -87,28 +87,94 @@ describe('biblioteca: registros', () => {
   })
 })
 
-describe('biblioteca: backup', () => {
-  it('faz backup e restaura, guardando a anterior', () => {
+describe('biblioteca: pacote por origem', () => {
+  const outra = () => {
+    mkdirSync(join(dir, 'outro'), { recursive: true })
+    return new LibraryStore(join(dir, 'outro', 'biblioteca.sqlite'))
+  }
+
+  it('exporta só a origem pedida e importa noutra biblioteca como origem nova', () => {
+    const livro = lib.saveSource({ name: 'Livro de Regras', kind: 'oficial', abbreviation: 'OPRPG' })
     lib.save('ritual', { sourceId: lib.ownSourceId(), data: { nome: 'Cinerária' } })
-    const file = lib.backup(join(dir, 'backups'), new Date(2026, 10, 3, 21, 30))
-    expect(file.endsWith('Biblioteca 2026-11-03 21h30.magistrado-backup')).toBe(true)
-    lib.save('ritual', { sourceId: lib.ownSourceId(), data: { nome: 'Decadência' } })
-    lib.restore(file)
-    expect(lib.list('ritual').map((r) => r.name)).toEqual(['Cinerária'])
-    // A versão de antes de restaurar continua guardada ao lado.
-    const before = new LibraryStore(join(dir, 'biblioteca.sqlite.antes-de-restaurar'))
-    expect(before.list('ritual')).toHaveLength(2)
-    before.close()
+    lib.save('item', { sourceId: livro.id, data: { nome: 'Pé de cabra' } })
+    const file = lib.exportPackage(join(dir, 'Livro.magistrado-biblioteca'), [livro.id])
+    const b = outra()
+    try {
+      const prev = b.previewImport(file)
+      expect(prev.origens).toEqual([expect.objectContaining({ name: 'Livro de Regras', match: null, novos: 1, total: 1 })])
+      expect(b.importPackage(file, {})).toEqual({ origens: 1, novos: 1, atualizados: 0 })
+      expect(b.sources().map((s) => s.name)).toEqual(['Criações próprias', 'Livro de Regras'])
+      expect(b.list('item')[0]).toMatchObject({ name: 'Pé de cabra', sourceName: 'Livro de Regras' })
+      expect(b.list('ritual')).toHaveLength(0)
+    } finally {
+      b.close()
+    }
   })
 
-  it('recusa arquivo que não é backup de biblioteca e não mexe na atual', () => {
+  it('exportar tudo leva todas as origens; "Criações próprias" casa pelo nome', () => {
+    lib.save('ritual', { sourceId: lib.ownSourceId(), data: { nome: 'Cinerária' } })
+    const file = lib.exportPackage(join(dir, 'tudo.magistrado-biblioteca'))
+    const b = outra()
+    try {
+      b.save('ritual', { sourceId: b.ownSourceId(), data: { nome: 'Decadência' } })
+      const [propria] = b.previewImport(file).origens
+      expect(propria).toMatchObject({ name: 'Criações próprias', match: { id: b.ownSourceId() }, novos: 1, soAqui: 1 })
+      b.importPackage(file, { [propria.pacoteId]: 'atualizar' })
+      expect(b.list('ritual').map((r) => r.name)).toEqual(['Cinerária', 'Decadência'])
+    } finally {
+      b.close()
+    }
+  })
+
+  it('importar o mesmo pacote de novo avisa e não duplica sem o mestre pedir', () => {
+    const r = lib.save('ritual', { sourceId: lib.ownSourceId(), data: { nome: 'Cinerária', circulo: 1 } })
+    const file = lib.exportPackage(join(dir, 'p.magistrado-biblioteca'))
+    const [o] = lib.previewImport(file).origens
+    expect(o).toMatchObject({ match: { id: lib.ownSourceId() }, novos: 0, mudam: 0, iguais: 1, soAqui: 0 })
+    // Sem escolha, a origem que já existe não muda.
+    expect(lib.importPackage(file, {})).toEqual({ origens: 0, novos: 0, atualizados: 0 })
+    // Atualizar: o que mudou volta ao do pacote; nada se duplica.
+    lib.save('ritual', { id: r.id, sourceId: lib.ownSourceId(), data: { ...r.data, circulo: 3 } })
+    expect(lib.previewImport(file).origens[0]).toMatchObject({ mudam: 1, iguais: 0 })
+    expect(lib.importPackage(file, { [o.pacoteId]: 'atualizar' })).toEqual({ origens: 1, novos: 0, atualizados: 1 })
+    expect(lib.list('ritual')).toHaveLength(1)
+    expect(lib.list('ritual')[0].data.circulo).toBe(1)
+    // Como cópia: outra origem, com outro nome, com tudo do pacote.
+    lib.importPackage(file, { [o.pacoteId]: 'copia' })
+    expect(lib.sources().map((s) => s.name)).toEqual(['Criações próprias', 'Criações próprias (cópia)'])
+    expect(lib.list('ritual').map((x) => x.sourceName).sort()).toEqual(['Criações próprias', 'Criações próprias (cópia)'])
+  })
+
+  it('avisa quando o mesmo nome está em outra origem, e as duas convivem', () => {
+    const livro = lib.saveSource({ name: 'Livro de Regras', kind: 'oficial', abbreviation: '' })
+    lib.save('item', { sourceId: livro.id, data: { nome: 'Pé de cabra' } })
+    const file = lib.exportPackage(join(dir, 'l.magistrado-biblioteca'), [livro.id])
+    const b = outra()
+    try {
+      b.save('item', { sourceId: b.ownSourceId(), data: { nome: 'Pé de Cabra' } })
+      expect(b.previewImport(file).origens[0]).toMatchObject({ match: null, novos: 1, mesmoNomeEmOutra: 1 })
+      b.importPackage(file, {})
+      expect(b.list('item')).toHaveLength(2)
+    } finally {
+      b.close()
+    }
+  })
+
+  it('backup antes de atualizar o app é um pacote com tudo', () => {
+    lib.save('ritual', { sourceId: lib.ownSourceId(), data: { nome: 'Cinerária' } })
+    const file = lib.backup(join(dir, 'backups'), new Date(2026, 10, 3, 21, 30))
+    expect(file.endsWith('Biblioteca 2026-11-03 21h30.magistrado-biblioteca')).toBe(true)
+    expect(lib.previewImport(file).origens[0].iguais).toBe(1)
+  })
+
+  it('recusa arquivo que não é pacote e não mexe na atual', () => {
     lib.save('item', { sourceId: lib.ownSourceId(), data: { nome: 'Pé de cabra' } })
-    const junk = join(dir, 'x.magistrado-backup')
+    const junk = join(dir, 'x.magistrado-biblioteca')
     writeFileSync(junk, 'não é zip')
-    expect(() => lib.restore(junk)).toThrow(/backup da biblioteca/)
+    expect(() => lib.previewImport(junk)).toThrow(/pacote da biblioteca/)
     const campanha = join(dir, 'campanha.magistrado-backup')
     writeFileSync(campanha, zipSync({ 'campanha.json': strToU8('{}') }))
-    expect(() => lib.restore(campanha)).toThrow(/campanha/)
+    expect(() => lib.importPackage(campanha, {})).toThrow(/campanha/)
     expect(lib.list('item').map((i) => i.name)).toEqual(['Pé de cabra'])
   })
 })

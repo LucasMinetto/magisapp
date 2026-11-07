@@ -5,12 +5,10 @@
 // Sem Electron aqui: dá para testar com vitest.
 import Database from 'better-sqlite3'
 import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate'
-import { copyFileSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import type { z } from 'zod'
 import { newId, nowIso, type DB } from './db'
-import { BACKUP_EXT } from './backup'
 import type { CampaignStore } from './store'
 import {
   ameacaBibliotecaSchema,
@@ -25,7 +23,7 @@ import {
 import type { LivroDados } from './livros'
 import { itemParaFicha, origemDe, ritualParaFicha } from '../shared/ordem/biblioteca'
 import { arquivoDoToken, guardarToken } from './tokens'
-import type { Entity, LibraryDataByKind, LibraryEntry, LibraryKind, LibrarySource, SourceKind } from '../shared/types'
+import { LIBRARY_KINDS, type Entity, type ImportChoice, type ImportPreview, type ImportPreviewSource, type PackageImportResult, type LibraryDataByKind, type LibraryEntry, type LibraryKind, type LibrarySource, type SourceKind } from '../shared/types'
 
 export const LIBRARY_VERSION = 2
 export const OWN_SOURCE_NAME = 'Criações próprias'
@@ -306,87 +304,194 @@ export class LibraryStore {
     return { id: r.id, kind, sourceId: r.source_id, sourceName: r.source_name, name: r.name, data, updatedAt: r.updated_at }
   }
 
-  // ------------------------------------------------------------ backup
+  // ------------------------------------------------------------ pacote por origem
 
-  /** Um arquivo .magistrado-backup só com a biblioteca (biblioteca.sqlite + biblioteca.json legível). */
+  /**
+   * Pacote (.magistrado-biblioteca, um zip): as origens pedidas com as ameaças, os rituais, os itens e os tokens do
+   * mestre. Os tokens dos livros vêm com o app e não entram. Sem `sourceIds`, todas as origens ("exportar tudo").
+   */
+  exportPackage(file: string, sourceIds?: string[], now = new Date()): string {
+    const origens = this.sources().filter((s) => !sourceIds || sourceIds.includes(s.id))
+    if (!origens.length) throw new Error('Escolha ao menos uma origem para exportar.')
+    const ids = new Set(origens.map((o) => o.id))
+    const registros = LIBRARY_KINDS.flatMap((kind) =>
+      this.list(kind)
+        .filter((e) => ids.has(e.sourceId))
+        .map((e) => ({ kind, id: e.id, sourceId: e.sourceId, data: e.data as unknown }))
+    )
+    const pacote: PacoteJson = {
+      app: 'Magistrado',
+      pacote: PACOTE_FORMATO,
+      exportadoEm: now.toISOString(),
+      origens: origens.map(({ id, name, kind, abbreviation }) => ({ id, name, kind, abbreviation })),
+      registros
+    }
+    const arquivos: Record<string, Uint8Array> = { 'biblioteca.json': strToU8(JSON.stringify(pacote, null, 1)) }
+    for (const r of registros) {
+      if (r.kind !== 'ameaca') continue
+      const a = r.data as LibraryDataByKind['ameaca']
+      for (const t of [a.token, ...a.tokensExtras]) {
+        const f = t ? arquivoDoToken(this.tokensDir, t) : null
+        if (f) arquivos[`tokens/${t}`] = readFileSync(f)
+      }
+    }
+    mkdirSync(dirname(file), { recursive: true })
+    writeFileSync(`${file}.parcial`, zipSync(arquivos, { level: 6 }))
+    renameSync(`${file}.parcial`, file) // aparece inteiro ou não aparece
+    return file
+  }
+
+  /** Pacote com a biblioteca inteira na pasta de backups (o app faz antes de atualizar). */
   backup(dir: string, now = new Date()): string {
-    mkdirSync(dir, { recursive: true })
     const p = (n: number) => String(n).padStart(2, '0')
     const base = `Biblioteca ${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())} ${p(now.getHours())}h${p(now.getMinutes())}`
-    let file = join(dir, `${base}${BACKUP_EXT}`)
-    for (let i = 2; existsSync(file); i++) file = join(dir, `${base} ${i}${BACKUP_EXT}`)
-    const tmp = join(tmpdir(), `magistrado-bib-${newId()}.sqlite`)
-    this.db.exec(`vacuum into '${tmp.replaceAll("'", "''")}'`)
-    try {
-      const json = {
-        app: 'Magistrado',
-        biblioteca: LIBRARY_VERSION,
-        exportadoEm: now.toISOString(),
-        origens: this.sources(),
-        ameacas: this.list('ameaca'),
-        itens: this.list('item'),
-        rituais: this.list('ritual')
-      }
-      const arquivos: Record<string, Uint8Array> = { 'biblioteca.sqlite': readFileSync(tmp), 'biblioteca.json': strToU8(JSON.stringify(json, null, 1)) }
-      // só os tokens do mestre: os dos livros vêm com o app
-      for (const a of this.list('ameaca'))
-        for (const t of [a.data.token, ...a.data.tokensExtras]) {
-          const f = t ? arquivoDoToken(this.tokensDir, t) : null
-          if (f) arquivos[`tokens/${t}`] = readFileSync(f)
-        }
-      const zip = zipSync(arquivos, { level: 6 })
-      writeFileSync(`${file}.parcial`, zip)
-      renameSync(`${file}.parcial`, file)
-      return file
-    } finally {
-      rmSync(tmp, { force: true })
-    }
+    let file = join(dir, `${base}${PACOTE_EXT}`)
+    for (let i = 2; existsSync(file); i++) file = join(dir, `${base} ${i}${PACOTE_EXT}`)
+    return this.exportPackage(file, undefined, now)
+  }
+
+  /** Compara o pacote com a biblioteca daqui. Não muda nada. */
+  previewImport(file: string): ImportPreview {
+    const { pacote } = lerPacote(file)
+    return { file, origens: pacote.origens.map((o) => this.compararOrigem(pacote, o)) }
   }
 
   /**
-   * Troca a biblioteca pela do backup. A atual é guardada antes em biblioteca.sqlite.antes-de-restaurar.
-   * Se o arquivo não for um backup de biblioteca que abra, nada muda.
+   * Importa o pacote. Origem nova entra como está. Origem que já existe aqui segue a escolha do mestre:
+   * "atualizar" troca os registros que mudaram e acrescenta os novos (os que só existem aqui ficam);
+   * "copia" cria outra origem, com outro nome, com tudo do pacote. Sem escolha, a origem que já existe não muda.
    */
-  restore(file: string): void {
-    let entries: Record<string, Uint8Array>
-    try {
-      entries = unzipSync(readFileSync(file), { filter: (f) => f.name === 'biblioteca.sqlite' || f.name === 'biblioteca.json' || f.name.startsWith('tokens/') })
-    } catch {
-      throw new Error('Não deu para ler este arquivo. Ele é um backup da biblioteca do Magistrado?')
-    }
-    if (!entries['biblioteca.sqlite']) {
-      const isLibrary = entries['biblioteca.json'] && strFromU8(entries['biblioteca.json']).includes('"biblioteca"')
-      throw new Error(isLibrary ? 'O backup da biblioteca está sem o banco.' : 'Este arquivo não é um backup da biblioteca (é de uma campanha?).')
-    }
-    const tmp = join(tmpdir(), `magistrado-bib-${newId()}.sqlite`)
-    writeFileSync(tmp, entries['biblioteca.sqlite'])
-    try {
-      const check = new Database(tmp, { fileMustExist: true })
-      try {
-        if (check.pragma('integrity_check', { simple: true }) !== 'ok') throw new Error('O banco do backup está corrompido.')
-        if (!check.prepare("select 1 from sqlite_master where name = 'sources'").get()) throw new Error('Este arquivo não é um backup da biblioteca.')
-        if ((check.pragma('user_version', { simple: true }) as number) > LIBRARY_VERSION) throw new Error('Backup feito numa versão mais nova do app.')
-      } finally {
-        check.close()
+  importPackage(file: string, choices: Record<string, ImportChoice>): PackageImportResult {
+    const { pacote, tokens } = lerPacote(file)
+    const result: PackageImportResult = { origens: 0, novos: 0, atualizados: 0 }
+    const now = nowIso()
+    this.db.transaction(() => {
+      for (const o of pacote.origens) {
+        const match = this.origemIgual(o)
+        const choice: ImportChoice | undefined = match ? choices[o.id] : 'copia'
+        if (!choice) continue
+        const atualizar = choice === 'atualizar' && match !== null
+        let destino: string
+        if (atualizar) destino = match.id
+        else {
+          const idLivre = !match && !this.db.prepare('select 1 from sources where id = ?').get(o.id)
+          destino = idLivre ? o.id : newId()
+          let name = match ? `${o.name} (cópia)` : o.name
+          for (let i = 2; this.db.prepare('select 1 from sources where name = ? collate nocase').get(name); i++) name = `${o.name} (cópia ${i})`
+          const kind: SourceKind = o.kind === 'propria' || o.kind === 'oficial' ? o.kind : 'outro'
+          this.db
+            .prepare('insert into sources (id, name, kind, abbreviation, created_at, updated_at) values (?, ?, ?, ?, ?, ?)')
+            .run(destino, name, kind, String(o.abbreviation ?? '').slice(0, 20), now, now)
+        }
+        result.origens++
+        for (const r of pacote.registros.filter((x) => x.sourceId === o.id)) {
+          const parsed = SCHEMA[r.kind].safeParse(r.data)
+          if (!parsed.success) continue
+          const data = parsed.data as { nome: string }
+          const json = JSON.stringify(data)
+          const aqui = atualizar ? this.registroIgual(r.kind, destino, r.id, data.nome) : null
+          if (aqui) {
+            if (aqui.data === json) continue
+            this.db.prepare(`update ${TABLE[r.kind]} set name = ?, data = ?, updated_at = ? where id = ?`).run(data.nome, json, now, aqui.id)
+            result.atualizados++
+          } else {
+            const idLivre = !match && !this.db.prepare(`select 1 from ${TABLE[r.kind]} where id = ?`).get(r.id)
+            this.db
+              .prepare(`insert into ${TABLE[r.kind]} (id, source_id, name, data, created_at, updated_at) values (?, ?, ?, ?, ?, ?)`)
+              .run(idLivre ? r.id : newId(), destino, data.nome, json, now, now)
+            result.novos++
+          }
+        }
       }
-      this.db.exec(`vacuum into '${`${this.file}.antes-de-restaurar.parcial`.replaceAll("'", "''")}'`)
-      renameSync(`${this.file}.antes-de-restaurar.parcial`, `${this.file}.antes-de-restaurar`)
-      this.db.close()
-      for (const f of ['', '-wal', '-shm']) rmSync(`${this.file}${f}`, { force: true })
-      copyFileSync(tmp, this.file)
-      for (const [nome, dados] of Object.entries(entries)) {
-        const base = nome.slice('tokens/'.length)
-        if (!nome.startsWith('tokens/') || !/^[a-f0-9]{16}\.[a-z]{3,4}$/.test(base)) continue
-        mkdirSync(this.tokensDir, { recursive: true })
-        if (!existsSync(join(this.tokensDir, base))) writeFileSync(join(this.tokensDir, base), dados)
-      }
-    } finally {
-      rmSync(tmp, { force: true })
-      // Reabre sempre: com o backup novo, ou com a mesma de antes se algo falhou antes de trocar.
-      if (!this.db.open) this.db = openLibraryDb(this.file)
+    })()
+    for (const [nome, dados] of Object.entries(tokens)) {
+      if (!/^[a-f0-9]{16}\.[a-z]{3,4}$/.test(nome)) continue
+      mkdirSync(this.tokensDir, { recursive: true })
+      if (!existsSync(join(this.tokensDir, nome))) writeFileSync(join(this.tokensDir, nome), dados)
     }
-    this.semear()
+    return result
   }
+
+  /** A origem daqui que é a mesma do pacote: pelo id, ou pelo nome. */
+  private origemIgual(o: PacoteJson['origens'][number]): { id: string; name: string } | null {
+    const porId = this.db.prepare('select id, name from sources where id = ?').get(o.id) as { id: string; name: string } | undefined
+    const porNome = this.db.prepare('select id, name from sources where name = ? collate nocase').get(o.name) as { id: string; name: string } | undefined
+    return porId ?? porNome ?? null
+  }
+
+  /** O registro daqui que é o mesmo do pacote, dentro da origem: pelo id, ou pelo nome. */
+  private registroIgual(kind: LibraryKind, sourceId: string, id: string, nome: string): { id: string; data: string } | null {
+    const porId = this.db.prepare(`select id, data from ${TABLE[kind]} where id = ? and source_id = ?`).get(id, sourceId) as { id: string; data: string } | undefined
+    if (porId) return porId
+    const alvo = fold(nome.trim())
+    const rows = this.db.prepare(`select id, name, data from ${TABLE[kind]} where source_id = ?`).all(sourceId) as { id: string; name: string; data: string }[]
+    return rows.find((r) => fold(r.name.trim()) === alvo) ?? null
+  }
+
+  private compararOrigem(pacote: PacoteJson, o: PacoteJson['origens'][number]): ImportPreviewSource {
+    const match = this.origemIgual(o)
+    const registros = pacote.registros.filter((r) => r.sourceId === o.id)
+    const preview: ImportPreviewSource = { pacoteId: o.id, name: o.name, kind: o.kind, total: registros.length, match, novos: 0, mudam: 0, iguais: 0, soAqui: 0, mesmoNomeEmOutra: 0 }
+    const vistos = new Set<string>()
+    const outras = new Map(
+      LIBRARY_KINDS.map((kind) => [
+        kind,
+        new Set((this.db.prepare(`select name from ${TABLE[kind]} where source_id <> ?`).all(match?.id ?? '') as { name: string }[]).map((x) => fold(x.name.trim())))
+      ])
+    )
+    for (const r of registros) {
+      const parsed = SCHEMA[r.kind].safeParse(r.data)
+      if (!parsed.success) continue
+      const data = parsed.data as { nome: string }
+      const aqui = match ? this.registroIgual(r.kind, match.id, r.id, data.nome) : null
+      if (!aqui) preview.novos++
+      else {
+        vistos.add(`${r.kind}:${aqui.id}`)
+        if (aqui.data === JSON.stringify(data)) preview.iguais++
+        else preview.mudam++
+      }
+      if (outras.get(r.kind)!.has(fold(data.nome.trim()))) preview.mesmoNomeEmOutra++
+    }
+    if (match)
+      for (const kind of LIBRARY_KINDS)
+        for (const r of this.db.prepare(`select id from ${TABLE[kind]} where source_id = ?`).all(match.id) as { id: string }[])
+          if (!vistos.has(`${kind}:${r.id}`)) preview.soAqui++
+    return preview
+  }
+}
+
+export const PACOTE_EXT = '.magistrado-biblioteca'
+/** Versão do formato do biblioteca.json do pacote. */
+const PACOTE_FORMATO = 1
+
+interface PacoteJson {
+  app: 'Magistrado'
+  pacote: number
+  exportadoEm: string
+  origens: { id: string; name: string; kind: SourceKind; abbreviation: string }[]
+  registros: { kind: LibraryKind; id: string; sourceId: string; data: unknown }[]
+}
+
+function lerPacote(file: string): { pacote: PacoteJson; tokens: Record<string, Uint8Array> } {
+  let entries: Record<string, Uint8Array>
+  try {
+    entries = unzipSync(readFileSync(file), { filter: (f) => f.name === 'biblioteca.json' || f.name.startsWith('tokens/') })
+  } catch {
+    throw new Error('Não deu para ler este arquivo. Ele é um pacote da biblioteca do Magistrado?')
+  }
+  let pacote: PacoteJson | null = null
+  try {
+    pacote = entries['biblioteca.json'] ? (JSON.parse(strFromU8(entries['biblioteca.json'])) as PacoteJson) : null
+  } catch {
+    pacote = null
+  }
+  if (!pacote || pacote.app !== 'Magistrado' || !Array.isArray(pacote.origens) || !Array.isArray(pacote.registros))
+    throw new Error('Este arquivo não é um pacote da biblioteca (é o backup de uma campanha?).')
+  if (pacote.pacote > PACOTE_FORMATO) throw new Error('Pacote feito numa versão mais nova do app. Atualize o app para importar.')
+  pacote.registros = pacote.registros.filter((r) => (LIBRARY_KINDS as readonly string[]).includes(r.kind) && typeof r.id === 'string' && typeof r.sourceId === 'string')
+  const tokens: Record<string, Uint8Array> = {}
+  for (const [nome, dados] of Object.entries(entries)) if (nome.startsWith('tokens/')) tokens[nome.slice('tokens/'.length)] = dados
+  return { pacote, tokens }
 }
 
 // ------------------------------------------------------------ cópia para a campanha

@@ -924,6 +924,31 @@ try {
   check('outro token vira o retrato', true)
   await shot('S22c-tokens')
 
+  // T11: pacote da biblioteca por origem. Exportar "Criações próprias" e importar de volta mostra o aviso e não duplica.
+  const pacote = join(tmp, 'Criações próprias.magistrado-biblioteca')
+  await app.evaluate(({ dialog }, f) => {
+    dialog.showSaveDialog = async () => ({ canceled: false, filePath: f })
+    dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [f] })
+  }, pacote)
+  await page.getByRole('link', { name: 'Biblioteca' }).first().click()
+  await page.getByRole('button', { name: 'Origens…' }).click()
+  const origens = page.getByRole('dialog', { name: 'Origens' })
+  await origens.getByRole('button', { name: 'Exportar a origem Criações próprias' }).click()
+  check('exporta a origem num pacote', await origens.getByRole('status').filter({ hasText: 'Pacote salvo' }).waitFor({ timeout: 10000 }).then(() => existsSync(pacote), () => false))
+  await origens.getByRole('button', { name: 'Importar…' }).click()
+  const importar = page.getByRole('dialog', { name: 'Importar para a biblioteca' })
+  await importar.waitFor({ timeout: 5000 })
+  const origemNoPacote = importar.getByRole('listitem', { name: 'Origem Criações próprias' })
+  check('importar o mesmo pacote avisa que a origem já existe', (await origemNoPacote.getByText(/Já existe aqui/).count()) === 1 && (await origemNoPacote.getByText(/já estão iguais|já está igual/).count()) === 1)
+  check('sem escolher, importar não faz nada', await importar.getByRole('button', { name: 'Importar' }).isDisabled())
+  await shot('S22d-importar-pacote')
+  await origemNoPacote.getByLabel('Importar como cópia').check()
+  await importar.getByRole('button', { name: 'Importar' }).click()
+  check('importar como cópia avisa o que entrou', await page.getByRole('status').filter({ hasText: /Importado: \d+ registros? novos?/ }).waitFor({ timeout: 10000 }).then(() => true, () => false))
+  await page.getByRole('button', { name: 'Origens…' }).click()
+  check('a cópia vira outra origem', (await origens.getByText('Criações próprias (cópia)').count()) === 1)
+  await page.keyboard.press('Escape')
+
   // P1: tela Regras com sumário, busca e página; e a busca Ctrl+K acha regras e a biblioteca
   await page.getByRole('link', { name: 'Regras' }).click()
   await page.getByRole('complementary', { name: 'Sumário das regras' }).waitFor({ timeout: 5000 })

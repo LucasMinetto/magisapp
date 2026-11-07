@@ -265,6 +265,40 @@ export interface LibraryDataByKind {
   ritual: RitualBiblioteca
 }
 
+/** Uma origem do pacote da biblioteca, comparada com a biblioteca daqui antes de importar. */
+export interface ImportPreviewSource {
+  /** Id da origem no pacote (chave da escolha). */
+  pacoteId: string
+  name: string
+  kind: SourceKind
+  total: number
+  /** A origem daqui que é a mesma (pelo id ou pelo nome), ou null: entra como origem nova. */
+  match: { id: string; name: string } | null
+  /** Registros do pacote que não existem nesta origem aqui. */
+  novos: number
+  /** Registros que existem aqui e estão diferentes no pacote. */
+  mudam: number
+  iguais: number
+  /** Registros que só existem aqui (importar não mexe neles). */
+  soAqui: number
+  /** Registros com o mesmo nome em outra origem daqui: convivem, só para avisar. */
+  mesmoNomeEmOutra: number
+}
+
+export interface ImportPreview {
+  file: string
+  origens: ImportPreviewSource[]
+}
+
+/** Para origem que já existe: atualizar a daqui ou importar como cópia (origem com outro nome). */
+export type ImportChoice = 'atualizar' | 'copia'
+
+export interface PackageImportResult {
+  origens: number
+  novos: number
+  atualizados: number
+}
+
 export interface LibraryEntry<K extends LibraryKind = LibraryKind> {
   id: string
   kind: K
@@ -647,10 +681,14 @@ export interface Api {
      * Devolve a ficha criada ou mudada.
      */
     copyToCampaign(input: { kind: LibraryKind; id: string; entityId?: string }): Promise<Entity>
-    /** Backup só da biblioteca na pasta de backups. */
+    /** Pacote com a biblioteca inteira na pasta de backups (antes de atualizar o app). */
     backup(): Promise<string>
-    /** Escolhe um backup da biblioteca e troca a atual por ele. false se cancelar. */
-    pickAndRestore(): Promise<boolean>
+    /** Exporta um pacote com as origens pedidas (todas, sem `sourceIds`). Devolve o arquivo, ou null se cancelar. */
+    exportPackage(input: { sourceIds?: string[] }): Promise<string | null>
+    /** Escolhe um pacote e compara com a biblioteca daqui, sem mudar nada. null se cancelar. */
+    pickPackage(): Promise<ImportPreview | null>
+    /** Importa o pacote com a escolha do mestre para cada origem que já existe aqui. */
+    importPackage(input: { file: string; choices: Record<string, ImportChoice> }): Promise<PackageImportResult>
     /** Escolhe a imagem do token de uma ameaça. null se cancelar. */
     pickToken(id: string): Promise<LibraryEntry<'ameaca'> | null>
     clearToken(id: string): Promise<LibraryEntry<'ameaca'>>

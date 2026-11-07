@@ -79,14 +79,14 @@ describe('tokens dos livros', () => {
     expect(t.sheetData).not.toHaveProperty('tokensExtras')
   })
 
-  it('o backup leva os tokens do mestre (os dos livros vêm com o app)', () => {
+  it('o pacote leva os tokens do mestre (os dos livros vêm com o app)', () => {
     const meu = join(dir, 'meu.png')
     writeFileSync(meu, PNG)
     const token = lib.setToken(daBib('O Diabo').id, meu).data.token
     const backup = lib.backup(join(dir, 'backups'))
     rmSync(lib.tokensDir, { recursive: true, force: true })
     expect(lib.tokenFile(token)).toBeNull()
-    lib.restore(backup)
+    lib.importPackage(backup, { [lib.ownSourceId()]: 'atualizar' })
     expect(lib.tokenFile(token)).not.toBeNull()
     expect(lib.tokenFile(daBib('Anfitrião').data.token)).not.toBeNull()
   })

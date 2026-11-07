@@ -73,7 +73,9 @@ const api: Api = {
     remove: call('library:remove'),
     copyToCampaign: call('library:copyToCampaign'),
     backup: call('library:backup'),
-    pickAndRestore: call('library:pickAndRestore'),
+    exportPackage: call('library:exportPackage'),
+    pickPackage: call('library:pickPackage'),
+    importPackage: call('library:importPackage'),
     pickToken: call('library:pickToken'),
     clearToken: call('library:clearToken'),
     tokenToCampaign: call('library:tokenToCampaign')
