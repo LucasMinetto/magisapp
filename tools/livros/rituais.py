@@ -9,8 +9,21 @@ ELEMENTOS = {'SANGUE': 'Sangue', 'MORTE': 'Morte', 'CONHECIMENTO': 'Conhecimento
 LINHA_ELEMENTO = re.compile(r'^\s*((?:SANGUE|MORTE|CONHECIMENTO|ENERGIA|MEDO|VARIÁVEL)\s*\d?\s*)+$')
 CAMPOS = {'execução': 'execucao', 'alcance': 'alcance', 'alvo': 'alvo', 'alvos': 'alvo', 'área': 'alvo', 'efeito': 'alvo', 'duração': 'duracao', 'resistência': 'resistencia'}
 DADO = r'\d+d\d+(?:\s*\+\s*\d+)?'
-DANO = re.compile(rf'({DADO})\s+pontos?\s+de\s+dano\s+de\s+(\w+)', re.I)
-MUDA_DANO = re.compile(rf'o\s+dano\s+para\s+({DADO})', re.I)
+# "6d8 pontos de dano de Sangue", "10d6 pontos de dano mental", "6d8 pontos de dano (metade corte, metade Sangue)"
+DANO = re.compile(rf'({DADO})\s+pontos?\s+de\s+dano(?![^.;]{{0,25}}?(?:por\s+espaço|para\s+cada))(?:\s+de\s+(\w+)|\s+\(metade\s+(\w+),\s+metade\s+(\w+)\)|\s+(mental|químico|qu[íi]mica))?', re.I)
+# (dano "por espaço" ou "para cada 3m" varia com a cena: não é o dano do ritual)
+# nas formas Discente e Verdadeiro: "muda o dano (direto) para 10d8", "aumenta o dano ... para 6d6"
+MUDA_DANO = re.compile(rf'o\s+dano[^.;]{{0,40}}?\s+para\s+({DADO})', re.I)
+
+
+def tipo_do_dano(m: re.Match) -> str:
+    if m.group(2):
+        return m.group(2).capitalize()
+    if m.group(3):
+        return f'{m.group(3).capitalize()} e {m.group(4).capitalize()}'
+    if m.group(5):
+        return 'Mental' if m.group(5).lower() == 'mental' else 'Químico'
+    return ''
 
 
 def eh_vermelho(c: int) -> bool:
@@ -151,11 +164,13 @@ def extrair(livro: Livro, ini: int, fim: int) -> list[dict]:
         m = DANO.search(r['efeito'])
         if m:
             r['danoNormal'] = m.group(1).replace(' ', '')
-            r['tipoDano'] = m.group(2).capitalize()
-            for campo, texto in (('danoDiscente', r['discente']), ('danoVerdadeiro', r['verdadeiro'])):
-                m2 = MUDA_DANO.search(texto)
-                if m2:
-                    r[campo] = m2.group(1).replace(' ', '')
+            r['tipoDano'] = tipo_do_dano(m)
+        for campo, texto in (('danoDiscente', r['discente']), ('danoVerdadeiro', r['verdadeiro'])):
+            m2 = MUDA_DANO.search(texto) or DANO.search(texto)
+            if m2:
+                r[campo] = m2.group(1).replace(' ', '')
+                if not r['tipoDano'] and isinstance(m2.re, type(DANO)) and m2.re is DANO:
+                    r['tipoDano'] = tipo_do_dano(m2)
         rituais.append(r)
         i = k
     return rituais
