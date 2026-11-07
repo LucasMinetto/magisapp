@@ -213,7 +213,10 @@ export const iniciativaSchema = z.object({
       })
     )
     .max(100)
-    .default([])
+    .default([]),
+  // Fichas tiradas da área fixa do combate (#18), pela chave do grupo (a ficha, ou o combatente sem ficha).
+  // Guardar as desafixadas faz toda ameaça nova (e combate salvo antes) nascer fixa.
+  desafixadas: z.array(z.string().max(60)).max(100).default([])
 })
 
 export type FichaAgente = z.infer<typeof fichaAgenteSchema>

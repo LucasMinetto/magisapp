@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { iniciativaSchema } from './esquemas'
-import { anterior, lerAcao, nomeDaCopia, ordenar, proximo, remover, testeDoTexto } from './sessao'
+import { agrupar, alternarFixa, alvosDoCombate, anterior, lerAcao, nomeDaCopia, ordenar, proximo, remover, SEM_COMBATE, testeDoTexto } from './sessao'
 
 const c = (id: string, valor = 0) => ({
   id,
@@ -82,5 +82,30 @@ describe('iniciativa', () => {
     const ordem = [c('Zumbi'), c('Zumbi 2')]
     expect(nomeDaCopia(ordem, 'Zumbi')).toBe('Zumbi 3')
     expect(nomeDaCopia(ordem, 'Anjo')).toBe('Anjo')
+  })
+
+  it('combate salvo antes da #18 abre com tudo fixo', () => {
+    expect(iniciativaSchema.parse({ ordem: [] }).desafixadas).toEqual([])
+  })
+
+  it('agrupa as cópias pela ficha, na ordem em que aparecem', () => {
+    const z = (id: string) => ({ ...c(id), entityId: 'zumbi' })
+    const g = agrupar([z('z1'), c('lia'), z('z2'), c('solto')])
+    expect(g.map((x) => [x.chave, x.combatentes.map((y) => y.id)])).toEqual([
+      ['zumbi', ['z1', 'z2']],
+      ['lia', ['lia']],
+      ['solto', ['solto']]
+    ])
+  })
+
+  it('o alfinete tira e põe a ficha na área fixa', () => {
+    const solta = alternarFixa(SEM_COMBATE, 'zumbi')
+    expect(solta.desafixadas).toEqual(['zumbi'])
+    expect(alternarFixa(solta, 'zumbi').desafixadas).toEqual([])
+  })
+
+  it('cada cópia é um alvo próprio (gancho da #13)', () => {
+    const ini = { ...SEM_COMBATE, ordem: [{ ...c('z1'), entityId: 'zumbi' }, { ...c('z2'), entityId: 'zumbi' }] }
+    expect(alvosDoCombate(ini).map((a) => a.combatenteId)).toEqual(['z1', 'z2'])
   })
 })

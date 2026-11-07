@@ -1,7 +1,7 @@
 # TASKS: Magistrado
 
 > Produto: [PRD.md](PRD.md) · Técnica: [TECH_SPEC.md](TECH_SPEC.md) · Memória: [PROJECT_MEMORY.md](PROJECT_MEMORY.md)
-> Status em 2026-11-07: T1 a T10b e P1 concluídas, publicadas como **versão 0.9.0**. Próxima: redesenho do combate ([#18](https://github.com/LucasMinetto/magistrado/issues/18)) ou T11. A 1.0.0 sai depois da T13. Versões: [VERSOES.md](VERSOES.md). "Bloqueada" = espera uma decisão de [TECH_SPEC § Decisões pendentes](TECH_SPEC.md#decisões-pendentes).
+> Status em 2026-11-07: T1 a T10b e P1 concluídas, publicadas como **versão 0.9.0**. Redesenho do combate ([#18](https://github.com/LucasMinetto/magistrado/issues/18)) feito em 2026-11-07, para a 0.10.0. Próxima: T11; a versão dos jogadores (P2) fica por último. A 1.0.0 sai depois da T13. Versões: [VERSOES.md](VERSOES.md). "Bloqueada" = espera uma decisão de [TECH_SPEC § Decisões pendentes](TECH_SPEC.md#decisões-pendentes).
 
 ## Fase 1: base funcionando com o nome novo
 
@@ -96,6 +96,11 @@
 - **Fora:** direcionar o dano (P3); tela de combate separada no menu; mudar a ficha completa e a janela de rolagem.
 - **Aceite:** resolver o turno de qualquer combatente olhando um cartão só; o combate sobrevive a sair e voltar.
 - **Feito:** `sessao/Combate.tsx` (modo combate e "Começar combate"), `sessao/Grupo.tsx` (faixa do grupo), `sessao/NaCena.tsx` (peças comuns), `GameClock compacto`. O combate começa quando há alguém na ordem; "Ver a cena" volta à cena sem encerrar. Condições: agente com ficha completa usa as da ficha; ameaça e ficha compacta, as do combatente. Além do esboço: campo de dano/cura de qualquer valor e +5.
+
+### T10c. Redesenho do combate → issue [#18](https://github.com/LucasMinetto/magistrado/issues/18) ✅ 2026-11-07
+- **Feito:** três colunas sempre à vista: ordem de iniciativa; **Ameaças e NPCs** com as fichas fixas (alfinete; desafixada aparece só na vez dela ou ao escolher na ordem), cópias da mesma ameaça numa ficha só com PV, condições e iniciativa de cada uma, Defesa, resistências, vulnerabilidades, imunidades, presença perturbadora, testes, ações e habilidades com o texto inteiro; **Agentes** com um cartão por jogador (PV/PE/SAN, Defesa, condições por extenso, ataques com ataque e dano, rituais com custo e Conjurar, itens de combate e componentes). Vilão e NPC ficam na coluna das ameaças com ficha própria. Quem está na vez ganha contorno forte e o selo "Na vez".
+- **Modelo:** `iniciativa.desafixadas` (combate salvo antes nasce com tudo fixo); `agrupar`, `alternarFixa` e `alvosDoCombate` em `shared/ordem/sessao.ts`. Ataque e ritual rolam por `ficha/pedidos.ts`, o mesmo da ficha.
+- **Gancho da #13:** cada combatente (cada cópia também) tem `data-alvo` com o id; `SlotAlvo` marca, em cada ação, ataque e ritual, onde entra a escolha do alvo.
 
 ## Fase 4: integração e fechamento
 

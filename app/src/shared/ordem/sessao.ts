@@ -77,4 +77,42 @@ export function remover(ini: Iniciativa, id: string): Iniciativa {
   return { ...ini, ordem, turno }
 }
 
-export const SEM_COMBATE: Iniciativa = { rodada: 1, turno: 0, ordem: [] }
+export const SEM_COMBATE: Iniciativa = { rodada: 1, turno: 0, ordem: [], desafixadas: [] }
+
+// ------------------------------------------------------------ fichas do combate (#18)
+
+/** Cópias da mesma ficha formam um grupo; combatente sem ficha é um grupo só dele. */
+export const chaveDoGrupo = (c: Combatente) => c.entityId ?? c.id
+
+export interface Grupo {
+  chave: string
+  entityId: string | null
+  combatentes: Combatente[]
+}
+
+/** Agrupa a ordem por ficha, na ordem em que cada ficha aparece pela primeira vez. */
+export function agrupar(ordem: Combatente[]): Grupo[] {
+  const grupos = new Map<string, Grupo>()
+  for (const c of ordem) {
+    const chave = chaveDoGrupo(c)
+    const g = grupos.get(chave) ?? { chave, entityId: c.entityId, combatentes: [] }
+    g.combatentes.push(c)
+    grupos.set(chave, g)
+  }
+  return [...grupos.values()]
+}
+
+/** Fixa ou desafixa a ficha de um grupo na área das ameaças. */
+export function alternarFixa(ini: Iniciativa, chave: string): Iniciativa {
+  const solta = ini.desafixadas.includes(chave)
+  return { ...ini, desafixadas: solta ? ini.desafixadas.filter((k) => k !== chave) : [...ini.desafixadas, chave] }
+}
+
+/** Quem pode receber um ataque, um dano ou um ritual: cada combatente, inclusive cada cópia de ameaça. Gancho da #13. */
+export interface Alvo {
+  combatenteId: string
+  entityId: string | null
+  nome: string
+}
+
+export const alvosDoCombate = (ini: Iniciativa): Alvo[] => ini.ordem.map((c) => ({ combatenteId: c.id, entityId: c.entityId, nome: c.nome }))

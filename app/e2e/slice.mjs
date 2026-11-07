@@ -779,8 +779,15 @@ try {
   check('−5 e dano digitado mudam só a cópia certa', (await zumbi2.innerText()).includes('32/60') && (await zumbi1.innerText()).includes('60/60'), await zumbi2.innerText())
   await cartaoZumbi.getByLabel('Pôr condição em Zumbi de Sangue 2').selectOption('Agarrado')
   check('condição fica no combatente', await cartaoZumbi.getByRole('button', { name: 'Tirar a condição Agarrado de Zumbi de Sangue 2' }).isVisible())
-  check('o cartão da ameaça mostra as rolagens do bloco', await cartaoZumbi.getByRole('button', { name: /^Iniciativa/ }).isVisible())
-  await cartaoZumbi.getByRole('button', { name: /^Iniciativa/ }).click()
+  // #18: as duas cópias dividem uma ficha, com Defesa e o bloco à vista sem clicar.
+  const fichaZumbi = page.getByRole('article', { name: 'Ficha de Zumbi de Sangue ×2' })
+  check(
+    'as cópias ficam numa ficha só, com a Defesa e as ações à vista',
+    (await fichaZumbi.getByRole('list', { name: 'Cópias de Zumbi de Sangue ×2' }).getByRole('listitem').count()) === 2 &&
+      (await fichaZumbi.getByText('Defesa', { exact: true }).isVisible()) &&
+      (await fichaZumbi.getByRole('button', { name: /^Rolar .* de Zumbi de Sangue$/ }).count()) > 0
+  )
+  await cartaoZumbi.getByRole('button', { name: 'Rolar iniciativa de Zumbi de Sangue 2' }).click()
   janela = page.getByRole('dialog')
   check('a ameaça rola com o Magistrado', (await janela.getByRole('button', { name: 'O Magistrado rola' }).getAttribute('aria-pressed')) === 'true')
   await janela.getByRole('button', { name: /^Rolar 2d20/ }).click()
@@ -793,8 +800,10 @@ try {
   const cartaoLia = page.getByLabel('Cartão de Lia Moraes')
   check(
     'ordenar põe o maior primeiro e o cartão mostra quem está na vez',
-    (await ordem.first().innerText()).includes('Lia Moraes') && (await ordem.first().getAttribute('aria-current')) === 'step' && (await cartaoLia.isVisible())
+    (await ordem.first().innerText()).includes('Lia Moraes') && (await ordem.first().getAttribute('aria-current')) === 'step' && (await cartaoLia.getByText('Na vez').isVisible())
   )
+  check('a agente fica na coluna dos agentes, separada das ameaças', await page.getByRole('region', { name: 'Agentes' }).getByRole('article', { name: 'Cartão de Lia Moraes' }).isVisible())
+  check('o cartão da agente mostra o arsenal (ataques)', await cartaoLia.getByRole('button', { name: /^Rolar ataque de / }).first().isVisible())
   check(
     'o cartão do agente tem PV da ficha, −5 e as perícias',
     (await cartaoLia.getByRole('group', { name: 'PV de Lia Moraes' }).innerText()).includes(liaDepois) &&
@@ -803,6 +812,10 @@ try {
   )
   for (let i = 0; i < (await ordem.count()); i++) await page.getByRole('button', { name: 'Próximo', exact: true }).click()
   check('depois do último volta ao primeiro na rodada 2', (await page.getByRole('heading', { name: 'Combate · Rodada 2' }).isVisible()) && (await ordem.first().getAttribute('aria-current')) === 'step')
+  await fichaZumbi.getByRole('button', { name: 'Desafixar Zumbi de Sangue' }).click()
+  check('desafixar tira a ficha da tela fora da vez dela', !(await fichaZumbi.isVisible()) && (await page.getByRole('button', { name: 'Fixar Zumbi de Sangue ×2' }).isVisible()))
+  await page.getByRole('button', { name: 'Fixar Zumbi de Sangue ×2' }).click()
+  check('fixar de novo traz a ficha de volta', await fichaZumbi.waitFor({ timeout: 3000 }).then(() => true, () => false))
   await page.getByRole('button', { name: 'Próximo', exact: true }).click()
   await page.getByRole('button', { name: 'Ver a cena' }).click()
   check('ver a cena sem encerrar o combate', (await page.getByRole('heading', { name: 'Cena atual' }).isVisible()) && (await page.getByRole('button', { name: 'Voltar ao combate' }).isVisible()))

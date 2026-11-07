@@ -3,9 +3,10 @@
 import { Plus } from 'lucide-react'
 import { useState } from 'react'
 import type { Ataque } from '@shared/ordem/esquemas'
-import { PERICIAS, TIPOS_DANO, bonusPericia, dadosDoTeste, descreverExpressao, lerExpressao } from '@shared/ordem/regras'
+import { PERICIAS, TIPOS_DANO } from '@shared/ordem/regras'
 import { Button, cx } from '@/ui'
-import { novoId, sinal, useFicha } from './contexto'
+import { novoId, useFicha } from './contexto'
+import { rolagensDoAtaque } from './pedidos'
 import { FormulaTexto } from './Identidade'
 import { Escolha, Numero, Secao, Texto, Vazio } from './partes'
 
@@ -83,19 +84,7 @@ function Ataques() {
       {a.ataques.length === 0 && <Vazio>Nenhum ataque. Adicione as armas.</Vazio>}
       <ul className="flex flex-col gap-2">
         {a.ataques.map((at) => {
-          const atributo = PERICIAS.find((p) => p.nome === at.pericia)?.atributo ?? 'for'
-          const t = dadosDoTeste(a.atributos[atributo], mod.dados)
-          const bonus = bonusPericia(a, at.pericia) + at.bonusAtaque + mod.bonus
-          // Ataque corpo a corpo (Luta) soma FOR ao dano.
-          const somaFor = at.pericia === 'Luta' ? a.atributos.for : 0
-          const expr = lerExpressao(at.dano)
-          const extras = at.danosExtras.filter((x) => x.dano.trim())
-          const textoDano = [descreverExpressao({ ...expr, fixo: expr.fixo + somaFor }), ...extras.map((x) => descreverExpressao(lerExpressao(x.dano)))].join(' + ')
-          const danoFinal = `${at.dano}${somaFor ? sinal(somaFor) : ''}`
-          const critico = `${at.margemCritico < 20 ? `${at.margemCritico}/` : ''}x${at.multCritico}`
-          const partes = [{ expressao: danoFinal, tipo: at.tipoDano }, ...extras.map((x) => ({ expressao: x.dano, tipo: x.tipoDano }))]
-          const dano = { opcoes: [{ nome: 'Dano', partes }], mult: at.multCritico }
-          const tipos = [at.tipoDano, ...extras.map((x) => x.tipoDano)].filter(Boolean).join(' + ')
+          const { ataque, dano, critico, tipos } = rolagensDoAtaque(a, at, mod)
 
           if (editando === at.id)
             return (
@@ -164,8 +153,8 @@ function Ataques() {
               </div>
               <div className="grid grid-cols-3 gap-1.5">
                 {[
-                  { texto: `${t.quantidade}d20${bonus ? sinal(bonus) : ''}`, nome: 'Ataque', pedido: { rotulo: at.nome, tipo: 'ataque' as const, teste: { ...t, bonus, margem: at.margemCritico }, dano } },
-                  { texto: textoDano, nome: 'Dano', pedido: { rotulo: at.nome, tipo: 'dano' as const, dano } }
+                  { ...ataque, nome: 'Ataque' },
+                  { ...dano, nome: 'Dano' }
                 ].map((b) =>
                   rolar ? (
                     <button key={b.nome} type="button" onClick={() => rolar(b.pedido)} aria-label={`Rolar ${b.nome.toLowerCase()} de ${at.nome}`} className={cx(caixa, 'hover:bg-border')}>
