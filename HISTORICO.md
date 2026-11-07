@@ -2,6 +2,13 @@
 
 Da versão mais recente para a mais antiga.
 
+## 1.0.0 — 07/11/2026
+
+- Primeira versão completa do Magistrado: a fusão está fechada
+- Backup, exportar e pasta do Obsidian levam a ficha do agente, o bloco da ameaça, rituais, itens, o combate e as rolagens
+- A biblioteca exporta uma origem (ou tudo) num pacote e importa avisando o que muda, para atualizar ou importar como cópia
+- Ajuda nova sobre a ficha do agente e as rolagens
+
 ## 0.10.0 — 07/11/2026
 
 - Combate redesenhado: ameaças e NPCs ficam fixos na tela, com alfinete para tirar e pôr
