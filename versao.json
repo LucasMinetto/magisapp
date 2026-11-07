@@ -1,11 +1,8 @@
 {
-    "versao":  "1.0.0",
+    "versao":  "1.0.1",
     "minimo":  "0.0.0",
     "publicada_em":  "2026-11-07",
     "notas":  [
-                  "Primeira versão completa do Magistrado: a fusão está fechada",
-                  "Backup, exportar e pasta do Obsidian levam a ficha do agente, o bloco da ameaça, rituais, itens, o combate e as rolagens",
-                  "A biblioteca exporta uma origem (ou tudo) num pacote e importa avisando o que muda, para atualizar ou importar como cópia",
-                  "Ajuda nova sobre a ficha do agente e as rolagens"
+                  "O Magistrado abre sem janela de terminal, pelo atalho e depois de atualizar"
               ]
 }

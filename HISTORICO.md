@@ -2,6 +2,10 @@
 
 Da versão mais recente para a mais antiga.
 
+## 1.0.1 — 07/11/2026
+
+- O Magistrado abre sem janela de terminal, pelo atalho e depois de atualizar
+
 ## 1.0.0 — 07/11/2026
 
 - Primeira versão completa do Magistrado: a fusão está fechada
