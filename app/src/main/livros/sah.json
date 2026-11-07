@@ -1664,7 +1664,7 @@
     {
      "tipo": "Completa",
      "nome": "Tragar",
-     "descricao": "Se estiver agarrando um ser Médio ou menor, o Sepultado pode tragá-lo para dentro do caixão e fechá-lo em seu interior. Enquanto estiver preso, o ser fica agarrado e imóvel e vive a experiência terrível de ser enterrado vivo, sentindo o peso dos palmos de terra sobre o peito, a falta de ar e o caminhar dos vermes na pele. Quando é tragado, e no início de cada turno em que estiver no interior do Sepultado, a vítima sofre 2d4 pontos de dano mental (Vontade DT 14 reduz à metade). A única forma de libertar um ser tragado é destruir o Sepultado. O Sepultado não pode tragar mais de um ser ao mesmo tempo. MESCLA"
+     "descricao": "Se estiver agarrando um ser Médio ou menor, o Sepultado pode tragá-lo para dentro do caixão e fechá-lo em seu interior. Enquanto estiver preso, o ser fica agarrado e imóvel e vive a experiência terrível de ser enterrado vivo, sentindo o peso dos palmos de terra sobre o peito, a falta de ar e o caminhar dos vermes na pele. Quando é tragado, e no início de cada turno em que estiver no interior do Sepultado, a vítima sofre 2d4 pontos de dano mental (Vontade DT 14 reduz à metade). A única forma de libertar um ser tragado é destruir o Sepultado. O Sepultado não pode tragar mais de um ser ao mesmo tempo."
     }
    ],
    "pagina": 127,
@@ -1687,7 +1687,7 @@
    "imunidades": "Químico",
    "pericias": "Acrobacia 3d20+10, Atletismo 3d20+10, Furtividade 3d20+8",
    "deslocamento": "12m (8 quadrados)",
-   "enigma": "Um espectro inesquecido é o resultado de uma morte de um marcado, e por essa natureza, as condições específicas dessa morte sempre serão imprevisíveis. Um espectro inesquecido pode surgir, por exemplo, de um flashback em uma história contada fora de cronologia, ou até mesmo ao revisitar um ambiente com a Membrana fragilizada em que um personagem de um jogador morreu em outra missão, no passado. Isso faz com que algumas habilidades e condições para dissipar um espectro inesquecido sejam únicas a cada manifestação, e estejam associadas à personalidade, escolhas e ações daquele personagem quando ainda vivo, mas distorcidas e transformadas pelas Entidades do Outro Lado.",
+   "enigma": "",
    "descricao": "",
    "nome": "Mescla",
    "vd": 60,
@@ -1703,55 +1703,50 @@
    "habilidades": [
     {
      "tipo": "",
-     "nome": "Balística Avançada",
-     "descricao": "Tem proficiência com armas táticas de fogo e +2 em rolagens de dano com armas de fogo."
+     "nome": "Fluidos Repugnantes",
+     "descricao": "Além de serem corrosivos, os fluidos corporais da Mescla causam enjoo e repugnância. Sempre que um ser causa dano corpo a corpo ou em alcance curto a criatura, ou sempre que sofre dano de Sangue dela, o ser fica enjoado por uma rodada (Fortitude DT 20 evita)."
+    },
+    {
+     "tipo": "",
+     "nome": "Percepção Multifacetada",
+     "descricao": "A Mescla não pode ser flanqueada nem surpreendida."
     }
    ],
    "acoes": [
     {
      "tipo": "Padrão",
      "nome": "Agredir",
-     "descricao": "Faca: Corpo a corpo\nTeste 1d20+5, crítico 19 | Dano 1d4+1 corte\nPistola Sinalizadora: À distância CURTO\nTeste 2d20+10 | Dano 2d6+2 fogo"
-    },
-    {
-     "tipo": "Livre",
-     "nome": "Conhecimento Aplicado",
-     "descricao": "Quando faz um teste de perícia (exceto Luta e Pontaria), o Marcado pode gastar 2 PE para mudar o atributo-base da perícia para Intelecto."
-    },
-    {
-     "tipo": "Livre",
-     "nome": "Eclético",
-     "descricao": "Quando faz um teste de perícia, o Marcado pode gastar 2 PE para receber os benefícios de ser treinado nela, ou 4 PE para receber os benefícios de veterano. DT de Dano Defesa/ Dano VD hab. mental Res. PV extra 20-40 15 2d8 +2 x2 +5 60-100 20 3d8 +5 x3 +10 120-160 25 4d8 +10 x4 +20 180-300 35 6d8 +15 x5 +30 320-400 40 8d8 +20 x6 +40"
-    },
-    {
-     "tipo": "Livre",
-     "nome": "Investigação Científica",
-     "descricao": "Uma vez por cena de investigação, o Marcado pode buscar pistas usando Ciências no lugar da perícia que seria usada para procurar a pista em questão."
-    },
-    {
-     "tipo": "Livre",
-     "nome": "Na Trilha Certa",
-     "descricao": "Sempre que tiver sucesso em um teste para procurar pistas, o Marcado pode gastar 1 PE para receber + 1d20 no próximo teste. Os custos e os bônus são cumulativos (se passar num segundo teste, pode pagar 2 PE para receber um total de +2d20 no próximo teste, e assim por diante)."
-    },
-    {
-     "tipo": "Livre",
-     "nome": "Pensamento Ágil",
-     "descricao": "Uma vez por rodada, durante uma cena de investigação, o Marcado pode gastar 2 PE para fazer uma ação de procurar pistas adicional."
-    },
-    {
-     "tipo": "Livre",
-     "nome": "Perito",
-     "descricao": "Perito(a) em Ciências e Medicina. Quando o Marcado faz um teste de uma dessas perícias, pode gastar 2 PE para somar +1d6 no resultado do teste, 3 PE para +1d8 ou 4 PE para +1d10."
+     "descricao": "Garras: Corpo a corpo x2\nTeste 3d20+10 | Dano 2d6+5 corte"
     },
     {
      "tipo": "Padrão",
-     "nome": "Equipe de Trauma",
-     "descricao": "O Marcado pode gastar 2 PE para remover uma condição negativa (exceto morrendo) de um aliado adjacente."
+     "nome": "Agredir",
+     "descricao": "Cuspe Ácido: Distância CURTO\nTeste 3d20+10 | Dano 3d12 Sangue"
     },
     {
-     "tipo": "Padrão",
-     "nome": "Paramédico",
-     "descricao": "O Marcado pode gastar 2 PE para curar 2d10 pontos de vida ou 3 PE para curar 3d10 pontos de vida de si mesmo(a) ou de um aliado adjacente."
+     "tipo": "Livre",
+     "nome": "Vomitar Ácido",
+     "descricao": "Quando atinge um ser com seus dois ataques de garra na mesma ação agredir, a Mescla vomita uma grotesca quantidade de substância cáustica. A vítima sofre 1d12 pontos de dano de Sangue."
+    },
+    {
+     "tipo": "Reação",
+     "nome": "Agarrão",
+     "descricao": "Se a Mescla acertar seus dois ataques de garra em um ser na mesma ação agredir, pode tentar agarrar o alvo (teste 3d20+12)."
+    },
+    {
+     "tipo": "Completa",
+     "nome": "Camuflagem Sobrenatural",
+     "descricao": "Se não estiver sendo visto por nenhuma pessoa, a Mescla pode se misturar ao ambiente, ficando imóvel e alterando sua cor para que fique sob camuflagem total e receba +10 em Furtividade."
+    },
+    {
+     "tipo": "Completa",
+     "nome": "Incubar Ovos",
+     "descricao": "Se estiver agarrando um ser, a Mescla pode usar um ferrão tão fino como uma agulha, oculto em sua língua, para perfurar a criatura (teste de ataque 3d20+10). Se acertar, o ferrão incuba 1d4 ovos da Mescla (Fortitude DT 5 +5 para cada ovo, evita a incubação). Um alvo incubado sofre uma versão modificada da doença Sangue Quente (OPRPG, p. 291), que tem um Estágio IV: ao alcançar esse estágio, uma nova Mescla nasce a partir do corpo da vítima, matando-a de dentro para fora."
+    },
+    {
+     "tipo": "Completa",
+     "nome": "Investida Insectoide",
+     "descricao": "Se estiver em um local acima de um ser em alcance médio, a Mescla salta na direção desse ser e aterrissa em um espaço adjacente a ele. Isso conta como uma investida, mas a Mescla pode fazer seus dois ataques de garra (ambos com o bônus da investida) contra o alvo."
     }
    ],
    "pagina": 129,
@@ -1774,7 +1769,7 @@
    "imunidades": "",
    "pericias": "Atletismo 1d20+5, Ciências 3d20+10, Furtividade 2d20+10, Intimidação 3d20+5, Intuição 3d20+10, Investigação 3d20+10, Medicina 3d20+10, Percepção 3d20+10 PONTOS DE ESFORÇO 66",
    "deslocamento": "9m (6 quadrados)",
-   "enigma": "",
+   "enigma": "Um espectro inesquecido é o resultado de uma morte de um marcado, e por essa natureza, as condições específicas dessa morte sempre serão imprevisíveis. Um espectro inesquecido pode surgir, por exemplo, de um flashback em uma história contada fora de cronologia, ou até mesmo ao revisitar um ambiente com a Membrana fragilizada em que um personagem de um jogador morreu em outra missão, no passado. Isso faz com que algumas habilidades e condições para dissipar um espectro inesquecido sejam únicas a cada manifestação, e estejam associadas à personalidade, escolhas e ações daquele personagem quando ainda vivo, mas distorcidas e transformadas pelas Entidades do Outro Lado.",
    "descricao": "",
    "nome": "Espectro Inesquecido",
    "vd": 220,
@@ -1853,7 +1848,7 @@
     {
      "tipo": "Completa",
      "nome": "Aterrorizar",
-     "descricao": "Estar na presença de um espectro pode ser perturbador, principalmente quando ele vibra, geme, urra ou emite qualquer sentimento que faz as pessoas se lembrarem de que ele é um eco de uma morte terrível. Pessoas e animais em alcance curto sofrem 2d8 pontos de dano mental (Vontade DT 15 reduz à metade). DERRETIDO"
+     "descricao": "Estar na presença de um espectro pode ser perturbador, principalmente quando ele vibra, geme, urra ou emite qualquer sentimento que faz as pessoas se lembrarem de que ele é um eco de uma morte terrível. Pessoas e animais em alcance curto sofrem 2d8 pontos de dano mental (Vontade DT 15 reduz à metade)."
     }
    ],
    "pagina": 133,
@@ -1930,7 +1925,7 @@
     {
      "tipo": "Completa",
      "nome": "Deslizar Nojento",
-     "descricao": "Enquanto não estiver se espremendo em um espaço apertado, o Derretido pode acelerar seu deslocamento em uma movimentação que lembra uma lesma do mar, deslizando e desviando de obstáculos. Ele percorre o triplo do seu deslocamento padrão. UIVAR"
+     "descricao": "Enquanto não estiver se espremendo em um espaço apertado, o Derretido pode acelerar seu deslocamento em uma movimentação que lembra uma lesma do mar, deslizando e desviando de obstáculos. Ele percorre o triplo do seu deslocamento padrão."
     }
    ],
    "pagina": 135,
@@ -1987,7 +1982,7 @@
     {
      "tipo": "Padrão",
      "nome": "Congelar",
-     "descricao": "A criatura emana ondas de frio que absorvem o calor e derrubam a temperatura em um raio de 90m ao seu redor. Qualquer ser dentro da área sofre 2d8 pontos de dano de frio (Fortitude DT 20 reduz à metade). Essa habilidade também afeta o cenário, cobrindo o céu de nuvens (se for dia, a iluminação fica como em penumbra; se for noite, fica como em escuridão), criando camadas de gelo sobre os objetos (a critério do mestre, testes envolvendo manipular itens sofrem –d20) e gerando granizo, chuva e vendaval (OPRPG, p. 290). As alterações no cenário duram até o fim da cena ou até o fim da missão, a critério do mestre."
+     "descricao": "A criatura emana ondas de frio que absorvem o calor e derrubam a temperatura em um raio de 90m ao seu redor. Qualquer ser dentro da área sofre 2d8 pontos de dano de frio (Fortitude DT 20 reduz à metade). Essa habilidade também afeta o cenário, cobrindo o céu de nuvens (se for dia, a iluminação fica como em penumbra; se for noite, fica como em escuridão), criando camadas de gelo sobre os objetos (a critério do mestre, testes envolvendo manipular itens sofrem –1d20) e gerando granizo, chuva e vendaval (OPRPG, p. 290). As alterações no cenário duram até o fim da cena ou até o fim da missão, a critério do mestre."
     },
     {
      "tipo": "Padrão",
@@ -2037,7 +2032,7 @@
     {
      "tipo": "",
      "nome": "Parasitose Melancólica",
-     "descricao": "A infecção da Melancolia segue as mesmas regras de doenças (OPRPG, p. 291), sendo uma contaminação por contato e teste de Vontade (DT 25). I Estágio I (Medo). O ser infectado se torna constantemente inseguro e fica abalado. Essa condição se aplica mesmo em seres imunes a efeitos de medo. I Estágio II (Sangue). A instabilidade emocional assume os pensamentos do ser, invadindo-os com ideias irracionais e, costumeiramente, de autoflagelo emocional. O ser fica alquebrado e frustrado. Essas condições se aplicam mesmo em seres imunes a efeitos mentais. I Estágio III (Morte). A falta de apego à própria vida enfraquece a mente da vítima a ponto de destruir o que resta do cérebro fragmentado. O ser fica esmorecido. Essa condição se aplica mesmo em seres imunes a efeitos mentais. I Estágio IV (Conhecimento). As portas para a verdade se escancaram na mente do ser revelando sua completa insignificância diante do universo. Todas as ações da vítima devem ser realizadas com o único objetivo de tirar a própria vida e dar fim a sua completa irrelevância. A cada estágio, o parasita se torna mais visível para a vítima, mas não tangível, aumentando de tamanho e tornando a dificuldade do teste de Vontade cada vez maior. I Estágio I. Parasita Minúsculo; Vontade (DT 25). I Estágio II. Parasita Pequeno; Vontade (DT 30). I Estágio III. Parasita Médio; Vontade (DT 35). I Estágio IV. Parasita Grande; Vontade (DT 40). Se a vítima for bem-sucedida em se recuperar da infecção, o parasita abandonará o ser e procurará outra vítima. Contudo, o ser ainda demora um dia para se recuperar de cada estágio. Por exemplo, uma vítima em Estágio IV precisará de um dia para melhorar para o Estágio III, outro dia para alcançar o Estágio II e mais um dia para o Estágio I, curando- -se totalmente ao final do quarto dia."
+     "descricao": "A infecção da Melancolia segue as mesmas regras de doenças (OPRPG, p. 291), sendo uma contaminação por contato e teste de Vontade (DT 25). Estágio I (Medo). O ser infectado se torna constantemente inseguro e fica abalado. Essa condição se aplica mesmo em seres imunes a efeitos de medo. Estágio II (Sangue). A instabilidade emocional assume os pensamentos do ser, invadindo-os com ideias irracionais e, costumeiramente, de autoflagelo emocional. O ser fica alquebrado e frustrado. Essas condições se aplicam mesmo em seres imunes a efeitos mentais. Estágio III (Morte). A falta de apego à própria vida enfraquece a mente da vítima a ponto de destruir o que resta do cérebro fragmentado. O ser fica esmorecido. Essa condição se aplica mesmo em seres imunes a efeitos mentais. Estágio IV (Conhecimento). As portas para a verdade se escancaram na mente do ser revelando sua completa insignificância diante do universo. Todas as ações da vítima devem ser realizadas com o único objetivo de tirar a própria vida e dar fim a sua completa irrelevância. A cada estágio, o parasita se torna mais visível para a vítima, mas não tangível, aumentando de tamanho e tornando a dificuldade do teste de Vontade cada vez maior. Estágio I. Parasita Minúsculo; Vontade (DT 25). Estágio II. Parasita Pequeno; Vontade (DT 30). Estágio III. Parasita Médio; Vontade (DT 35). Estágio IV. Parasita Grande; Vontade (DT 40). Se a vítima for bem-sucedida em se recuperar da infecção, o parasita abandonará o ser e procurará outra vítima. Contudo, o ser ainda demora um dia para se recuperar de cada estágio. Por exemplo, uma vítima em Estágio IV precisará de um dia para melhorar para o Estágio III, outro dia para alcançar o Estágio II e mais um dia para o Estágio I, curando- -se totalmente ao final do quarto dia."
     },
     {
      "tipo": "",
@@ -2120,7 +2115,7 @@
     {
      "tipo": "Completa",
      "nome": "Investida Brutal",
-     "descricao": "O Quibungo percorre o dobro do seu deslocamento, mesmo não sendo em linha reta, até o alvo. Isso conta como uma investida (+ 1d20 nos ataques e –5 na Defesa até seu próximo turno). Ao final da investida, ele realiza dois ataques com suas garras. PROFUNDO"
+     "descricao": "O Quibungo percorre o dobro do seu deslocamento, mesmo não sendo em linha reta, até o alvo. Isso conta como uma investida (+ 1d20 nos ataques e –5 na Defesa até seu próximo turno). Ao final da investida, ele realiza dois ataques com suas garras."
     }
    ],
    "pagina": 143,
@@ -2143,7 +2138,7 @@
    "imunidades": "",
    "pericias": "Furtividade 4d20+10",
    "deslocamento": "6m (4 quadrados)",
-   "enigma": "Pergaminhos antigos, perdidos no fundo das estantes grandes bibliotecas, contam lendas sobre ludibriar a morte. Uma vez que uma pessoa se torna alvo do Memento Mori, não há como escapar dele, mas ainda é possível distraí-lo para ganhar algum tempo de vida. Se estiver sem sua ampulheta, o Memento Mori para de perseguir seu alvo e passa a perseguir o item amaldiçoado até recuperá-lo. Além disso, existem mitos sobre um ritual capaz de destruir a ampulheta, matando de vez o Memento Mori e libertando o alvo da perseguição, mas não há informações úteis sobre isso — até onde se sabe.",
+   "enigma": "",
    "descricao": "",
    "nome": "Profundo",
    "vd": 200,
@@ -2192,7 +2187,7 @@
     {
      "tipo": "Completa",
      "nome": "Onda Energética",
-     "descricao": "O Profundo emite uma onda de Energia invisível que enlouquece todos os sistemas eletrônicos em um raio de 90m ao seu redor. Os dispositivos, veículos e demais aparelhos na área reagem de forma caótica a critério do mestre, desligando-se, piscando, entrando em curto e até mesmo explodindo. Se o item estiver sendo portado, seu portador pode evitar que ele enlouqueça com um teste de Vontade (DT 25). MEMENTO MORI Lembre-se da morte."
+     "descricao": "O Profundo emite uma onda de Energia invisível que enlouquece todos os sistemas eletrônicos em um raio de 90m ao seu redor. Os dispositivos, veículos e demais aparelhos na área reagem de forma caótica a critério do mestre, desligando-se, piscando, entrando em curto e até mesmo explodindo. Se o item estiver sendo portado, seu portador pode evitar que ele enlouqueça com um teste de Vontade (DT 25)."
     }
    ],
    "pagina": 147,
@@ -2215,7 +2210,7 @@
    "imunidades": "",
    "pericias": "Furtividade 1d20+30",
    "deslocamento": "9m (6 quadrados)",
-   "enigma": "",
+   "enigma": "Pergaminhos antigos, perdidos no fundo das estantes grandes bibliotecas, contam lendas sobre ludibriar a morte. Uma vez que uma pessoa se torna alvo do Memento Mori, não há como escapar dele, mas ainda é possível distraí-lo para ganhar algum tempo de vida. Se estiver sem sua ampulheta, o Memento Mori para de perseguir seu alvo e passa a perseguir o item amaldiçoado até recuperá-lo. Além disso, existem mitos sobre um ritual capaz de destruir a ampulheta, matando de vez o Memento Mori e libertando o alvo da perseguição, mas não há informações úteis sobre isso — até onde se sabe.",
    "descricao": "",
    "nome": "Memento Mori",
    "vd": 260,
@@ -2269,7 +2264,7 @@
     {
      "tipo": "Completa",
      "nome": "Atrair a Ampulheta",
-     "descricao": "Se estiver em alcance curto de sua ampulheta, mesmo sem poder vê-la, O Memento Mori sente sua presença e a teletransporta para suas mãos. RASCUNHO"
+     "descricao": "Se estiver em alcance curto de sua ampulheta, mesmo sem poder vê-la, O Memento Mori sente sua presença e a teletransporta para suas mãos."
     }
    ],
    "pagina": 149,
@@ -2320,7 +2315,7 @@
     {
      "tipo": "Completa",
      "nome": "Piscar",
-     "descricao": "O Rascunho pode, até três vezes por cena, se teletransportar para um espaço desocupado em alcance extremo, mesmo sem ter linha de visão com ele. Se ele surgir adjacente a outro ser, pode usar a habilidade Aterrorizar como ação livre contra esse ser. MEDUSA"
+     "descricao": "O Rascunho pode, até três vezes por cena, se teletransportar para um espaço desocupado em alcance extremo, mesmo sem ter linha de visão com ele. Se ele surgir adjacente a outro ser, pode usar a habilidade Aterrorizar como ação livre contra esse ser."
     }
    ],
    "pagina": 151,
@@ -2417,7 +2412,7 @@
     {
      "tipo": "Completa",
      "nome": "Rastejar Imparável",
-     "descricao": "A Medusa dispara em um rastejar assustadoramente ágil. Ela percorre até o dobro de seu deslocamento ignorando terreno difícil. Se ela terminar seu rastejar adjacente a um ser, pode atacá-lo com suas garras ou cauda como uma ação livre. AMIGO IMAGINÁRIO “Quando o Sino tocar , a criatura vai retornar e todo mundo vai morrer. “ A verdadeira arte é só um reflexo dos sentimentos de quem a contempla, e a criatura da ilha de Tipora é o resultado da devoção de um artista, consumido pela sua própria obsessão, na busca da perfeição. A obra de arte perfeita tomada forma, impecável, manifestada e viva. Criado pelo delírio coletivo de uma pequena civilização isolada intensificado pelos efeitos do composto impossível gerado conjuntamente pelas entidades de Sangue e Morte através de um processo misterioso associado a um objeto conhecido como Sino de Tenebris, o Amigo Imaginário é um ser encapuzado com mais de dois metros e meio, alongado e curvado. Longos tentáculos se movem sutilmente embaixo do que parece ser um manto marrom, feito de um material irreconhecível, que também esconde braços apodrecidos com dedos esqueléticos e pontudos. Do abismo em seu rosto, uma cascata da Tinta vermelho-ocre jorra no chão incessantemente. Os arredores parecem derreter. Tudo parece derreter. Nada parece real. Ele é real. Alimentado pelo medo daqueles que tiveram seus segredos manipulados, a criatura consome e derrete em uma tormenta de euforia e sentimentos daqueles ingênuos demais para conseguir escapar, ou tolos demais para decidir enfrentá-la. Após ter se originado em uma ilha isolada com um passado ainda mais misterioso, agora abandonada pelos seus antigos habitantes após o evento que ecoa conhecido como “O Incidente da Ilha”, a manifestação original da criatura foi contida. Porém, o trauma daqueles que presenciaram o massacre na pequena igreja da ilha nunca poderá ser esquecido e enquanto a história da ilha de Tipora for recontada por seus sobreviventes, o Medo gerado por sua forma se expandirá de forma cada vez mais horripilante e poderosa. A paranoia constante, os pesadelos sem fim, a abstinência da tinta no âmago do ser… Deus tenha piedade daqueles que escutarem o Sino tocar mais uma vez."
+     "descricao": "A Medusa dispara em um rastejar assustadoramente ágil. Ela percorre até o dobro de seu deslocamento ignorando terreno difícil. Se ela terminar seu rastejar adjacente a um ser, pode atacá-lo com suas garras ou cauda como uma ação livre."
     }
    ],
    "pagina": 153,
@@ -2467,7 +2462,7 @@
     {
      "tipo": "",
      "nome": "Frenesi de Sangue",
-     "descricao": "Ao ficar machucado, o Amigo Imaginário é tomado por uma fúria sanguinolenta e se torna mais ágil e violento. Ele sofre as seguintes alterações: I Vigor muda para 5; I Fortitude muda para 5D+30; I Recebe deslocamento de escalada 15m | 10 ; I Passa a ter duas ações padrão e duas ações de movimento; I O som emitido pela habilidade “O Sino” fica distorcido, causando um formigamento interno, fome, abstinência e necessidade de morder algo. Em vez de ficar pasma, a pessoa que falhar no teste deve gastar suas ações para alcançar o ser vivo mais próximo e tentar mordê-lo com força ou morde a si mesma, a critério do mestre. Pessoas que já tenham passado no teste de Vontade contra a versão anterior do Sino precisam fazer testes novamente contra essa versão. O sino se repete nos inícios de cada turno do Amigo Imaginário, mas qualquer pessoa bem-sucedida contra esse efeito fica imune a ele até o fim da cena."
+     "descricao": "Ao ficar machucado, o Amigo Imaginário é tomado por uma fúria sanguinolenta e se torna mais ágil e violento. Ele sofre as seguintes alterações: Vigor muda para 5; Fortitude muda para 5D+30; Recebe deslocamento de escalada 15m | 10 ; Passa a ter duas ações padrão e duas ações de movimento; O som emitido pela habilidade “O Sino” fica distorcido, causando um formigamento interno, fome, abstinência e necessidade de morder algo. Em vez de ficar pasma, a pessoa que falhar no teste deve gastar suas ações para alcançar o ser vivo mais próximo e tentar mordê-lo com força ou morde a si mesma, a critério do mestre. Pessoas que já tenham passado no teste de Vontade contra a versão anterior do Sino precisam fazer testes novamente contra essa versão. O sino se repete nos inícios de cada turno do Amigo Imaginário, mas qualquer pessoa bem-sucedida contra esse efeito fica imune a ele até o fim da cena."
     }
    ],
    "acoes": [
@@ -2489,7 +2484,7 @@
     {
      "tipo": "Completa",
      "nome": "Dissolver",
-     "descricao": "O Amigo Imaginário puxa um alvo agarrado e começa a envolvê-lo com outros tentáculos na tentativa de consumir o ser. A vítima sofre 4d10+20 pontos de dano químico (Fortitude DT 40 reduz à metade) e o Amigo Imaginário recupera PV igual ao dano causado. NOVAS AMEAÇAS DA REALIDADE"
+     "descricao": "O Amigo Imaginário puxa um alvo agarrado e começa a envolvê-lo com outros tentáculos na tentativa de consumir o ser. A vítima sofre 4d10+20 pontos de dano químico (Fortitude DT 40 reduz à metade) e o Amigo Imaginário recupera PV igual ao dano causado."
     }
    ],
    "pagina": 156,
@@ -2805,7 +2800,7 @@
    "resistencias": "",
    "vulnerabilidades": "",
    "imunidades": "",
-   "pericias": "Diplomacia 3d20+5, Intuição 3d20+5, FÉ",
+   "pericias": "Diplomacia 3d20+5, Intuição 3d20+5, Religião 3d20+5",
    "deslocamento": "9m (6 quadrados)",
    "enigma": "",
    "descricao": "",
@@ -2906,7 +2901,7 @@
     {
      "tipo": "",
      "nome": "Sorriso Sedutor",
-     "descricao": "Este assassino é capaz de manipular e atrair suas vítimas com seu carisma e artigos de luxo. Uma pessoa que não saiba que o predador é na verdade um assassino fica desprevenida contra ele e sofre –d20 em testes contra ele. Essa habilidade não depende apenas de atração romântica; o predador pode, por exemplo, atrair um acionista, levando-o para um quarto de hotel onde prometeu compartilhar informações valiosas."
+     "descricao": "Este assassino é capaz de manipular e atrair suas vítimas com seu carisma e artigos de luxo. Uma pessoa que não saiba que o predador é na verdade um assassino fica desprevenida contra ele e sofre –1d20 em testes contra ele. Essa habilidade não depende apenas de atração romântica; o predador pode, por exemplo, atrair um acionista, levando-o para um quarto de hotel onde prometeu compartilhar informações valiosas."
     }
    ],
    "acoes": [
@@ -3206,7 +3201,7 @@
    "deslocamento": "6m | 4 , Escalar 6m (4 quadrados)",
    "enigma": "",
    "descricao": "",
-   "nome": "Tocandiras Enxame de",
+   "nome": "Enxame de Tocandiras",
    "vd": 20,
    "presencaDt": 0,
    "defesa": 16,
@@ -3226,7 +3221,7 @@
     {
      "tipo": "",
      "nome": "Dor Debilitante",
-     "descricao": "Um ser que sofra dano do enxame sofre –d20 em todos os testes devido à dor profunda (Fortitude DT 20 evita). Essa penalidade só pode ser removida com uma ação de interlúdio dormir ou com a aplicação de uma dose de antídoto."
+     "descricao": "Um ser que sofra dano do enxame sofre –1d20 em todos os testes devido à dor profunda (Fortitude DT 20 evita). Essa penalidade só pode ser removida com uma ação de interlúdio dormir ou com a aplicação de uma dose de antídoto."
     },
     {
      "tipo": "",

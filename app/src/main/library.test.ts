@@ -178,3 +178,28 @@ describe('biblioteca: pacote por origem', () => {
     expect(lib.list('item').map((i) => i.name)).toEqual(['Pé de cabra'])
   })
 })
+
+describe('biblioteca: correções dos livros', () => {
+  const ID_A = '00000000-0000-4000-8000-00000000000a'
+  const ID_B = '00000000-0000-4000-8000-00000000000b'
+  const livro = (rituais: { id: string; nome: string; circulo: number }[]) => [{ fonte: { nome: 'Livro Teste', sigla: 'LT' }, rituais, itens: [], ameacas: [] }]
+
+  it('troca o que ainda está como veio do livro e deixa o que o mestre editou, com aviso', () => {
+    const file = join(dir, 'livros.sqlite')
+    const v1 = new LibraryStore(file, { dados: livro([{ id: ID_A, nome: 'Alfa', circulo: 1 }, { id: ID_B, nome: 'Beta', circulo: 1 }]), versao: 1 })
+    const beta = v1.get('ritual', ID_B)
+    v1.save('ritual', { id: ID_B, sourceId: beta.sourceId, data: { ...beta.data, efeito: 'minha versão' } })
+    v1.close()
+    const anteriores = { [ID_A]: { id: ID_A, nome: 'Alfa', circulo: 1 }, [ID_B]: { id: ID_B, nome: 'Beta', circulo: 1 } }
+    const v2 = new LibraryStore(file, { dados: livro([{ id: ID_A, nome: 'Alfa', circulo: 2 }, { id: ID_B, nome: 'Beta', circulo: 2 }]), versao: 2, anteriores })
+    try {
+      expect(v2.get('ritual', ID_A).data.circulo).toBe(2)
+      expect(v2.get('ritual', ID_B).data).toMatchObject({ circulo: 1, efeito: 'minha versão' })
+      expect(v2.livrosEditados()).toEqual(['Beta'])
+      v2.dispensarLivrosEditados()
+      expect(v2.livrosEditados()).toEqual([])
+    } finally {
+      v2.close()
+    }
+  })
+})

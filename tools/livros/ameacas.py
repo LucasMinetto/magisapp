@@ -20,9 +20,13 @@ ROTULOS = ('PRESENÇA PERTURBADORA', 'SENTIDOS', 'PERCEPÇÃO', 'INICIATIVA', 'D
 
 def texto_span(s) -> str:
     if 'd20' in s.font:
-        return 'd20'
+        # um glifo por dado: "OO" é 2d20; um só fica "d20" para juntar com o número antes ("5O" é 5d20)
+        n = len(s.text.strip())
+        return f'{n}d20' if n > 1 else 'd20'
     if 'Wingdings' in s.font:
         return ' '
+    if 'OutroLado' in s.font and s.text.strip() in ('I', 'b'):
+        return ''  # marcador de lista do livro
     return s.text
 
 
@@ -38,6 +42,8 @@ def texto_linha(l: Linha) -> str:
     t = ''.join(partes)
     # o livro omite o 1 ("O+10" é 1d20+10) e às vezes escreve "–2" antes do dado (dados negativos: fica como está)
     t = re.sub(r'(?<![\d–-])\s*d20', ' 1d20', t)
+    t = re.sub(r'(?<=[–-])d20', '1d20', t)  # "–O" é –1d20
+    t = re.sub(r'(\dd20)(?=[A-Za-zÀ-ú])', r'\1 ', t)  # "–1d20em testes"
     t = re.sub(r'(\d)\s*d20\s*([+–-])\s*(\d)', lambda m: f'{m.group(1)}d20{"+" if m.group(2) == "+" else "-"}{m.group(3)}', t)
     t = re.sub(r'(\d)\s*d20', r'\1d20', t)
     return re.sub(r'\s+', ' ', t).strip()
@@ -255,12 +261,50 @@ def extrair(livro: Livro, ini: int, fim: int) -> list[dict]:
     # posição de leitura: página, coluna, altura
     pos = [(pdf, 0 if x < meio - 15 else 1, y, nome, vd) for pdf, y, nome, vd, x in lista]
     todas = [l for p in range(ini, fim + 1) for l in livro.linhas(p)]
+    # Títulos grandes (abertura de outra criatura ou seção): a ficha não passa deles. Sem isto a Mescla (SaH p. 129)
+    # engolia as páginas do Espectro Inesquecido até a ficha de exemplo do "Marcado".
+    aberturas = sorted(
+        (p, 0, s['bbox'][1])
+        for p in range(ini, fim + 1)
+        for b in livro.doc[p - 1].get_text('dict')['blocks']
+        for l in b.get('lines', [])
+        for s in l['spans']
+        if s['size'] >= 30 and s['text'].strip() and not s['text'].strip().isdigit()
+    )
     out = []
     for n, (pdf, col, y, nome, vd) in enumerate(pos):
         ini_k = (pdf, col, y - 2)
         fim_k = (pos[n + 1][0], pos[n + 1][1], pos[n + 1][2] - 2) if n + 1 < len(pos) else (fim + 1, 0, 0)
+        corte = next((a for a in aberturas if a[0] > pdf), None)
+        if corte and corte < fim_k:
+            fim_k = corte
         linhas = [l for l in todas if ini_k <= (l.pdf, l.col, l.y) < fim_k]
         a = ficha(nome, vd, linhas)
         a['pagina'] = livro.numero_impresso(pdf)
+        if not a['enigma']:
+            # O quadro "Enigma de Medo" costuma ficar na página de abertura da criatura, antes da ficha.
+            anterior = pos[n - 1][:3] if n else (ini, 0, 0)
+            abertura = max((x for x in aberturas if anterior < x < (pdf, col, y)), default=None)
+            if abertura:
+                a['enigma'] = enigma_da_abertura([l for l in todas if abertura <= (l.pdf, 0, l.y) and (l.pdf, l.col, l.y) < ini_k])
         out.append(a)
     return out
+
+
+def enigma_da_abertura(linhas: list[Linha]) -> str:
+    """O texto do quadro "Enigma de Medo" (fonte Gabriele, logo depois do título do quadro)."""
+    texto: list[str] = []
+    dentro = False
+    for l in linhas:
+        t = texto_linha(l).strip()
+        if not t:
+            continue
+        if 'ENIGMA' in t.upper() and l.size >= 12 and 'Gabriele' not in l.font:
+            dentro = True
+            continue
+        if dentro:
+            if 'Gabriele' in l.font:
+                texto.append(t)
+            elif texto:
+                break
+    return juntar(texto)

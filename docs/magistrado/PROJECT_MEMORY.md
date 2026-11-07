@@ -5,6 +5,7 @@
 ## Propósito e status
 
 - **O que é:** app de desktop do mestre de Ordem Paranormal. Junta o **autore** (a base) com a ficha do agente, a rolagem com dados físicos e os modelos de ameaças, itens e rituais do **taberna**.
+- **Status (2026-11-07, conferência):** dados e regras conferidos contra os dois livros (C1 no TASKS). 161 testes e e2e 195/195. A lista do que o livro manda e o app ainda não aplica espera a escolha do Lucas.
 - **Status (2026-11-07, T11–T12):** fusão fechada. Repositório só com o Magistrado (sem `_fontes/` nem `replica/`). Backup, cofre e exportar com a ficha do agente, o bloco da ameaça, rituais, itens, iniciativa e rolagens; biblioteca exporta e importa por origem. Ajuda e README. 158 testes e e2e 195/195. Falta a T13 (teste de mesa do Lucas).
 - **Status (2026-11-07, #18):** combate redesenhado (ameaças fixas com cópias agrupadas, cartões dos agentes com arsenal, destaque da vez, ganchos da #13). 147 testes e e2e 185/185. Vai na 0.10.0.
 - **Status (2026-11-07, T10b):** a Sessão tem dois modos, cena (faixa do grupo, cena larga, abas Pistas · Notas · NPCs) e combate (ordem à esquerda, cartão com tudo do combatente à direita). 138 testes e e2e 181/181.
@@ -60,7 +61,7 @@
 ## Dados dos livros
 
 - **PDFs (fora do git):** `C:/Users/lucas/Meu Drive/RPG/Livros/Ordem Paranormal RPG v1-3.pdf` (332 p.; página impressa = PDF − 10) e `Sobrevivendo-ao-Horror-v1-3.pdf` (226 p.; impressa = PDF − 1).
-- **Regerar:** `cd tools/livros` e `python extrair.py "<OP.pdf>" "<SaH.pdf>"` (precisa de `pip install pymupdf`). Mudou os JSON? Suba `LIVROS_VERSAO` em `app/src/main/livros/index.ts`.
+- **Regerar:** `cd tools/livros` e `python extrair.py "<OP.pdf>" "<SaH.pdf>"` (precisa de `pip install pymupdf`). Mudou os JSON? Suba `LIVROS_VERSAO` em `app/src/main/livros/index.ts` e gere `livros/anteriores.json` com os registros que mudaram, como eram na versão anterior (a biblioteca troca os não editados).
 - **Tokens das ameaças:** arte dos livros, vem com o app. Origem: `C:/Users/lucas/Meu Drive/RPG/Ameaças`. Regerar: `python tools/livros/tokens.py "<pasta Ameaças>"` (precisa de Pillow); a ligação arquivo → ameaça é a tabela `LIGACOES` do script. Saída: `app/resources/livros-tokens/*.webp` e `app/src/main/livros/tokens.json` (vão para o git). Mudou? Suba `LIVROS_VERSAO`.
 
 ## Próximo passo

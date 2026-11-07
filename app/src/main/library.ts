@@ -118,7 +118,7 @@ export class LibraryStore {
    */
   constructor(
     readonly file: string,
-    private readonly livros: { dados: LivroDados[]; versao: number; tokens?: string } = { dados: [], versao: 0 }
+    private readonly livros: { dados: LivroDados[]; versao: number; tokens?: string; anteriores?: Record<string, Record<string, unknown>> } = { dados: [], versao: 0 }
   ) {
     this.db = openLibraryDb(file)
     this.semear()
@@ -161,6 +161,7 @@ export class LibraryStore {
       ['itens', 'item'],
       ['rituais', 'ritual']
     ]
+    const avisos: string[] = []
     this.db.transaction(() => {
       for (const livro of dados) {
         const porNome = this.db.prepare('select id from sources where name = ? collate nocase').get(livro.fonte.nome) as { id: string } | undefined
@@ -177,12 +178,61 @@ export class LibraryStore {
             const parsed = SCHEMA[kind].safeParse(resto)
             if (!parsed.success) continue
             const novo = ins.run(id, sourceId, parsed.data.nome, JSON.stringify(parsed.data), now, now).changes > 0
+            if (!novo) this.atualizarDoLivro(kind, id, parsed.data, avisos)
             if (!novo && kind === 'ameaca') this.darTokensDoLivro(id, parsed.data as LibraryDataByKind['ameaca'])
           }
         }
       }
       this.db.prepare("insert into meta (key, value) values ('livros', ?) on conflict(key) do update set value = excluded.value").run(String(versao))
+      if (avisos.length)
+        this.db
+          .prepare("insert into meta (key, value) values ('livros-editados', ?) on conflict(key) do update set value = excluded.value")
+          .run(JSON.stringify(avisos))
     })()
+  }
+
+  /**
+   * Registro do livro que já está na biblioteca: se o livro mudou (está em `anteriores`) e o registro ainda é igual ao
+   * que veio do livro, troca pelos dados novos, mantendo o token que o mestre escolheu. Editado pelo mestre: fica e
+   * vira aviso.
+   */
+  private atualizarDoLivro(kind: LibraryKind, id: string, dados: { nome: string }, avisos: string[]): void {
+    const antes = this.livros.anteriores?.[id]
+    if (!antes) return
+    const row = this.db.prepare(`select data from ${TABLE[kind]} where id = ?`).get(id) as { data: string } | undefined
+    if (!row) return
+    const semToken = (d: Record<string, unknown>) => {
+      const { token: _t, tokensExtras: _e, ...resto } = d
+      return JSON.stringify(resto)
+    }
+    const { id: _id, ...antigo } = antes
+    const antigoOk = SCHEMA[kind].safeParse(antigo)
+    let atual: Record<string, unknown>
+    try {
+      atual = JSON.parse(row.data) as Record<string, unknown>
+    } catch {
+      return
+    }
+    if (!antigoOk.success || semToken(antigoOk.data as Record<string, unknown>) !== semToken(atual)) {
+      avisos.push(dados.nome)
+      return
+    }
+    const novo = kind === 'ameaca' ? { ...dados, token: atual.token ?? '', tokensExtras: atual.tokensExtras ?? [] } : dados
+    this.db.prepare(`update ${TABLE[kind]} set name = ?, data = ?, updated_at = ? where id = ?`).run(dados.nome, JSON.stringify(novo), nowIso(), id)
+  }
+
+  /** Registros do livro que o mestre tinha editado e por isso não receberam a correção da última versão dos dados. */
+  livrosEditados(): string[] {
+    const row = this.db.prepare("select value from meta where key = 'livros-editados'").get() as { value: string } | undefined
+    try {
+      return row ? (JSON.parse(row.value) as string[]) : []
+    } catch {
+      return []
+    }
+  }
+
+  dispensarLivrosEditados(): void {
+    this.db.prepare("delete from meta where key = 'livros-editados'").run()
   }
 
   /** Ameaça do livro que já estava na biblioteca, sem token nenhum: recebe os do livro. Não troca o que o mestre escolheu. */

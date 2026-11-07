@@ -683,6 +683,9 @@ export interface Api {
     copyToCampaign(input: { kind: LibraryKind; id: string; entityId?: string }): Promise<Entity>
     /** Pacote com a biblioteca inteira na pasta de backups (antes de atualizar o app). */
     backup(): Promise<string>
+    /** Registros dos livros que o mestre editou e por isso não receberam a última correção dos dados. */
+    livrosEditados(): Promise<string[]>
+    dispensarLivrosEditados(): Promise<void>
     /** Exporta um pacote com as origens pedidas (todas, sem `sourceIds`). Devolve o arquivo, ou null se cancelar. */
     exportPackage(input: { sourceIds?: string[] }): Promise<string | null>
     /** Escolhe um pacote e compara com a biblioteca daqui, sem mudar nada. null se cancelar. */

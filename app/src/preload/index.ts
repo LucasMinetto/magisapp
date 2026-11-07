@@ -73,6 +73,8 @@ const api: Api = {
     remove: call('library:remove'),
     copyToCampaign: call('library:copyToCampaign'),
     backup: call('library:backup'),
+    livrosEditados: call('library:livrosEditados'),
+    dispensarLivrosEditados: call('library:dispensarLivrosEditados'),
     exportPackage: call('library:exportPackage'),
     pickPackage: call('library:pickPackage'),
     importPackage: call('library:importPackage'),

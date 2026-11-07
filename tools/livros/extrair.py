@@ -38,8 +38,21 @@ def limpa_ameaca(a: dict) -> dict:
         a[k] = re.sub(r'\s+[A-ZÁÉÍÓÚ]$', '', a[k]).strip(' ,;|')
     if a['sentidos'].isupper():
         a['sentidos'] = a['sentidos'].capitalize()
+    # Títulos de página e de capítulo que a última linha engole ("… metade). CRIATURAS DE", "… SANGUE MORTE ENERGIA").
+    rabo = re.compile(r'(?<=[.)])(?:\s+(?:CRIATURAS DE|AMEAÇAS DA REALIDADE|SANGUE|MORTE|ENERGIA|CONHECIMENTO|MEDO|MEMENTO))+\s*$')
     for h in a['habilidades'] + a['acoes']:
-        h['descricao'] = h['descricao'].strip()
+        h['descricao'] = rabo.sub('', h['descricao'].strip())
+    a['enigma'] = rabo.sub('', a['enigma'].strip())
+    # Conferidas na página do livro: o PDF põe estas linhas fora de ordem.
+    if a['nome'] == 'Tocandiras Enxame de':
+        a['nome'] = 'Enxame de Tocandiras'  # SaH p. 164: o título quebra em duas linhas
+    if a['nome'] == 'Religioso' and a['pericias'].endswith('FÉ'):
+        # SaH p. 160: a terceira perícia fica na linha de baixo; "FÉ" é o começo de "Fé Inabalável"
+        a['pericias'] = 'Diplomacia 3d20+5, Intuição 3d20+5, Religião 3d20+5'
+    for h in a['acoes'] + a['habilidades']:
+        if a['nome'] == 'Anfitrião' and h['nome'] == 'Teletransporte':
+            # OP p. 279: os nomes das cinco facetas (do diagrama ao lado) entravam no fim do texto
+            h['descricao'] = h['descricao'].split(' Amphitruo Aeneas')[0]
     return a
 
 
@@ -103,11 +116,15 @@ def livro_sah(caminho: str) -> dict:
     }
 
 
+NOME_DO_ID = {('SaH', 'ameacas', 'Enxame de Tocandiras'): 'Tocandiras Enxame de'}
+
+
 def com_ids(dados: dict) -> dict:
     sigla = dados['fonte']['sigla']
     for tipo in ('rituais', 'itens', 'ameacas'):
         for r in dados[tipo]:
-            r['id'] = ident(sigla, tipo, r['nome'])
+            # nome corrigido depois que a biblioteca já tinha o registro: mantém o id antigo, para não duplicar
+            r['id'] = ident(sigla, tipo, NOME_DO_ID.get((sigla, tipo, r['nome']), r['nome']))
             if isinstance(r.get('espacos'), float) and r['espacos'].is_integer():
                 r['espacos'] = int(r['espacos'])
         # nomes repetidos no mesmo livro (ex.: duas fichas com o mesmo nome) ganham sufixo

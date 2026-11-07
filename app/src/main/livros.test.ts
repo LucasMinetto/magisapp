@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { ameacaBibliotecaSchema, itemBibliotecaSchema, ritualBibliotecaSchema } from '../shared/ordem/esquemas'
 import { itemForSheet, LibraryStore, ritualForSheet, threatForCampaign } from './library'
-import { LIVROS, LIVROS_VERSAO } from './livros'
+import { LIVROS, LIVROS_ANTERIORES, LIVROS_VERSAO, type LivroDados } from './livros'
 
 describe('dados dos livros', () => {
   const texto = JSON.stringify(LIVROS)
@@ -107,3 +107,34 @@ describe('regras dos livros', () => {
     expect(rituais.texto).not.toMatch(/\*\*Eletrocussão\.?\*\*/)
   })
 })
+
+describe('conferência com os livros (versão 3 dos dados)', () => {
+  it('biblioteca semeada na versão 2 recebe as correções ao abrir na 3', () => {
+    const dir2 = mkdtempSync(join(tmpdir(), 'magistrado-livros-v2-'))
+    const file = join(dir2, 'biblioteca.sqlite')
+    // os dados como eram na versão 2: o atual, com os registros que mudaram trocados pelo anterior
+    const v2: LivroDados[] = LIVROS.map((l) => ({
+      ...l,
+      rituais: l.rituais.map((r) => (LIVROS_ANTERIORES[r.id] as typeof r) ?? r),
+      itens: l.itens.map((r) => (LIVROS_ANTERIORES[r.id] as typeof r) ?? r),
+      ameacas: l.ameacas.map((r) => (LIVROS_ANTERIORES[r.id] ? ({ ...LIVROS_ANTERIORES[r.id], token: r.token, tokensExtras: r.tokensExtras } as unknown as typeof r) : r))
+    }))
+    try {
+      new LibraryStore(file, { dados: v2, versao: 2 }).close()
+      const lib = new LibraryStore(file, { dados: LIVROS, versao: LIVROS_VERSAO, anteriores: LIVROS_ANTERIORES })
+      try {
+        const descarnar = lib.list('ritual', { q: 'Descarnar' })[0]
+        expect(descarnar.data.danoNormal).toBe('6d8')
+        expect(lib.list('item', { q: 'Jaqueta de Veríssimo' })[0].data.categoria).toBe(4)
+        expect(lib.list('ameaca', { q: 'Mescla' })[0].data.acoes.map((a) => a.nome)).toContain('Incubar Ovos')
+        expect(lib.list('ameaca', { q: 'Enxame de Tocandiras' })).toHaveLength(1)
+        expect(lib.livrosEditados()).toEqual([])
+      } finally {
+        lib.close()
+      }
+    } finally {
+      rmSync(dir2, { recursive: true, force: true })
+    }
+  })
+})
+

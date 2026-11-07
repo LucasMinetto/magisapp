@@ -3678,7 +3678,7 @@
     {
      "tipo": "Movimento",
      "nome": "Arremessar",
-     "descricao": "(Flor Rosa) A dama de Sangue ergue um personagem em alcance curto e o arremessa a um ponto a sua escolha também em alcance curto. O personagem sofre 2d6 pontos de dano de impacto e fica caído (Reflexos DT 15 evita todo o efeito). A flor rosa murcha se a dama de Sangue entrar em contato com fertilizante. Isso faz a dama perder esta habilidade e sofrer –d20 em Luta."
+     "descricao": "(Flor Rosa) A dama de Sangue ergue um personagem em alcance curto e o arremessa a um ponto a sua escolha também em alcance curto. O personagem sofre 2d6 pontos de dano de impacto e fica caído (Reflexos DT 15 evita todo o efeito). A flor rosa murcha se a dama de Sangue entrar em contato com fertilizante. Isso faz a dama perder esta habilidade e sofrer –1d20 em Luta."
     },
     {
      "tipo": "Movimento",
@@ -3688,12 +3688,12 @@
     {
      "tipo": "Movimento",
      "nome": "Espinhos",
-     "descricao": "(Flor Amarela) A dama dispara espinhos em até três alvos em alcance médio. Cada alvo sofre 2d8 pontos de dano de perfuração (Reflexos DT 15 reduz à metade). A flor amarela murcha se a dama de Sangue sofrer 10 pontos de dano de fogo de um único efeito. Isso faz a dama perder esta habilidade e sofrer –d20em testes de Reflexos."
+     "descricao": "(Flor Amarela) A dama dispara espinhos em até três alvos em alcance médio. Cada alvo sofre 2d8 pontos de dano de perfuração (Reflexos DT 15 reduz à metade). A flor amarela murcha se a dama de Sangue sofrer 10 pontos de dano de fogo de um único efeito. Isso faz a dama perder esta habilidade e sofrer –1d20 em testes de Reflexos."
     },
     {
      "tipo": "Movimento",
      "nome": "Grito Devastador",
-     "descricao": "(Flor Roxa) A dama emite um grito agudo que afeta a mente e causa confusão. Todos os personagens em alcance curto ficam confusos (Vontade DT 15 evita). Um personagem que falhe no teste pode repeti-lo no final do seu turno. A flor roxa murcha se a dama de Sangue entrar em contato com o bulbo de bravo purpulis, uma planta roxa que cresce em algumas pedras. Isso faz a dama perder esta habilidade e sofrer –d20em testes de Vontade."
+     "descricao": "(Flor Roxa) A dama emite um grito agudo que afeta a mente e causa confusão. Todos os personagens em alcance curto ficam confusos (Vontade DT 15 evita). Um personagem que falhe no teste pode repeti-lo no final do seu turno. A flor roxa murcha se a dama de Sangue entrar em contato com o bulbo de bravo purpulis, uma planta roxa que cresce em algumas pedras. Isso faz a dama perder esta habilidade e sofrer –1d20 em testes de Vontade."
     },
     {
      "tipo": "Padrão",
@@ -3865,7 +3865,7 @@
    "imunidades": "",
    "pericias": "ATLETISMO 5d20+20",
    "deslocamento": "12m (8 quadrados)",
-   "enigma": "Quando a mulher afogada assombra um local, todas as fontes de água se tornam armadilhas potenciais: torneiras, canos, privadas, chuveiros… Tudo que estiver conectado a um sistema hidráulico será um possível “ponto de invocação” da criatura e, caso um personagem se aproxime de um desses pontos, ela pode se manifestar em forma física de líquido de Sangue, agarrando esse personagem e tentando arrastá-lo para dentro dos canos onde o devorará aos poucos. Tentar enfrentar a mulher afogada de forma direta é inútil, já que ela consegue se mover livremente por dentro dos encanamentos e se recuperar de seus ferimentos caso seja atacada. A única maneira de derrotá-la é bloquear todas as saídas de água e fechar o registro hidráulico do local, e então abrir todas as torneiras, forçando a sua manifestação física e a deixando sem lugar para fugir caso esteja próxima de ser derrotada.",
+   "enigma": "",
    "descricao": "",
    "nome": "Minotauro",
    "vd": 280,
@@ -3911,7 +3911,7 @@
    "imunidades": "",
    "pericias": "",
    "deslocamento": "9m 6",
-   "enigma": "",
+   "enigma": "Quando a mulher afogada assombra um local, todas as fontes de água se tornam armadilhas potenciais: torneiras, canos, privadas, chuveiros… Tudo que estiver conectado a um sistema hidráulico será um possível “ponto de invocação” da criatura e, caso um personagem se aproxime de um desses pontos, ela pode se manifestar em forma física de líquido de Sangue, agarrando esse personagem e tentando arrastá-lo para dentro dos canos onde o devorará aos poucos. Tentar enfrentar a mulher afogada de forma direta é inútil, já que ela consegue se mover livremente por dentro dos encanamentos e se recuperar de seus ferimentos caso seja atacada. A única maneira de derrotá-la é bloquear todas as saídas de água e fechar o registro hidráulico do local, e então abrir todas as torneiras, forçando a sua manifestação física e a deixando sem lugar para fugir caso esteja próxima de ser derrotada.",
    "descricao": "",
    "nome": "Mulher Afogada",
    "vd": 140,
@@ -4105,7 +4105,7 @@
     {
      "tipo": "Padrão",
      "nome": "Agredir",
-     "descricao": "Mordida de Sangue: Corpo a corpo\nTeste 3d20+15 | Dano 2d10+5 perfuração\nGarras de Sangue: Corpo a corpo x2\nTeste 3d20+15 | Dano 2d6+5 corte VOCÊ NÃO DEVE SE ENVOLVER COM O DIABO."
+     "descricao": "Mordida de Sangue: Corpo a corpo\nTeste 3d20+15 | Dano 2d10+5 perfuração\nGarras de Sangue: Corpo a corpo x2\nTeste 3d20+15 | Dano 2d6+5 corte"
     }
    ],
    "pagina": 203,
@@ -4197,7 +4197,7 @@
     {
      "tipo": "Completa",
      "nome": "Desejos de Sangue",
-     "descricao": "Todos os personagens em alcance médio do Diabo entram em uma fúria de Sangue e atacam outro personagem em alcance curto a escolha do Diabo (Vontade DT 45 evita). Um personagem afetado por esta habilidade deve usar sua ação com o maior potencial de dano, mas não pode conjurar rituais. Um personagem que passe no teste de Vontade fica imune a esta habilidade até final da cena. CRIATURAS DE"
+     "descricao": "Todos os personagens em alcance médio do Diabo entram em uma fúria de Sangue e atacam outro personagem em alcance curto a escolha do Diabo (Vontade DT 45 evita). Um personagem afetado por esta habilidade deve usar sua ação com o maior potencial de dano, mas não pode conjurar rituais. Um personagem que passe no teste de Vontade fica imune a esta habilidade até final da cena."
     }
    ],
    "pagina": 206,
@@ -4282,7 +4282,7 @@
    "imunidades": "Dano balístico",
    "pericias": "ATLETISMO 4d20+15",
    "deslocamento": "12m (8 quadrados)",
-   "enigma": "A espiral consome todos, pois é o próprio tempo reverso em si. Não se pode parar a espiral, pois cada corrida para um círculo externo é um caminho mais longo em direção ao fim. É cansar, ao invés de findar. Aqueles que quebram a espiral são aqueles que a transformam em uma linha. Mesmo que infinita, a linha é limitada. Ela é definida por suas beiradas e, portanto, existe escapatória. Transformar a espiral em linha, porém, é uma tarefa misteriosa, que requer esforço e energia quase inimagináveis. Quando seu Enigma de Medo for resolvido, o Ceifador Espiral perde sua resistência a dano e qualquer área de Terras Desoladas se torna terreno normal no final do seu próximo turno.",
+   "enigma": "",
    "descricao": "",
    "nome": "Carniçal Preto da Morte",
    "vd": 200,
@@ -4359,7 +4359,7 @@
    "imunidades": "Condições de paralisia, efeitos e dano de Morte",
    "pericias": "",
    "deslocamento": "15m (10 quadrados)",
-   "enigma": "",
+   "enigma": "A espiral consome todos, pois é o próprio tempo reverso em si. Não se pode parar a espiral, pois cada corrida para um círculo externo é um caminho mais longo em direção ao fim. É cansar, ao invés de findar. Aqueles que quebram a espiral são aqueles que a transformam em uma linha. Mesmo que infinita, a linha é limitada. Ela é definida por suas beiradas e, portanto, existe escapatória. Transformar a espiral em linha, porém, é uma tarefa misteriosa, que requer esforço e energia quase inimagináveis. Quando seu Enigma de Medo for resolvido, o Ceifador Espiral perde sua resistência a dano e qualquer área de Terras Desoladas se torna terreno normal no final do seu próximo turno.",
    "descricao": "",
    "nome": "Ceifador Espiral",
    "vd": 380,
@@ -4639,7 +4639,7 @@
    "imunidades": "",
    "pericias": "",
    "deslocamento": "9m (6 quadrados)",
-   "enigma": "Para enfrentar um nidere, é preciso primeiro encontrar seu covil, que muitas vezes é formado por cavernas naturais nas profundezas da floresta, enquanto ele não estiver lá. Se o nidere enfrentar os personagens dentro do seu covil, a afinidade com seu lar labiríntico o tornará ainda mais mortal. Para acessar a origem da sua manifestação, é primeiro necessário entender a lógica distorcida por trás dos padrões misteriosos dos restos ósseos de suas vítimas deixados pendurados no lar pelo nidere. Estes ossos formam uma espécie de engenhoca bizarra criada pela própria criatura. É como se a criatura preparasse uma armadilha para atrair e distrair seus caçadores, com uma lógica que sempre tem uma conexão com as identidades das vítimas que devora, como um desafio. Quando a origem for destruída, a criatura entrará em uma fúria incontrolável. Ela sofre –10 na Defesa e –d20 em testes de resistência, e perde suas habilidades Regeneração Acelerada e Senso de Direção Perfeito, o que a torna suscetível a cair em armadilhas que seriam facilmente evitadas em seu estado original, possibilitando a sua captura e morte.",
+   "enigma": "",
    "descricao": "",
    "nome": "Múmia Xipófaga",
    "vd": 240,
@@ -4701,7 +4701,7 @@
    "imunidades": "",
    "pericias": "FURTIVIDADE 5d20+23 SOBREVIVÊNCIA 5d20+20",
    "deslocamento": "24m (18 quadrados)",
-   "enigma": "",
+   "enigma": "Para enfrentar um nidere, é preciso primeiro encontrar seu covil, que muitas vezes é formado por cavernas naturais nas profundezas da floresta, enquanto ele não estiver lá. Se o nidere enfrentar os personagens dentro do seu covil, a afinidade com seu lar labiríntico o tornará ainda mais mortal. Para acessar a origem da sua manifestação, é primeiro necessário entender a lógica distorcida por trás dos padrões misteriosos dos restos ósseos de suas vítimas deixados pendurados no lar pelo nidere. Estes ossos formam uma espécie de engenhoca bizarra criada pela própria criatura. É como se a criatura preparasse uma armadilha para atrair e distrair seus caçadores, com uma lógica que sempre tem uma conexão com as identidades das vítimas que devora, como um desafio. Quando a origem for destruída, a criatura entrará em uma fúria incontrolável. Ela sofre –10 na Defesa e –2d20 em testes de resistência, e perde suas habilidades Regeneração Acelerada e Senso de Direção Perfeito, o que a torna suscetível a cair em armadilhas que seriam facilmente evitadas em seu estado original, possibilitando a sua captura e morte.",
    "descricao": "",
    "nome": "Nidere",
    "vd": 320,
@@ -4728,7 +4728,7 @@
     {
      "tipo": "",
      "nome": "Senso de Direção Perfeito",
-     "descricao": "Nideres nunca se perdem e recebem + 1d20 em Percepção e Sobrevivência (já contabilizados na ficha). A criatura perde esta habilidade caso seu enigma de medo seja resolvido."
+     "descricao": "Nideres nunca se perdem e recebem +2d20 em Percepção e Sobrevivência (já contabilizados na ficha). A criatura perde esta habilidade caso seu enigma de medo seja resolvido."
     }
    ],
    "acoes": [
@@ -4843,7 +4843,7 @@
     {
      "tipo": "Livre",
      "nome": "Sucção",
-     "descricao": "Se acertar um personagem com sua mordida, o succ prende seus dentes no rosto da vítima e então tira o ar de seus pulmões. O personagem deve fazer um teste de Fortitude (DT 17). Se passar, consegue se soltar. Se falhar, fica inconsciente e, no início do próximo turno do succ, será reduzido a 0 PV e ficará morrendo. Enquanto estiver prendendo um personagem dessa forma, o succ não pode realizar ações, exceto reações, e seu deslocamento é reduzido para 3m. Se o succ sofrer 10 pontos de dano ou mais na mesma rodada, solta qualquer vítima que estiver prendendo. É POSSÍVEL DESTRUIR A PRÓPRIA MORTE?"
+     "descricao": "Se acertar um personagem com sua mordida, o succ prende seus dentes no rosto da vítima e então tira o ar de seus pulmões. O personagem deve fazer um teste de Fortitude (DT 17). Se passar, consegue se soltar. Se falhar, fica inconsciente e, no início do próximo turno do succ, será reduzido a 0 PV e ficará morrendo. Enquanto estiver prendendo um personagem dessa forma, o succ não pode realizar ações, exceto reações, e seu deslocamento é reduzido para 3m. Se o succ sofrer 10 pontos de dano ou mais na mesma rodada, solta qualquer vítima que estiver prendendo."
     }
    ],
    "pagina": 227,
@@ -4930,7 +4930,7 @@
     {
      "tipo": "Padrão",
      "nome": "Espiral Destrutiva",
-     "descricao": "O Deus da Morte cria uma enorme espiral de Morte com 12m de raio em alcance longo. Todos os personagens dentro da área sofrem 10d10+50 pontos de dano de Morte (Fortitude DT 45 reduz à metade). CRIATURAS DE"
+     "descricao": "O Deus da Morte cria uma enorme espiral de Morte com 12m de raio em alcance longo. Todos os personagens dentro da área sofrem 10d10+50 pontos de dano de Morte (Fortitude DT 45 reduz à metade)."
     }
    ],
    "pagina": 230,
@@ -5115,7 +5115,7 @@
     {
      "tipo": "Padrão",
      "nome": "Cópia Observada",
-     "descricao": "O espreitador manifesta uma cópia de um ser que tenha deixado enlouquecendo com sua habilidade Espreitar. A cópia utiliza a mesma ficha do ser, mas causa dano de Conhecimento em vez de seu dano normal, não pode conjurar rituais ou usar habilidades paranormais e dura até o fim da cena. ESTRANGEIRO Estrangeiro relataram Estrangeiro"
+     "descricao": "O espreitador manifesta uma cópia de um ser que tenha deixado enlouquecendo com sua habilidade Espreitar. A cópia utiliza a mesma ficha do ser, mas causa dano de Conhecimento em vez de seu dano normal, não pode conjurar rituais ou usar habilidades paranormais e dura até o fim da cena."
     }
    ],
    "pagina": 238,
@@ -5272,7 +5272,7 @@
     {
      "tipo": "",
      "nome": "Aura Manifestada",
-     "descricao": "O lembrado é cercado por uma aura dourada de faces flutuantes, que gritam com todos aqueles que se aproximam. Personagens em alcance curto do lembrado sofrem –d20 em todos os testes."
+     "descricao": "O lembrado é cercado por uma aura dourada de faces flutuantes, que gritam com todos aqueles que se aproximam. Personagens em alcance curto do lembrado sofrem –2d20 em todos os testes."
     }
    ],
    "acoes": [
@@ -5393,7 +5393,7 @@
     {
      "tipo": "Completa",
      "nome": "Fixar",
-     "descricao": "O parasita se aproxima de um personagem dormindo. O ser tem direito a um teste de Percepção (com penalidade de –d20, por estar dormindo), oposto ao teste de Furtividade do parasita (2d20+15). Se passar, desperta antes que o parasita se fixe nele, fazendo com que a criatura fuja. Se falhar, torna-se hospedeiro do parasita (veja Devorar Culpa)."
+     "descricao": "O parasita se aproxima de um personagem dormindo. O ser tem direito a um teste de Percepção (com penalidade de –2d20, por estar dormindo), oposto ao teste de Furtividade do parasita (2d20+15). Se passar, desperta antes que o parasita se fixe nele, fazendo com que a criatura fuja. Se falhar, torna-se hospedeiro do parasita (veja Devorar Culpa)."
     },
     {
      "tipo": "Completa",
@@ -5568,7 +5568,7 @@
     {
      "tipo": "Completa",
      "nome": "Plantar Paranoia",
-     "descricao": "O vulto procura implantar medo e paranoia na mente de suas vítimas ao chacoalhar a Membrana e fazer aparecer coisas que não estão lá de verdade. Cada personagem em alcance médio fica abalado (Vontade DT 15 evita). Se o personagem já estiver abalado, ficará apavorado. Se o vulto estiver escondido ao usar essa habilidade, cada personagem sofre –d20 no teste de Vontade. A ETERNIDADE DO DESESPERO INFINITO DO CONHECIMENTO."
+     "descricao": "O vulto procura implantar medo e paranoia na mente de suas vítimas ao chacoalhar a Membrana e fazer aparecer coisas que não estão lá de verdade. Cada personagem em alcance médio fica abalado (Vontade DT 15 evita). Se o personagem já estiver abalado, ficará apavorado. Se o vulto estiver escondido ao usar essa habilidade, cada personagem sofre –1d20 no teste de Vontade."
     }
    ],
    "pagina": 251,
@@ -5728,7 +5728,7 @@
     {
      "tipo": "Movimento",
      "nome": "Autodestruição",
-     "descricao": "O anárquico concentra Energia no seu corpo e se autodestrói, causando 8d12 pontos de dano de Energia em todos os personagens em alcance curto (Reflexos DT 25 reduz à metade). Personagens adjacentes ao anárquico descontrolado sofrem – 1d20 neste teste de resistência. O anárquico descontrolado morre após usar essa habilidade."
+     "descricao": "O anárquico concentra Energia no seu corpo e se autodestrói, causando 8d12 pontos de dano de Energia em todos os personagens em alcance curto (Reflexos DT 25 reduz à metade). Personagens adjacentes ao anárquico descontrolado sofrem – 2d20 neste teste de resistência. O anárquico descontrolado morre após usar essa habilidade."
     }
    ],
    "pagina": 259,
@@ -6054,7 +6054,7 @@
    "imunidades": "Dano balístico, de corte e de perfuração",
    "pericias": "",
    "deslocamento": "Voo 18m (12 quadrados)",
-   "enigma": "A única maneira teorizada de derrotar o telopsia é de alguma forma destruir a própria fita amaldiçoada que se manifestou na Realidade, mas para isso é necessário investigar suas vítimas para encontrá-la, um trabalho árduo considerando que ninguém parece conseguir lembrar do que fez com ela após assistila. Se a fita for destruída, o telopsia tem seus PV reduzidos a 0 e também é destruído. Caso contrário, mesmo que seja derrotado em combate, se o seu Enigma de Medo não tiver sido resolvido, será apenas uma questão de tempo até o telopsia retornar.",
+   "enigma": "",
    "descricao": "",
    "nome": "Sukkalgir",
    "vd": 160,
@@ -6116,7 +6116,7 @@
    "imunidades": "Condições de paralisia",
    "pericias": "FURTIVIDADE 4d20+20",
    "deslocamento": "12m (8 quadrados)",
-   "enigma": "",
+   "enigma": "A única maneira teorizada de derrotar o telopsia é de alguma forma destruir a própria fita amaldiçoada que se manifestou na Realidade, mas para isso é necessário investigar suas vítimas para encontrá-la, um trabalho árduo considerando que ninguém parece conseguir lembrar do que fez com ela após assistila. Se a fita for destruída, o telopsia tem seus PV reduzidos a 0 e também é destruído. Caso contrário, mesmo que seja derrotado em combate, se o seu Enigma de Medo não tiver sido resolvido, será apenas uma questão de tempo até o telopsia retornar.",
    "descricao": "",
    "nome": "Telopsia",
    "vd": 340,
@@ -6172,7 +6172,7 @@
    "imunidades": "Condições de paralisia",
    "pericias": "",
    "deslocamento": "24m (12 quadrados)",
-   "enigma": "A única maneira de enxergar o viajante é usando dispositivos de captura de imagem para fotografálo. Capturar a sua existência em uma imagem sem que ele esteja de fato viajando através dela é o suficiente para distraí-lo momentaneamente, fazendo com que se torne visível por alguns segundos. Quando o Enigma de Medo do viajante for resolvido ele perde a habilidade Invisibilidade Permanente até o início do próximo turno do personagem que capturou sua imagem.",
+   "enigma": "",
    "descricao": "",
    "nome": "Tempestuoso",
    "vd": 360,
@@ -6234,7 +6234,7 @@
    "imunidades": "",
    "pericias": "",
    "deslocamento": "9m 6",
-   "enigma": "",
+   "enigma": "A única maneira de enxergar o viajante é usando dispositivos de captura de imagem para fotografálo. Capturar a sua existência em uma imagem sem que ele esteja de fato viajando através dela é o suficiente para distraí-lo momentaneamente, fazendo com que se torne visível por alguns segundos. Quando o Enigma de Medo do viajante for resolvido ele perde a habilidade Invisibilidade Permanente até o início do próximo turno do personagem que capturou sua imagem.",
    "descricao": "",
    "nome": "Viajante",
    "vd": 200,
@@ -6333,7 +6333,7 @@
     {
      "tipo": "",
      "nome": "Roleta Maluca (ato 2)",
-     "descricao": "No começo do turno do Anfitrião, cada ser em alcance longo sofre um efeito determinado aleatoriamente. Jogue 1d6 para cada ser na área; efeitos iguais são cumulativos: 1 Sofre –5 na Defesa até o final da cena. 2 Deve usar uma ação completa fazendo coisas sem sentido ou sofre 4d10 pontos de dano mental no final do seu turno. 3 Sofre 4d20 pontos de dano de Energia. 4 Sofre –d20 em Pontaria até o final da cena. 5 Sofre –d20 em Luta até o final da cena. 6 Nada acontece."
+     "descricao": "No começo do turno do Anfitrião, cada ser em alcance longo sofre um efeito determinado aleatoriamente. Jogue 1d6 para cada ser na área; efeitos iguais são cumulativos: 1 Sofre –5 na Defesa até o final da cena. 2 Deve usar uma ação completa fazendo coisas sem sentido ou sofre 4d10 pontos de dano mental no final do seu turno. 3 Sofre 4d20 pontos de dano de Energia. 4 Sofre –1d20 em Pontaria até o final da cena. 5 Sofre –1d20 em Luta até o final da cena. 6 Nada acontece."
     }
    ],
    "acoes": [
@@ -6380,7 +6380,7 @@
     {
      "tipo": "Movimento",
      "nome": "Teletransporte",
-     "descricao": "O Anfitrião se transporta para outro ponto em alcance médio. Amphitruo Aeneas Liber Silenus Plautus Anfitrião"
+     "descricao": "O Anfitrião se transporta para outro ponto em alcance médio."
     }
    ],
    "pagina": 278,
@@ -6442,7 +6442,7 @@
     {
      "tipo": "Movimento",
      "nome": "Desfiguramento Capilar",
-     "descricao": "A degolificada usa seus longos cabelos para penetrar os orifícios faciais e seus olhos vazios para perturbar a alma de suas vítimas. Cada ser agarrado por ela sofre 10d6+20 pontos de dano de perfuração (Fortitude DT 35 reduz à metade) e 6d10 pontos de dano mental (Vontade DT 35 reduz à metade). SANGUE MORTE ENERGIA CONHECIMENTO AMEAÇAS DA REALIDADE"
+     "descricao": "A degolificada usa seus longos cabelos para penetrar os orifícios faciais e seus olhos vazios para perturbar a alma de suas vítimas. Cada ser agarrado por ela sofre 10d6+20 pontos de dano de perfuração (Fortitude DT 35 reduz à metade) e 6d10 pontos de dano mental (Vontade DT 35 reduz à metade)."
     }
    ],
    "pagina": 282,
@@ -7075,7 +7075,7 @@
     {
      "tipo": "Livre",
      "nome": "Derrubar",
-     "descricao": "Se o cão de guarda acerta um ataque de mordida, pode fazer a manobra derrubar (bônus 1d20+5)."
+     "descricao": "Se o cão de guarda acerta um ataque de mordida, pode fazer a manobra derrubar (bônus 2d20+5)."
     }
    ],
    "pagina": 288,
@@ -7373,7 +7373,7 @@
     {
      "tipo": "Livre",
      "nome": "Constrição",
-     "descricao": "No início de cada um dos seus turnos, a sucuri causa 2d6+8 pontos de dano de impacto em qualquer ser que esteja agarrando. PERIGOS Descrições das Armadilhas Precipitações Vento Lista de Doenças Estágio I. O personagem fica fraco. Estágio II. O personagem fica debilitado. Estágio III ou superior. Sempre que sofre dano de Estágio I. O Intelecto do personagem é reduzido Estágio II. O personagem começa a esquecer Estágio III ou superior. O personagem tem sua Estágio I. O Vigor do personagem é reduzido Estágio II. O Vigor do personagem é reduzido Estágio III. O Vigor do personagem é reduzido Estágio I. A Força e Agilidade do personagem Estágio II. O personagem fica confuso. Estágio III. O personagem fica confuso e sofre Estágio I. Os pontos de vida máximos do perso- Estágio II. Os pontos de vida máximos do per- Estágio III ou superior. Os pontos de vida má- Fonte Dano Exemplos Bateria, Mínima 1d6 soquete de lâmpada Baixa 2d8 Caixa de fusíveis Cerca elétrica, Média 4d10 transformador industrial Alta 8d12 Raio Veneno Tipo DT Efeito Arsênico Ingestão 15 1d12 de dano por rodada durante 1d4 rodadas Beladona Ferimento 20 Vítima fica fraca Clorofórmio Inalação 25 Vítima fica inconsciente (enjoada por 1 rodada) Curare Ferimento 20 Vítima fica imóvel (lenta) por 1d6 rodadas Estricnina Ferimento 25 2d12 de dano por rodada por 2d4 rodadas (metade do dano) Inseticida Inalação 15 Vítima fica enjoada Lixo químico Contato 20 Vítima fica debilitada (fraca) Peçonha fraca Ferimento 15 1d12 de dano (metade do dano) Peçonha mortal Ferimento 25 Vítima cai com 0 PV (10d6 de dano) Peçonha potente Ferimento 20 1d12 de dano por rodada por 1d4 rodadas (metade do dano) Sonífero Ingestão 20 Vítima fica inconsciente (enjoada por 1 rodada)"
+     "descricao": "No início de cada um dos seus turnos, a sucuri causa 2d6+8 pontos de dano de impacto em qualquer ser que esteja agarrando."
     }
    ],
    "pagina": 289,

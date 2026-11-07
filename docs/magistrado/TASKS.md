@@ -126,6 +126,16 @@
 - **Resultado:** a tela Ajuda explica a ficha e as rolagens. `README.md` do Magistrado. O e2e ganha o fluxo criar agente → mudar atributo → rolar.
 - **Aceite:** o e2e completo passa.
 
+### C1. Conferência com os livros ✅ 2026-11-07
+- **Intenção:** [docs/intent/conferencia-dos-livros.md](../intent/conferencia-dos-livros.md). Tudo contra a página, sem amostra.
+- **Ficha e mecânica:** classes, patentes, custo de ritual, Defesa, carga, deslocamento, DT, perícias e condições batiam. Corrigido: penalidade que deixa menos de 1 dado (rola como bônus, fica com o pior; p. 12), arma de arremesso soma FOR (p. 82), classe Sobrevivente com estágio (SaH p. 30), origens e trilhas do SaH nas listas.
+- **Regras (59 seções):** "3O" virava 31d20; marcadores de lista soltos; Chef/Criminoso misturados; faltavam os tipos de aliados (p. 171) e atributos negativos (SaH p. 81).
+- **Rituais (98):** campos e textos batem; 13 ganharam o dano que faltava (Descarnar 6d8, Conhecendo o Medo, Miasma, Tentáculos de Lodo e formas Discente/Verdadeiro).
+- **Itens (180):** tabelas batem; Jaqueta de Veríssimo é categoria IV; subitens de granadas e medicamentos perdiam a primeira linha; Medidor de estabilidade cortado.
+- **Ameaças (96):** números batem; a Mescla tinha as ações do agente de exemplo do Espectro Inesquecido; 7 enigmas estavam na criatura anterior; títulos de página no fim de ações; "–O" sem o 1; Religioso sem Religião; "Tocandiras Enxame de".
+- **Biblioteca:** `LIVROS_VERSAO` 3 e `livros/anteriores.json` (os 83 registros que mudaram, como eram na versão 2): registro ainda igual ao do livro é trocado (mantém o token escolhido); editado fica e vira aviso na Biblioteca.
+- **Ferramentas:** correções conferidas ficam em `tools/livros` (`CORRECOES` em regras.py, `corrige_itens` e `limpa_ameaca` em extrair.py), com erro se o texto do livro mudar.
+
 ### T13. Sessão de teste do usuário
 - **Depende de:** T12
 - **Resultado:** Lucas conduz uma sessão (ou um ensaio) só no Magistrado.

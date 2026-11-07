@@ -25,7 +25,7 @@ import {
 import { CampaignStore, IMAGE_EXTENSIONS, IMPORT_EXTENSIONS } from './store'
 import { join } from 'node:path'
 import { copyToCampaign, LibraryStore, PACOTE_EXT } from './library'
-import { LIVROS, LIVROS_VERSAO } from './livros'
+import { LIVROS, LIVROS_ANTERIORES, LIVROS_VERSAO } from './livros'
 import { TOKEN_EXTENSIONS } from './tokens'
 import { safeFileName } from './vault'
 import { iniciativaSchema, rolagemSchema, type Iniciativa, type RolagemInput } from '../shared/ordem/esquemas'
@@ -96,7 +96,7 @@ const swap = (next: CampaignStore) => {
 
 // Biblioteca única (fora das campanhas): abre na primeira vez que alguém pede.
 let lib: LibraryStore | null = null
-const library = (): LibraryStore => (lib ??= new LibraryStore(join(app.getPath('userData'), 'biblioteca.sqlite'), { dados: LIVROS, versao: LIVROS_VERSAO, tokens: join(app.getAppPath(), 'resources', 'livros-tokens') }))
+const library = (): LibraryStore => (lib ??= new LibraryStore(join(app.getPath('userData'), 'biblioteca.sqlite'), { dados: LIVROS, versao: LIVROS_VERSAO, anteriores: LIVROS_ANTERIORES, tokens: join(app.getAppPath(), 'resources', 'livros-tokens') }))
 
 /** Arquivo de um token da biblioteca (magistrado://token/<nome>). */
 export function libraryTokenFile(nome: string): string | null {
@@ -417,6 +417,8 @@ const channels: Record<string, [z.ZodTypeAny, (input: never, win: BrowserWindow)
     (input: { kind: LibraryKind; id: string; entityId?: string }) => copyToCampaign(need(), library(), input)
   ],
   'library:backup': [z.undefined(), () => library().backup(backupConfig().dir)],
+  'library:livrosEditados': [z.undefined(), () => library().livrosEditados()],
+  'library:dispensarLivrosEditados': [z.undefined(), () => library().dispensarLivrosEditados()],
   // Pacote da biblioteca: exporta as origens escolhidas (todas, sem sourceIds) para onde o mestre mandar.
   'library:exportPackage': [
     z.object({ sourceIds: z.array(id).max(200).optional() }),

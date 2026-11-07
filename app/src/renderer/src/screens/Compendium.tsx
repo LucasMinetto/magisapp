@@ -145,6 +145,7 @@ export function Compendium() {
   const [imported, setImported] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const sources = useLoad(() => window.api.library.sources(), [])
+  const editados = useLoad(() => window.api.library.livrosEditados(), [])
   const list = useLoad(() => window.api.library.list({ kind, q, sourceId: sourceId || undefined }), [kind, q, sourceId])
   const all = (list.data ?? []) as LibraryEntry[]
   const shown = all.filter((e) => {
@@ -183,6 +184,18 @@ export function Compendium() {
           {tab.novo}
         </Button>
       </div>
+
+      {(editados.data?.length ?? 0) > 0 && (
+        <div role="status" className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-surface px-3 py-2 text-sm text-muted">
+          <span className="min-w-0 flex-1">
+            Os livros foram conferidos e corrigidos, mas {editados.data!.length === 1 ? 'este registro, que você editou, ficou' : 'estes registros, que você editou, ficaram'} como
+            estavam: {editados.data!.join(', ')}. Compare com o livro e ajuste se quiser.
+          </span>
+          <Button size="sm" variant="ghost" onClick={() => void window.api.library.dispensarLivrosEditados().then(editados.reload)}>
+            Entendi
+          </Button>
+        </div>
+      )}
 
       {imported && (
         <p role="status" className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-muted">
