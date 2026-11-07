@@ -1,0 +1,13 @@
+{
+    "versao":  "0.9.0",
+    "minimo":  "0.0.0",
+    "publicada_em":  "2026-11-07",
+    "notas":  [
+                  "Primeira versão numerada do Magistrado (fusão do autore com o taberna)",
+                  "Ficha do agente completa e ficha compacta de NPC, calculadas pelas regras de Ordem Paranormal",
+                  "Rolagem pelo app ou digitando os dados físicos",
+                  "Ameaças, rituais e itens dos livros na biblioteca, com tokens, e tela Regras",
+                  "Sessão em dois modos, cena e combate, com iniciativa, PV e condições",
+                  "Aviso de versão nova e atualização pelo próprio app (Ajustes, Versão do Magistrado)"
+              ]
+}

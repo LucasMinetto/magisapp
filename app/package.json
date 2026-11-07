@@ -1,7 +1,7 @@
 {
   "name": "magistrado",
   "productName": "Magistrado",
-  "version": "0.1.0",
+  "version": "0.9.0",
   "private": true,
   "description": "App de mestre para Ordem Paranormal",
   "main": "out/main/index.js",
