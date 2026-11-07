@@ -136,6 +136,20 @@
 - **Biblioteca:** `LIVROS_VERSAO` 3 e `livros/anteriores.json` (os 83 registros que mudaram, como eram na versão 2): registro ainda igual ao do livro é trocado (mantém o token escolhido); editado fica e vira aviso na Biblioteca.
 - **Ferramentas:** correções conferidas ficam em `tools/livros` (`CORRECOES` em regras.py, `corrige_itens` e `limpa_ameaca` em extrair.py), com erro se o texto do livro mudar.
 
+### C2. Regras do livro que o app ainda não aplica (para ver depois)
+Levantadas na conferência (C1), em 2026-11-07. O Lucas escolhe quais entram e em que ordem.
+1. **Condições com efeito automático** (livro, p. 310): desprevenido −5 na Defesa, abalado −1d20 etc. Médio.
+2. **Custo extra de Discente e Verdadeiro** ao conjurar (+2 a +11 PE, conforme o ritual). Pequeno.
+3. **Limite de PE por turno** travando o gasto (p. 24). Pequeno.
+4. **Sobrecarga** (p. 53): −5 na Defesa e −3 m de deslocamento acima da carga. Pequeno.
+5. **Esquiva e Bloqueio** só para treinados em Reflexos e Fortitude (p. 89). Pequeno.
+6. **Perícias "somente treinado", penalidade de carga e kit** (Tabela 2.1). Médio.
+7. **Arma do inventário vira ataque**, com dano, crítico e alcance. Médio.
+8. **Morrendo e enlouquecendo** com a contagem de 3 turnos (p. 87 e 111). Médio.
+9. **Interlúdio**: descanso e recuperação de PV e PE (p. 92). Médio.
+10. **Resistência, vulnerabilidade e imunidade no dano**: junto com a [#13](https://github.com/LucasMinetto/magistrado/issues/13) (escolher o alvo).
+- **Decidir também:** atributo "–" de criaturas (Anomalia AGI/FOR/VIG, Uivar e Melancolia FOR) é guardado como 0; pela regra, 0 rola 2d20 e fica com o pior.
+
 ### T13. Sessão de teste do usuário
 - **Depende de:** T12
 - **Resultado:** Lucas conduz uma sessão (ou um ensaio) só no Magistrado.
