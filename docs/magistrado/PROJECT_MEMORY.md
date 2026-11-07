@@ -5,6 +5,7 @@
 ## Propósito e status
 
 - **O que é:** app de desktop do mestre de Ordem Paranormal. Junta o **autore** (a base) com a ficha do agente, a rolagem com dados físicos e os modelos de ameaças, itens e rituais do **taberna**.
+- **Status (2026-11-07, T10b):** a Sessão tem dois modos, cena (faixa do grupo, cena larga, abas Pistas · Notas · NPCs) e combate (ordem à esquerda, cartão com tudo do combatente à direita). 138 testes e e2e 181/181.
 - **Status (2026-11-07, T10):** T1 a T10 e P1 concluídas. A Sessão conduz o combate: iniciativa salva na sessão de jogo, PV de cada cópia de ameaça, PV/PE/SAN dos agentes e rolagem por perícia, teste ou ação do bloco. 138 testes e e2e 176/176. Faltam T11 a T13.
 - **Status (2026-11-07):** T1 a T9 e P1 concluídas: Biblioteca com ameaças, rituais e itens dos dois livros (com página e tokens) e a tela Regras. 127 testes e e2e 153/153. Faltam T10 a T13.
 - **Status (2026-11-03):** T1 a T8 concluídas. Ficha completa com janela de rolagem; tela Biblioteca com ameaças no formato do livro (origem, trazer para a campanha); a ficha de ameaça edita o bloco em `sheet_data` e a Sessão mostra o bloco. 116 testes e e2e 142/142. Faltam rituais e itens da biblioteca (T9) e a Sessão com iniciativa (T10). As cópias dos dois projetos estão em `_fontes/` (fora do git).
@@ -50,7 +51,7 @@
 - O rótulo "Mesa" do menu lateral e as frases "na mesa" são mesa de jogo e ficam.
 - **Modelo da ficha (T4):** agente = `is_player`; `sheet` (compacta/completa); ficha completa e bloco de ameaça em `sheet_data`, montados de `stats` enquanto não editados (ver [TECH_SPEC § Modelo de dados](TECH_SPEC.md#modelo-de-dados-novo-migração-4)).
 - **Biblioteca:** `%APPDATA%/Magistrado/biblioteca.sqlite` (`app/src/main/library.ts`), aberta só quando pedida.
-- **Combate (T10):** a iniciativa fica em `game_sessions.initiative` (por sessão de jogo). Cada ameaça entra como cópia com PV próprio no combatente (`pv`); o agente entra uma vez e usa o PV da ficha. Testes do bloco são lidos de "2d20+5" ou "2O+5" (`app/src/shared/ordem/sessao.ts`). Rolagens da Sessão gravam a sessão de jogo.
+- **Combate (T10):** a iniciativa fica em `game_sessions.initiative` (por sessão de jogo). Cada ameaça entra como cópia com PV próprio no combatente (`pv`); o agente entra uma vez e usa o PV da ficha. Testes do bloco são lidos de "2d20+5" ou "2O+5" (`app/src/shared/ordem/sessao.ts`). Rolagens da Sessão gravam a sessão de jogo. Desde a T10b o combatente também guarda `condicoes` (as do agente com ficha completa ficam na ficha).
 - Git local com identidade `Lucas <lucasminetto13@gmail.com>` só neste repositório.
 
 ## Dados dos livros

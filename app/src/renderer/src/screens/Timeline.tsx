@@ -32,7 +32,8 @@ const dayLabel = (date: string, weekday: number) => `${weekdayName(weekday, true
 
 // ------------------------------------------------------------ relógio grande
 
-export function GameClock({ scenes, events }: { scenes: SceneSummary[]; events: TimelineEvent[] }) {
+/** `compacto`: uma linha só (topo da tela de Sessão). */
+export function GameClock({ scenes, events, compacto }: { scenes: SceneSummary[]; events: TimelineEvent[]; compacto?: boolean }) {
   const campaign = useOpenCampaign()
   const clock = useClock()
   const [setting, setSetting] = useState(false)
@@ -45,6 +46,47 @@ export function GameClock({ scenes, events }: { scenes: SceneSummary[]; events: 
   const overdue = events.filter((e) => e.status === 'planejado' && e.gameMinuteStart <= now)
 
   const run = (job: Promise<void>) => job.then(() => setError(null)).catch((e: Error) => setError(e.message))
+
+  if (compacto)
+    return (
+      <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+        <span aria-live="polite" className="flex items-baseline gap-2" title={`${dayLabel(p.date, p.weekday)}/${p.date.slice(0, 4)}`}>
+          <span className="sr-only">Agora no jogo:</span>
+          <span className="font-mono text-xl leading-none font-semibold">{hour(campaign.epochDate, now)}</span>
+          <span className="text-xs text-muted">{dayLabel(p.date, p.weekday)}</span>
+        </span>
+        <span className="flex items-center gap-1" role="group" aria-label="Mudar a hora no jogo">
+          <Button size="sm" variant="ghost" onClick={() => run(clock.advance(-10))} title="Alt+←">
+            −10 min
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => run(clock.advance(10))} title="Alt+→">
+            +10 min
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => run(clock.advance(60))} title="Alt+Shift+→">
+            +1 h
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={!nextScene}
+            onClick={() => nextScene && run(clock.set(nextScene.gameMinuteStart!))}
+            title={nextScene ? `Pula para ${nextScene.title || 'a próxima cena'}` : 'Nenhuma cena planejada à frente'}
+          >
+            Até a próxima cena
+          </Button>
+        </span>
+        {nextEvent && (
+          <span className="flex min-w-0 items-center gap-1 text-xs">
+            <span className="truncate text-muted" title={nextEvent.title}>
+              {nextEvent.title || 'Próximo evento'}
+            </span>
+            <Chip tone={nextEvent.gameMinuteStart - now < 60 ? 'warning' : 'neutral'}>em {formatDuration(nextEvent.gameMinuteStart - now)}</Chip>
+          </span>
+        )}
+        {overdue.length > 0 && <Chip tone="danger">{overdue.length === 1 ? '1 evento passou' : `${overdue.length} eventos passaram`}</Chip>}
+        {error && <span className="text-xs text-danger">{error}</span>}
+      </div>
+    )
 
   return (
     <Card className="flex flex-wrap items-center gap-x-8 gap-y-4">

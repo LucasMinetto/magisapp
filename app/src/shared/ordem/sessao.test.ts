@@ -7,7 +7,8 @@ const c = (id: string, valor = 0) => ({
   entityId: null,
   nome: id,
   valor,
-  pv: null
+  pv: null,
+  condicoes: [] as string[]
 })
 
 describe('testes lidos do bloco', () => {

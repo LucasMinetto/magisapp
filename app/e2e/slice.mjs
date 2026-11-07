@@ -581,14 +581,17 @@ try {
   await page.getByRole('heading', { name: 'Cena atual' }).waitFor()
   check('sessão abre na última sessão', (await page.getByLabel('Sessão', { exact: true }).locator('option:checked').innerText()).startsWith('Sessão 2'))
   check('cena atual é escolhida pela hora do jogo', (await page.getByLabel('Escolher a cena').locator('option:checked').innerText()).includes('Ala fechada'))
+  await page.getByRole('tab', { name: /^NPCs/ }).click()
   const aurelioPv = page.getByRole('group', { name: 'PV de Dr. Aurélio Bastos' })
   await aurelioPv.waitFor()
   await aurelioPv.getByRole('button', { name: 'Tirar 1 de PV' }).click()
   check('−1 PV no NPC durante a sessão', (await aurelioPv.innerText()).includes('17/24'))
+  await page.getByRole('tab', { name: /^Pistas/ }).click()
   await page.getByRole('button', { name: 'Achada agora: Arranhões na porta da ala' }).click()
   const scratches = page.getByRole('list', { name: 'Pistas desta cena' }).getByRole('listitem').filter({ hasText: 'Arranhões na porta da ala' })
   check('pista marcada achada na tela de sessão', await scratches.getByRole('button', { name: /^Desfazer/ }).waitFor({ timeout: 5000 }).then(() => true, () => false))
   check('a pista guarda a hora e a sessão', /qui 23\/07 · 01h20\s*sessão 2/.test(await scratches.innerText()))
+  await page.getByRole('tab', { name: 'Notas' }).click()
   await page.getByRole('textbox', { name: 'Notas da sessão 2' }).click()
   await page.keyboard.type('Tomás Andrade arrombou a porta da ala.')
   await page.locator('.mention', { hasText: 'Tomás Andrade' }).waitFor({ timeout: 5000 })
@@ -728,6 +731,7 @@ try {
   await page.keyboard.type('O Zumbi de Sangue ronda a ala.')
   await page.waitForTimeout(1200)
   await page.getByRole('link', { name: 'Sessão' }).click()
+  await page.getByRole('tab', { name: /^NPCs/ }).click()
   const zombie = page.getByRole('listitem').filter({ hasText: 'Zumbi de Sangue' }).filter({ has: page.getByText(/^Bloco de/) })
   await zombie.waitFor({ timeout: 5000 })
   check('sessão mostra a ameaça da cena com o bloco editado na campanha', ((await zombie.textContent()) ?? '').includes('VD 40 · Defesa 20 · PV 60'), await zombie.textContent())
@@ -735,8 +739,9 @@ try {
   check('o bloco abre na sessão com as ações', ((await zombie.textContent()) ?? '').includes('Agredir — Garras'))
   await shot('S21-sessao-ameaca')
 
-  // T10: combate na tela de Sessão. Duas cópias da mesma ameaça com PV próprio, agente com PV/PE/SAN da ficha completa,
-  // iniciativa rolada dali, ordenar, passar a vez, e tudo continua depois de sair e voltar.
+  // T10 e T10b: a Sessão em dois modos. Lia (jogadora) fica na faixa do grupo; o combate começa por uma janela com
+  // quem está na cena; duas cópias da ameaça com PV próprio; o cartão mostra tudo de um combatente; tudo continua
+  // depois de sair e voltar.
   await page.getByRole('link', { name: 'Cenas' }).click()
   await page.getByRole('link', { name: /Ala fechada/ }).click()
   await alaEditor.click()
@@ -744,53 +749,86 @@ try {
   await page.keyboard.type(' Lia Moraes vigia a porta.')
   await page.waitForTimeout(1200)
   await page.getByRole('link', { name: 'Sessão' }).click()
-  const liaPv = page.getByRole('group', { name: 'PV de Lia Moraes' })
+  const grupo = page.getByRole('region', { name: 'Grupo' })
+  const liaPv = grupo.getByRole('group', { name: 'PV de Lia Moraes' })
   await liaPv.waitFor({ timeout: 5000 })
   const liaAntes = (await liaPv.innerText()).match(/(\d+)\/(\d+)/)
+  const liaDepois = `${Number(liaAntes[1]) - 1}/${liaAntes[2]}`
   await liaPv.getByRole('button', { name: 'Tirar 1 de PV' }).click()
-  check('PV do agente com ficha completa muda na sessão', (await liaPv.innerText()).includes(`${Number(liaAntes[1]) - 1}/${liaAntes[2]}`), await liaPv.innerText())
-  check('agente mostra PE e SAN da ficha', await page.getByRole('group', { name: 'PE de Lia Moraes' }).isVisible() && await page.getByRole('group', { name: 'SAN de Lia Moraes' }).isVisible())
-  await page.getByRole('button', { name: 'Pôr Zumbi de Sangue na iniciativa' }).click()
-  await page.getByRole('button', { name: 'Pôr Zumbi de Sangue na iniciativa' }).click()
-  await page.getByRole('button', { name: 'Todos da cena', exact: true }).click()
+  check('faixa do grupo marca o PV da jogadora', (await liaPv.innerText()).includes(liaDepois), await liaPv.innerText())
+  check('faixa do grupo mostra PE e SAN', (await grupo.getByRole('group', { name: 'PE de Lia Moraes' }).isVisible()) && (await grupo.getByRole('group', { name: 'SAN de Lia Moraes' }).isVisible()))
+  await page.getByRole('tab', { name: /^NPCs/ }).click()
+  check('a jogadora não se repete na aba NPCs', (await page.getByRole('list', { name: 'NPCs e ameaças da cena' }).getByText('Lia Moraes').count()) === 0)
+  await page.waitForTimeout(800)
+  await page.getByRole('button', { name: 'Começar combate' }).click()
+  janela = page.getByRole('dialog')
+  check('quem está na cena já vem marcado', (await janela.getByLabel('Lia Moraes').isChecked()) && (await janela.getByLabel('Zumbi de Sangue · ameaça').isChecked()))
+  await janela.getByLabel('Cópias de Zumbi de Sangue').fill('2')
+  await janela.getByRole('button', { name: /^Começar com/ }).click()
   const ordem = page.getByRole('list', { name: 'Ordem de iniciativa' }).getByRole('listitem')
-  await ordem.filter({ hasText: 'Lia Moraes' }).waitFor({ timeout: 5000 })
-  check('duas cópias da ameaça, cada uma com PV cheio', (await page.getByLabel('PV atual de Zumbi de Sangue 2').inputValue()) === '60' && (await ordem.filter({ hasText: 'Zumbi de Sangue' }).count()) === 2)
-  check('todos da cena entram uma vez só', (await ordem.filter({ hasText: 'Lia Moraes' }).count()) === 1 && (await ordem.filter({ hasText: 'Aurélio' }).count()) === 1)
-  await page.getByRole('button', { name: 'Tirar 1 de PV de Zumbi de Sangue 2' }).click()
-  check('PV de uma cópia não muda a outra', (await page.getByLabel('PV atual de Zumbi de Sangue 2').inputValue()) === '59' && (await page.getByLabel('PV atual de Zumbi de Sangue', { exact: true }).inputValue()) === '60')
-  await page.getByRole('button', { name: 'Rolar a iniciativa de Zumbi de Sangue', exact: true }).click()
+  await ordem.filter({ hasText: 'Zumbi de Sangue 2' }).waitFor({ timeout: 5000 })
+  const zumbi1 = ordem.filter({ hasText: 'Zumbi de Sangue' }).filter({ hasNotText: 'Zumbi de Sangue 2' })
+  const zumbi2 = ordem.filter({ hasText: 'Zumbi de Sangue 2' })
+  check('duas cópias da ameaça entram no combate', (await ordem.filter({ hasText: 'Zumbi de Sangue' }).count()) === 2)
+  check('no combate a cena sai da tela', !(await page.getByRole('heading', { name: 'Cena atual' }).isVisible()))
+  await page.getByRole('button', { name: 'Ver Zumbi de Sangue 2' }).click()
+  const cartaoZumbi = page.getByLabel('Cartão de Zumbi de Sangue 2')
+  await cartaoZumbi.getByRole('button', { name: 'Tirar 5 de PV' }).click()
+  await cartaoZumbi.getByLabel('Quanto de PV para Zumbi de Sangue 2').fill('23')
+  await cartaoZumbi.getByRole('button', { name: 'Dano', exact: true }).click()
+  check('−5 e dano digitado mudam só a cópia certa', (await zumbi2.innerText()).includes('32/60') && (await zumbi1.innerText()).includes('60/60'), await zumbi2.innerText())
+  await cartaoZumbi.getByLabel('Pôr condição em Zumbi de Sangue 2').selectOption('Agarrado')
+  check('condição fica no combatente', await cartaoZumbi.getByRole('button', { name: 'Tirar a condição Agarrado de Zumbi de Sangue 2' }).isVisible())
+  check('o cartão da ameaça mostra as rolagens do bloco', await cartaoZumbi.getByRole('button', { name: /^Iniciativa/ }).isVisible())
+  await cartaoZumbi.getByRole('button', { name: /^Iniciativa/ }).click()
   janela = page.getByRole('dialog')
   check('a ameaça rola com o Magistrado', (await janela.getByRole('button', { name: 'O Magistrado rola' }).getAttribute('aria-pressed')) === 'true')
   await janela.getByRole('button', { name: /^Rolar 2d20/ }).click()
   await janela.getByRole('status', { name: 'Resultado' }).waitFor({ timeout: 5000 })
   await janela.getByRole('button', { name: 'Pronto' }).click()
-  const iniZumbi = Number(await page.getByLabel('Iniciativa de Zumbi de Sangue', { exact: true }).inputValue())
-  check('a rolagem preenche a iniciativa', iniZumbi >= 6 && iniZumbi <= 25, String(iniZumbi))
+  const iniZumbi = Number(await page.getByLabel('Iniciativa de Zumbi de Sangue 2', { exact: true }).inputValue())
+  check('a rolagem de iniciativa preenche o valor', iniZumbi >= 6 && iniZumbi <= 25, String(iniZumbi))
   await page.getByLabel('Iniciativa de Lia Moraes', { exact: true }).fill('40')
   await page.getByRole('button', { name: 'Ordenar', exact: true }).click()
-  check('ordenar põe o maior primeiro e é a vez dele', (await ordem.first().innerText()).includes('Lia Moraes') && (await ordem.first().getAttribute('aria-current')) === 'step')
+  const cartaoLia = page.getByLabel('Cartão de Lia Moraes')
+  check(
+    'ordenar põe o maior primeiro e o cartão mostra quem está na vez',
+    (await ordem.first().innerText()).includes('Lia Moraes') && (await ordem.first().getAttribute('aria-current')) === 'step' && (await cartaoLia.isVisible())
+  )
+  check(
+    'o cartão do agente tem PV da ficha, −5 e as perícias',
+    (await cartaoLia.getByRole('group', { name: 'PV de Lia Moraes' }).innerText()).includes(liaDepois) &&
+      (await cartaoLia.getByRole('button', { name: 'Tirar 5 de PV' }).isVisible()) &&
+      (await cartaoLia.getByRole('button', { name: 'Perícia…' }).isVisible())
+  )
   for (let i = 0; i < (await ordem.count()); i++) await page.getByRole('button', { name: 'Próximo', exact: true }).click()
-  check('depois do último volta ao primeiro na rodada 2', (await page.getByRole('heading', { name: /Iniciativa · Rodada 2/ }).isVisible()) && (await ordem.first().getAttribute('aria-current')) === 'step')
+  check('depois do último volta ao primeiro na rodada 2', (await page.getByRole('heading', { name: 'Combate · Rodada 2' }).isVisible()) && (await ordem.first().getAttribute('aria-current')) === 'step')
   await page.getByRole('button', { name: 'Próximo', exact: true }).click()
-  await page.getByRole('button', { name: 'Rolar por Zumbi de Sangue' }).click()
-  janela = page.getByRole('dialog')
-  check('rolar pela ameaça mostra os testes do bloco', await janela.getByRole('button', { name: 'Rolar Iniciativa' }).isVisible())
-  await page.keyboard.press('Escape')
+  await page.getByRole('button', { name: 'Ver a cena' }).click()
+  check('ver a cena sem encerrar o combate', (await page.getByRole('heading', { name: 'Cena atual' }).isVisible()) && (await page.getByRole('button', { name: 'Voltar ao combate' }).isVisible()))
+  await page.getByRole('button', { name: 'Voltar ao combate' }).click()
+  await page.getByRole('button', { name: 'Ver Zumbi de Sangue 2' }).click()
   await page.waitForTimeout(1000)
-  await shot('T10-sessao-combate')
+  await shot('T10b-sessao-combate')
   await page.getByRole('link', { name: 'Fichas' }).click()
   await page.getByRole('link', { name: 'Sessão' }).click()
   await ordem.first().waitFor({ timeout: 5000 })
+  await page.getByRole('button', { name: 'Ver Zumbi de Sangue 2' }).click()
   check(
-    'iniciativa, rodada, vez e PV continuam depois de sair e voltar',
-    (await page.getByRole('heading', { name: /Iniciativa · Rodada 2/ }).isVisible()) &&
+    'o combate continua depois de sair e voltar (rodada, vez, PV e condição)',
+    (await page.getByRole('heading', { name: 'Combate · Rodada 2' }).isVisible()) &&
       (await ordem.nth(1).getAttribute('aria-current')) === 'step' &&
-      (await page.getByLabel('PV atual de Zumbi de Sangue 2').inputValue()) === '59'
+      (await zumbi2.innerText()).includes('32/60') &&
+      (await page.getByRole('button', { name: 'Tirar a condição Agarrado de Zumbi de Sangue 2' }).isVisible())
   )
-  check('PV do agente ficou salvo na ficha', (await page.getByRole('group', { name: 'PV de Lia Moraes' }).innerText()).includes(`${Number(liaAntes[1]) - 1}/${liaAntes[2]}`))
   await page.getByRole('button', { name: 'Encerrar combate' }).click()
-  check('encerrar limpa a ordem e volta à rodada 1', await page.getByText('Ninguém na ordem').waitFor({ timeout: 5000 }).then(() => true, () => false) && await page.getByRole('heading', { name: 'Iniciativa · Rodada 1' }).isVisible())
+  check(
+    'encerrar o combate volta à cena',
+    (await page.getByRole('button', { name: 'Começar combate' }).waitFor({ timeout: 5000 }).then(() => true, () => false)) &&
+      (await page.getByRole('heading', { name: 'Cena atual' }).isVisible())
+  )
+  check('o PV da jogadora ficou salvo na ficha', (await grupo.getByRole('group', { name: 'PV de Lia Moraes' }).innerText()).includes(liaDepois))
+  await shot('T10b-sessao-cena')
 
   // T9 + P1: dados dos livros na biblioteca; ritual e item vão para a ficha e continuam lá depois de apagados da biblioteca
   await page.getByRole('link', { name: 'Biblioteca' }).first().click()

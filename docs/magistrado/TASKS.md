@@ -87,6 +87,16 @@
 - **Arquivos:** `app/src/renderer/src/screens/Session.tsx`.
 - **Feito:** `app/src/renderer/src/sessao/` (painel de iniciativa, quem está na cena, o que rolar) e `app/src/shared/ordem/sessao.ts`. Ameaça repetida entra como cópia ("Zumbi 2") com PV próprio; o dado da iniciativa preenche o valor. Fica para o T11: o export e o `legivel/` ainda não escrevem a iniciativa.
 
+### T10b. Sessão em dois modos: cena e combate (pedido do Lucas, 2026-11-07) ✅ 2026-11-07
+- **Depende de:** T10
+- **Por quê:** na T10 a informação de cada combatente ficou espalhada em três colunas apertadas, e a mesma ameaça aparecia duas vezes.
+- **Modo cena:** topo numa linha (relógio compacto, sessão, "Começar combate"); faixa do grupo com PV/PE/SAN dos agentes dos jogadores; centro largo com o texto da cena e o material; lateral com abas Pistas · Notas · NPCs da cena.
+- **Modo combate:** "Começar combate" escolhe quem entra e troca a tela. À esquerda, a ordem enxuta (valor, nome, PV); à direita, o cartão de quem está na vez, aberto: PV com −5/−1/+1, aviso de machucado, rolagens do bloco ou da ficha, condições e o bloco completo recolhido. Clicar numa linha abre o cartão dela sem passar a vez. "Encerrar combate" volta à cena.
+- **Continua:** iniciativa e PV de cada cópia salvos na sessão; digitar ou rolar a iniciativa.
+- **Fora:** direcionar o dano (P3); tela de combate separada no menu; mudar a ficha completa e a janela de rolagem.
+- **Aceite:** resolver o turno de qualquer combatente olhando um cartão só; o combate sobrevive a sair e voltar.
+- **Feito:** `sessao/Combate.tsx` (modo combate e "Começar combate"), `sessao/Grupo.tsx` (faixa do grupo), `sessao/NaCena.tsx` (peças comuns), `GameClock compacto`. O combate começa quando há alguém na ordem; "Ver a cena" volta à cena sem encerrar. Condições: agente com ficha completa usa as da ficha; ameaça e ficha compacta, as do combatente. Além do esboço: campo de dano/cura de qualquer valor e +5.
+
 ## Fase 4: integração e fechamento
 
 ### T11. Backup, export e Obsidian com os tipos novos
