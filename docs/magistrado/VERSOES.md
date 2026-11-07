@@ -6,7 +6,7 @@ O Magistrado usa número de versão **maior.menor.correção** (ex.: `1.0.0`), n
 |---|---|---|
 | Correção de defeito, ajuste pequeno | correção | 0.9.0 → 0.9.1 |
 | Função nova, tela nova | menor | 0.9.1 → 0.10.0 |
-| Marco do projeto (1.0.0 = fase 4 concluída e sessão de teste T13 aprovada) ou mudança que quebra campanhas antigas | maior | 0.12.0 → 1.0.0 |
+| Marco do projeto (1.0.0 = fusão fechada, T1–T12; o Lucas pediu a 1.0.0 antes do teste de mesa da T13) ou mudança que quebra campanhas antigas | maior | 0.12.0 → 1.0.0 |
 
 ## Onde fica
 
