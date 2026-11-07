@@ -200,7 +200,16 @@ export const iniciativaSchema = z.object({
   rodada: z.coerce.number().int().min(1).default(1),
   turno: z.coerce.number().int().min(0).default(0),
   ordem: z
-    .array(z.object({ id: idLocal, entityId: z.string().uuid().nullable().default(null), nome: z.string().max(200), valor: numero }))
+    .array(
+      z.object({
+        id: idLocal,
+        entityId: z.string().uuid().nullable().default(null),
+        nome: z.string().max(200),
+        valor: numero,
+        // PV de cada ameaça no combate (dois zumbis da mesma ficha têm PV separados). Agentes usam o PV da ficha: null.
+        pv: z.object({ atual: z.coerce.number().int().min(-1000).max(100_000), max: z.coerce.number().int().min(0).max(100_000) }).nullable().default(null)
+      })
+    )
     .max(100)
     .default([])
 })

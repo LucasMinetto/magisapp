@@ -28,7 +28,9 @@ export function JanelaRolagem({
   entityId,
   fisicos,
   aoFechar,
-  aoGastarPe
+  aoGastarPe,
+  sessionId = null,
+  aoTotal
 }: {
   pedido: PedidoRolagem
   entityId: string
@@ -36,6 +38,10 @@ export function JanelaRolagem({
   fisicos: boolean
   aoFechar: () => void
   aoGastarPe: (custo: number) => void
+  /** Sessão de jogo em que a rolagem aconteceu (na tela de Sessão). */
+  sessionId?: string | null
+  /** Recebe o total de cada rolagem feita (a iniciativa usa para preencher o valor). */
+  aoTotal?: (total: number) => void
 }) {
   const { changed } = useCampaign()
   const [modo, setModo] = useState<Modo>(fisicos ? 'fisico' : 'app')
@@ -49,7 +55,8 @@ export function JanelaRolagem({
   async function registrar(r: Registro, partes?: Feita['partes']) {
     setErro(null)
     try {
-      const salvo = await window.api.rolls.add({ ...r, entityId })
+      const salvo = await window.api.rolls.add({ ...r, entityId, sessionId })
+      aoTotal?.(salvo.total)
       if (gastarPe && pedido.custoPe && !peGasto) {
         aoGastarPe(pedido.custoPe)
         setPeGasto(true)

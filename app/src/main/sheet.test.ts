@@ -148,11 +148,12 @@ describe('iniciativa da sessão', () => {
     const s = store.createSession(null)
     expect(store.getInitiative(s.id)).toEqual({ rodada: 1, turno: 0, ordem: [] })
     const ordem = [
-      { id: 'a', entityId: byName('Lia Moraes').id, nome: 'Lia Moraes', valor: 22 },
-      { id: 'b', entityId: null, nome: 'Vigia', valor: 18 }
+      { id: 'a', entityId: byName('Lia Moraes').id, nome: 'Lia Moraes', valor: 22, pv: null },
+      { id: 'b', entityId: null, nome: 'Vigia', valor: 18, pv: { atual: 9, max: 12 } }
     ]
     act('iniciativa', () => store.saveInitiative(s.id, { rodada: 2, turno: 1, ordem }))
     expect(store.getInitiative(s.id)).toMatchObject({ rodada: 2, turno: 1 })
+    expect(store.getInitiative(s.id).ordem[1].pv).toEqual({ atual: 9, max: 12 })
     // Turno além do fim da lista volta para o primeiro.
     expect(store.saveInitiative(s.id, { rodada: 2, turno: 5, ordem }).turno).toBe(0)
     history.undo()
@@ -203,7 +204,7 @@ describe('campanha.json', () => {
     store.saveEntity({ ...input(lia), sheetData: { ...ficha(lia), jogador: 'Bruna' } })
     store.addRoll({ entityId: lia.id, dados: [20], total: 25, critico: true })
     const s = store.createSession(null)
-    store.saveInitiative(s.id, { rodada: 3, turno: 0, ordem: [{ id: 'a', entityId: lia.id, nome: 'Lia', valor: 20 }] })
+    store.saveInitiative(s.id, { rodada: 3, turno: 0, ordem: [{ id: 'a', entityId: lia.id, nome: 'Lia', valor: 20, pv: null }] })
     const file = join(dir, 'volta.sqlite')
     loadJson(dumpJson(store.db), file)
     const back = new CampaignStore(openDb(file), dir)

@@ -253,7 +253,7 @@ function MapCard({ name, url, mapId, onPick, onClear }: { name: string; url: str
 
 const isFull = (e: Pick<Entity, 'kind' | 'sheet'>) => e.kind === 'personagem' && e.sheet === 'completa'
 
-const toInput = (e: Entity): EntityInput => ({
+export const toInput = (e: Entity): EntityInput => ({
   id: e.id,
   kind: e.kind,
   name: e.name,

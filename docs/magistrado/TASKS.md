@@ -79,12 +79,13 @@
 - **Aceite:** um ritual ou item colocado na ficha continua lá mesmo se for apagado da biblioteca.
 - **Base:** `taberna/web/src/paginas/RituaisPagina.tsx`, `taberna/web/src/ficha/{Rituais,Inventario}.tsx`.
 
-### T10. Sessão com agentes, ameaças e iniciativa
+### T10. Sessão com agentes, ameaças e iniciativa ✅ 2026-11-07
 - **Depende de:** T6, T7, T8
 - **Resultado:** a tela de Sessão marca PV, PE e SAN dos agentes e PV das ameaças da cena, e permite rolar dali. Tem o painel de iniciativa: adicionar agentes e ameaças, digitar os valores, ordenar, mostrar o turno e a rodada, passar para o próximo e limpar.
 - **Aceite:** conduzir uma cena de combate sem sair da tela de Sessão. Iniciativa, rodada e turno continuam lá depois de fechar e reabrir a campanha.
 - **Base:** `PainelIniciativa` em `taberna/web/src/paginas/SessaoPagina.tsx`.
 - **Arquivos:** `app/src/renderer/src/screens/Session.tsx`.
+- **Feito:** `app/src/renderer/src/sessao/` (painel de iniciativa, quem está na cena, o que rolar) e `app/src/shared/ordem/sessao.ts`. Ameaça repetida entra como cópia ("Zumbi 2") com PV próprio; o dado da iniciativa preenche o valor. Fica para o T11: o export e o `legivel/` ainda não escrevem a iniciativa.
 
 ## Fase 4: integração e fechamento
 
