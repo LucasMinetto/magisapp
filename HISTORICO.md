@@ -2,6 +2,14 @@
 
 Da versão mais recente para a mais antiga.
 
+## 1.1.0 — 07/11/2026
+
+- Ficha, regras, rituais, itens e ameaças conferidos com os dois livros, página por página
+- Ameaças corrigidas: a Mescla com as ações dela, sete enigmas na criatura certa e textos sem sobras de outras páginas
+- Rituais com o dano que faltava (Descarnar, Miasma Entrópico, Tentáculos de Lodo e formas Discente e Verdadeiro) e itens com a categoria e o texto do livro
+- Ficha: classe Sobrevivente com estágios, origens e trilhas do Sobrevivendo, arma de arremesso soma a Força e a penalidade de dados segue o livro
+- Regras: tipos de aliados e atributos negativos; a biblioteca recebe as correções sem mexer no que você editou
+
 ## 1.0.1 — 07/11/2026
 
 - O Magistrado abre sem janela de terminal, pelo atalho e depois de atualizar
