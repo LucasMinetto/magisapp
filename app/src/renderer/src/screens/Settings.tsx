@@ -1,5 +1,6 @@
 import { Archive, FileDown, FolderOpen, HardDriveDownload, RotateCcw } from 'lucide-react'
 import { useExportDialog } from './ExportDialog'
+import { CartaoVersao } from '@/atualizacao'
 import { setThemePref, themePref, type ThemePref } from '@/lib/theme'
 import { useState } from 'react'
 import { useCampaign, useOpenCampaign } from '@/campaign'
@@ -164,6 +165,8 @@ export function Settings() {
           Exportar a campanha…
         </Button>
       </Card>
+
+      <CartaoVersao />
 
       <Card className="flex flex-col gap-3">
         <h2 className="type-lg">Pasta da campanha</h2>

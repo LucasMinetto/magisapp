@@ -272,9 +272,11 @@ interface DialogProps {
   description?: string
   children: ReactNode
   footer?: ReactNode
+  /** false tira o X; quem chama também ignora o Esc em onOpenChange. */
+  closable?: boolean
 }
 
-export function Dialog({ open, onOpenChange, title, description, children, footer }: DialogProps) {
+export function Dialog({ open, onOpenChange, title, description, children, footer, closable = true }: DialogProps) {
   return (
     <RadixDialog.Root open={open} onOpenChange={onOpenChange}>
       <RadixDialog.Portal>
@@ -285,11 +287,13 @@ export function Dialog({ open, onOpenChange, title, description, children, foote
               <RadixDialog.Title className="type-lg">{title}</RadixDialog.Title>
               {description && <RadixDialog.Description className="mt-1 text-muted">{description}</RadixDialog.Description>}
             </div>
-            <RadixDialog.Close asChild>
-              <IconButton label="Fechar">
-                <X className="size-4" />
-              </IconButton>
-            </RadixDialog.Close>
+            {closable && (
+              <RadixDialog.Close asChild>
+                <IconButton label="Fechar">
+                  <X className="size-4" />
+                </IconButton>
+              </RadixDialog.Close>
+            )}
           </div>
           <div className="px-5 py-4">{children}</div>
           {footer && <div className="flex justify-end gap-2 px-5 pb-4">{footer}</div>}

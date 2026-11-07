@@ -1,4 +1,5 @@
 import { HashRouter, Route, Routes } from 'react-router'
+import { AvisoAtualizacao } from './atualizacao'
 import { CampaignProvider, useCampaign } from './campaign'
 import { Entities } from './screens/Entities'
 import { EntitySheet } from './screens/EntitySheet'
@@ -57,6 +58,7 @@ export function App() {
       <HashRouter>
         <Routed />
       </HashRouter>
+      <AvisoAtualizacao />
     </CampaignProvider>
   )
 }

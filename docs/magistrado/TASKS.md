@@ -1,7 +1,7 @@
 # TASKS: Magistrado
 
 > Produto: [PRD.md](PRD.md) · Técnica: [TECH_SPEC.md](TECH_SPEC.md) · Memória: [PROJECT_MEMORY.md](PROJECT_MEMORY.md)
-> Status em 2026-11-03: T1 a T8 concluídas. Próxima: T9 (rituais e itens), depois T10. "Bloqueada" = espera uma decisão de [TECH_SPEC § Decisões pendentes](TECH_SPEC.md#decisões-pendentes).
+> Status em 2026-11-07: T1 a T10b e P1 concluídas, publicadas como **versão 0.9.0**. Próxima: redesenho do combate ([#18](https://github.com/LucasMinetto/magistrado/issues/18)) ou T11. A 1.0.0 sai depois da T13. Versões: [VERSOES.md](VERSOES.md). "Bloqueada" = espera uma decisão de [TECH_SPEC § Decisões pendentes](TECH_SPEC.md#decisões-pendentes).
 
 ## Fase 1: base funcionando com o nome novo
 

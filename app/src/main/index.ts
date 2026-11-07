@@ -1,6 +1,7 @@
 import { app, BrowserWindow, net, protocol, shell } from 'electron'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { iniciarAtualizacao } from './atualizacao'
 import { recentCoverFile } from './campaigns'
 import { autoBackupTick, closeCurrent, closeLibrary, currentStore, libraryTokenFile, registerIpc } from './ipc'
 
@@ -74,6 +75,7 @@ function createWindow(): void {
 
 app.whenReady().then(() => {
   registerIpc(() => win)
+  iniciarAtualizacao((estado) => win?.webContents.send('update:changed', estado))
   serveAttachments()
   setInterval(autoBackupTick, 60_000)
   createWindow()

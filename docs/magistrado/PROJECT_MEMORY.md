@@ -53,6 +53,7 @@
 - **Biblioteca:** `%APPDATA%/Magistrado/biblioteca.sqlite` (`app/src/main/library.ts`), aberta só quando pedida.
 - **Combate (T10):** a iniciativa fica em `game_sessions.initiative` (por sessão de jogo). Cada ameaça entra como cópia com PV próprio no combatente (`pv`); o agente entra uma vez e usa o PV da ficha. Testes do bloco são lidos de "2d20+5" ou "2O+5" (`app/src/shared/ordem/sessao.ts`). Rolagens da Sessão gravam a sessão de jogo. Desde a T10b o combatente também guarda `condicoes` (as do agente com ficha completa ficam na ficha).
 - Git local com identidade `Lucas <lucasminetto13@gmail.com>` só neste repositório.
+- **Versões (2026-11-07):** número maior.menor.correção, publicado com `tools/publicar-versao.ps1` (`versao.json`, `HISTORICO.md`, tag e release). 0.9.0 = T1–T10b + P1; 1.0.0 depois da T13. Sem instalador: o app se atualiza pelo git (`app/src/main/atualizacao.ts`), no modelo do TEC. Ver [VERSOES.md](VERSOES.md).
 
 ## Dados dos livros
 
@@ -62,4 +63,4 @@
 
 ## Próximo passo
 
-T11 (backup, export e Obsidian com os tipos novos, e a biblioteca por origem). A P2 (jogadores, com a antiga P3) começa quando o Lucas pedir: issues #1 a #13 e #15.
+Redesenho do combate (issue #18) ou T11 (backup, export e Obsidian com os tipos novos, e a biblioteca por origem). A P2 (jogadores, com a antiga P3) começa quando o Lucas pedir: issues #1 a #13 e #15.

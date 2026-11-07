@@ -526,7 +526,35 @@ export interface SearchResult {
 }
 
 /** O que o preload expõe em window.api. Cada função vira um canal IPC com o mesmo nome. */
+/** Situação da atualização do app (ver main/atualizacao.ts). */
+export interface EstadoAtualizacao {
+  /** Versão instalada, do package.json. */
+  instalada: string
+  /** false quando o app não roda de uma cópia do git e não pode se atualizar sozinho. */
+  disponivel: boolean
+  verificando: boolean
+  atualizando: boolean
+  /** Versão publicada mais nova que a instalada, ou null. */
+  nova: string | null
+  obrigatoria: boolean
+  notas: string[]
+  publicadaEm: string | null
+  verificadoEm: string | null
+  /** "Depois" esconde o aviso até esta hora (ISO). */
+  adiadoAte: string | null
+  erro: string | null
+}
+
 export interface Api {
+  atualizacao: {
+    estado(): Promise<EstadoAtualizacao>
+    verificar(): Promise<EstadoAtualizacao>
+    adiar(): Promise<EstadoAtualizacao>
+    /** Baixa e reabre o app. Devolve um aviso quando não reabre sozinho (modo dev). */
+    aplicar(): Promise<string | null>
+    /** Avisa a tela quando o estado muda. Devolve a função de desligar. */
+    aoMudar(cb: (e: EstadoAtualizacao) => void): () => void
+  }
   campaign: {
     recent(): Promise<RecentCampaign[]>
     create(input: { name: string; epochDate: string; example?: boolean }): Promise<Campaign>

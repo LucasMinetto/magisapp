@@ -28,6 +28,10 @@ npm.cmd test
 npm.cmd run build && node e2e/slice.mjs
 ```
 
+## Versões
+
+A versão instalada está em `app/package.json` e o histórico em [HISTORICO.md](HISTORICO.md). O app avisa quando há versão nova no GitHub e se atualiza pelo git (Ajustes → Versão do Magistrado). Para publicar uma versão, veja [docs/magistrado/VERSOES.md](docs/magistrado/VERSOES.md).
+
 ## Pastas
 
 - `app/`: o app Electron (React, SQLite).

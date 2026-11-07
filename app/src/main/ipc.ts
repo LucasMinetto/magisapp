@@ -1,6 +1,7 @@
 import { app, dialog, ipcMain, shell, type BrowserWindow } from 'electron'
 import { z } from 'zod'
 import { createBackup, listBackups, restoreBackup } from './backup'
+import { adiarAtualizacao, aplicarAtualizacao, estadoAtualizacao, verificarAtualizacao } from './atualizacao'
 import { exportCampaign } from './export-run'
 import { ACTION_LABEL, UndoLog } from './undo'
 import { applyStructure, BUILTIN_STRUCTURES, structureFromCampaign } from './structures'
@@ -561,6 +562,10 @@ const channels: Record<string, [z.ZodTypeAny, (input: never, win: BrowserWindow)
   'boards:get': [id, (input: string) => need().getBoard(input)],
   'boards:save': [boardSave, (input: BoardSave) => need().saveBoard(input)],
   'boards:trash': [id, (input: string) => need().trashBoard(input)],
+  'update:state': [z.undefined(), () => estadoAtualizacao()],
+  'update:check': [z.undefined(), () => verificarAtualizacao()],
+  'update:later': [z.undefined(), () => adiarAtualizacao()],
+  'update:apply': [z.undefined(), () => aplicarAtualizacao()],
   'search:query': [
     z.object({ q: z.string().max(200), limit: z.number().int().min(1).max(50).optional() }),
     (input: { q: string; limit?: number }) => need().search(input.q, input.limit)

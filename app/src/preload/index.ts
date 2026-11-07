@@ -11,6 +11,17 @@ const call =
   }
 
 const api: Api = {
+  atualizacao: {
+    estado: call('update:state'),
+    verificar: call('update:check'),
+    adiar: call('update:later'),
+    aplicar: call('update:apply'),
+    aoMudar: (cb) => {
+      const ouvir = (_e: unknown, estado: Parameters<typeof cb>[0]) => cb(estado)
+      ipcRenderer.on('update:changed', ouvir)
+      return () => ipcRenderer.removeListener('update:changed', ouvir)
+    }
+  },
   campaign: {
     recent: call('campaign:recent'),
     create: call('campaign:create'),
