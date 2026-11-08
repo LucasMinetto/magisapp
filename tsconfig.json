@@ -4,9 +4,21 @@
     "strict": true,
     "ignoreDeprecations": "6.0",
     "baseUrl": ".",
+    "types": ["node"],
     "paths": {
-      "@/*": ["./*", "./src/*"],
-      "shared/*": ["../app/src/shared/*"]
+      "@/*": [
+        "./*",
+        "./src/*"
+      ],
+      "shared/*": [
+        "../app/src/shared/*"
+      ]
     }
-  }
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+  ]
 }
