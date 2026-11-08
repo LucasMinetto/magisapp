@@ -4,6 +4,165 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 
+// Migration SQL as constant (version 1 is static; file kept for reference)
+const MIGRATION_V1_SQL = `
+-- Migration 001: Initial schema v1
+PRAGMA foreign_keys = ON;
+PRAGMA journal_mode = WAL;
+
+-- Ficha do agente (um por campanha por usuário)
+CREATE TABLE ficha (
+  id TEXT PRIMARY KEY,
+  campaign_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  sheet_data TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  synced_at TEXT,
+  UNIQUE(campaign_id, user_id)
+);
+CREATE INDEX idx_ficha_updated_at ON ficha(updated_at);
+
+-- Biblioteca: Rituais
+CREATE TABLE biblioteca_ritual (
+  id TEXT PRIMARY KEY,
+  source_id TEXT NOT NULL,
+  nome TEXT NOT NULL,
+  elemento TEXT NOT NULL,
+  circulo INTEGER NOT NULL,
+  execucao TEXT,
+  alcance TEXT,
+  alvo TEXT,
+  duracao TEXT,
+  resistencia TEXT,
+  efeito TEXT,
+  discente TEXT,
+  verdadeiro TEXT,
+  dano_normal TEXT,
+  dano_discente TEXT,
+  dano_verdadeiro TEXT,
+  tipo_dano TEXT,
+  alvo_tipo TEXT,
+  pagina INTEGER,
+  data TEXT NOT NULL,
+  synced_at TEXT,
+  UNIQUE(source_id, nome)
+);
+CREATE INDEX idx_bib_ritual_elemento_circulo ON biblioteca_ritual(elemento, circulo);
+
+-- Biblioteca: Itens
+CREATE TABLE biblioteca_item (
+  id TEXT PRIMARY KEY,
+  source_id TEXT NOT NULL,
+  nome TEXT NOT NULL,
+  tipo TEXT NOT NULL,
+  categoria INTEGER NOT NULL,
+  espacos REAL NOT NULL,
+  defesa REAL NOT NULL,
+  dano TEXT,
+  tipo_dano TEXT,
+  critico TEXT,
+  alcance TEXT,
+  proficiencia TEXT,
+  empunhadura TEXT,
+  elemento TEXT,
+  descricao TEXT,
+  quantidade INTEGER NOT NULL DEFAULT 1,
+  pagina INTEGER,
+  data TEXT NOT NULL,
+  synced_at TEXT,
+  UNIQUE(source_id, nome)
+);
+CREATE INDEX idx_bib_item_tipo_categoria ON biblioteca_item(tipo, categoria);
+
+-- Regras
+CREATE TABLE regras (
+  id TEXT PRIMARY KEY,
+  capitulo INTEGER NOT NULL,
+  titulo TEXT NOT NULL,
+  conteudo TEXT NOT NULL,
+  pagina_livro INTEGER,
+  visivel_para_jogadores INTEGER NOT NULL DEFAULT 1,
+  updated_at TEXT NOT NULL,
+  UNIQUE(capitulo)
+);
+
+-- Arquivo: Pessoas
+CREATE TABLE arquivo_pessoa (
+  id TEXT PRIMARY KEY,
+  campaign_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  nome TEXT NOT NULL,
+  retrato_url TEXT,
+  o_que_sabe TEXT NOT NULL,
+  versao_atual INTEGER NOT NULL DEFAULT 1,
+  updated_at TEXT NOT NULL,
+  UNIQUE(campaign_id, user_id, id)
+);
+
+-- Arquivo: Lugares
+CREATE TABLE arquivo_lugar (
+  id TEXT PRIMARY KEY,
+  campaign_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  nome TEXT NOT NULL,
+  imagem_url TEXT,
+  descricao_publica TEXT NOT NULL,
+  versao_atual INTEGER NOT NULL DEFAULT 1,
+  updated_at TEXT NOT NULL,
+  UNIQUE(campaign_id, user_id, id)
+);
+
+-- Arquivo: Anotações
+CREATE TABLE arquivo_anotacao (
+  id TEXT PRIMARY KEY,
+  campaign_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  titulo TEXT NOT NULL,
+  conteudo TEXT NOT NULL,
+  linked_pessoa_id TEXT REFERENCES arquivo_pessoa(id) ON DELETE SET NULL,
+  linked_lugar_id TEXT REFERENCES arquivo_lugar(id) ON DELETE SET NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE INDEX idx_anotacao_campaign_user ON arquivo_anotacao(campaign_id, user_id);
+
+-- Arquivo: Histórico
+CREATE TABLE arquivo_historico (
+  id TEXT PRIMARY KEY,
+  campaign_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  tipo TEXT NOT NULL CHECK (tipo IN ('pessoa_v1', 'lugar_v2', 'interludio', 'anotacao')),
+  ref_id TEXT NOT NULL,
+  titulo TEXT NOT NULL,
+  conteudo TEXT NOT NULL,
+  autor TEXT NOT NULL CHECK (autor IN ('mestre', 'jogador')),
+  created_at TEXT NOT NULL
+);
+CREATE INDEX idx_historico_campaign_user ON arquivo_historico(campaign_id, user_id);
+
+-- Sync Queue
+CREATE TABLE sync_queue (
+  id TEXT PRIMARY KEY,
+  campaign_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  operacao TEXT NOT NULL CHECK (operacao IN ('pull', 'push_ficha', 'push_rolagem', 'push_anotacao')),
+  payload TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  tentativas INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  processed_at TEXT,
+  error TEXT
+);
+CREATE INDEX idx_sync_queue_status ON sync_queue(status, created_at);
+
+-- Auth
+CREATE TABLE auth (
+  key TEXT PRIMARY KEY CHECK (key = 'current_user' OR key LIKE 'token_%'),
+  value TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+`;
+
 type OpenOptions = {
   name: string;
   location?: string;
@@ -37,9 +196,9 @@ export function getDB(): DB {
 }
 
 export async function openDB(dbPath: string = 'magistrado.db'): Promise<DB> {
-  const options: OpenOptions = { name: dbPath };
+  const options = { name: dbPath };
   if (dbPath === ':memory:') {
-    options.location = ':memory:';
+    (options as any).location = ':memory:';
   }
   const db = open(options);
   db.executeSync('PRAGMA foreign_keys = ON;');
@@ -47,30 +206,20 @@ export async function openDB(dbPath: string = 'magistrado.db'): Promise<DB> {
   return db;
 }
 
-function isTestEnvironment(): boolean {
-  return typeof process !== 'undefined' && !!process.versions?.node && !!process.env.VITEST;
-}
-
-async function readMigrationFileExpo(): Promise<string> {
-  // Dynamic imports to avoid static analysis issues in test environment
-  const { Asset } = await import('expo-asset');
-  const FileSystem = await import('expo-file-system');
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const asset = Asset.fromModule(require('../migrations/001_init.sql'));
-  await asset.downloadAsync();
-  return FileSystem.readAsStringAsync(asset.localUri ?? asset.uri);
-}
-
-async function readMigrationFileNode(): Promise<string> {
+function readMigrationFileNode(): string {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
-  // Migration file is in src/db/migrations/ relative to src/db/index.ts
   const migrationPath = path.resolve(__dirname, 'migrations/001_init.sql');
   return fs.readFileSync(migrationPath, 'utf-8');
 }
 
+function readMigrationFileExpo(): string {
+  // In Expo, use the embedded constant (migration v1 is static)
+  return MIGRATION_V1_SQL;
+}
+
 async function readMigrationFile(): Promise<string> {
-  if (isTestEnvironment()) {
+  if (typeof process !== 'undefined' && !!process.versions?.node && !!process.env.VITEST) {
     return readMigrationFileNode();
   }
   return readMigrationFileExpo();
@@ -89,8 +238,7 @@ export async function runMigrations(db: DB): Promise<void> {
       .filter(s => s.length > 0);
     // Execute PRAGMA statements first (they don't work well in batch)
     for (const stmt of statements) {
-      const upper = stmt.toUpperCase();
-      if (upper.startsWith('PRAGMA ')) {
+      if (stmt.toUpperCase().startsWith('PRAGMA ')) {
         db.executeSync(stmt);
       }
     }
