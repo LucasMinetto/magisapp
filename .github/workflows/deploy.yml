@@ -1,0 +1,67 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [hermes-app-celular]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate PWA icons
+        run: |
+          node -e "
+            const sharp = require('sharp');
+            (async () => {
+              await sharp('./assets/icon.png')
+                .resize(192, 192, { fit: 'contain', background: { r: 26, g: 26, b: 46, alpha: 1 } })
+                .png()
+                .toFile('./assets/icon-192.png');
+              await sharp('./assets/icon.png')
+                .resize(512, 512, { fit: 'contain', background: { r: 26, g: 26, b: 46, alpha: 1 } })
+                .png()
+                .toFile('./assets/icon-512.png');
+              console.log('Icons generated successfully!');
+            })();
+          "
+
+      - name: Build static export
+        run: npm run export:web
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

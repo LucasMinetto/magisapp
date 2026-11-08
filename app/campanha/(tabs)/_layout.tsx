@@ -36,7 +36,7 @@ export default function CampaignTabsLayout() {
         options={{
           title: 'Rolagem',
           tabBarIcon: ({ focused }) => (
-            <Ionicons name={focused ? 'dice' : 'dice-outline'} size={24} color={focused ? '#3b82f6' : '#666680'} />
+            <Ionicons name={focused ? 'cube' : 'cube-outline'} size={24} color={focused ? '#3b82f6' : '#666680'} />
           ),
         }}
       />

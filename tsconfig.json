@@ -4,10 +4,11 @@
     "strict": true,
     "ignoreDeprecations": "6.0",
     "baseUrl": ".",
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "paths": {
       "@/*": [
-        "./*",
         "./src/*"
       ],
       "shared/*": [
@@ -16,9 +17,23 @@
     }
   },
   "include": [
+    "app/_layout.tsx",
+    "app/index.tsx",
+    "app/login.tsx",
+    "app/login/**/*.tsx",
+    "app/campanha/**/*.tsx",
     "src/**/*.ts",
     "src/**/*.tsx",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts"
+    "expo-env.d.ts",
+    "nativewind-env.d.ts"
+  ],
+  "exclude": [
+    "app/src",
+    "app/e2e",
+    "app/electron.vite.config.ts",
+    "app/node_modules",
+    "desktop",
+    "node_modules"
   ]
 }

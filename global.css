@@ -1,0 +1,12 @@
+@import "tailwindcss";
+@import "./design/tailwind.css";
+
+@layer base {
+  * {
+    @apply box-border;
+  }
+  
+  body {
+    @apply bg-bg text-text;
+  }
+}

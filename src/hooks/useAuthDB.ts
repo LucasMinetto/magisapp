@@ -21,9 +21,16 @@ export interface CampaignToken {
   expiresAt?: string;
 }
 
+export interface SyncCredentials {
+  serverUrl: string;
+  username: string;
+  password: string;
+}
+
 export interface UseAuthDBResult {
   currentUser: CurrentUser | null;
   tokens: Map<string, CampaignToken>;
+  syncCredentials: SyncCredentials | null;
   loading: boolean;
   error: string | null;
   setCurrentUser: (user: CurrentUser | null) => Promise<void>;
@@ -32,6 +39,9 @@ export interface UseAuthDBResult {
   deleteToken: (campaignId: string) => Promise<void>;
   clearAll: () => Promise<void>;
   refresh: () => Promise<void>;
+  saveCredentials: (credentials: SyncCredentials) => Promise<void>;
+  getCredentials: () => SyncCredentials | null;
+  testConnection: (credentials?: SyncCredentials) => Promise<boolean>;
 }
 
 function parseCurrentUser(value: string): CurrentUser | null {
@@ -50,9 +60,18 @@ function parseToken(value: string): CampaignToken | null {
   }
 }
 
+function parseCredentials(value: string): SyncCredentials | null {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
 export function useAuthDB(): UseAuthDBResult {
   const [currentUser, setCurrentUserState] = useState<CurrentUser | null>(null);
   const [tokens, setTokensState] = useState<Map<string, CampaignToken>>(new Map());
+  const [syncCredentials, setSyncCredentialsState] = useState<SyncCredentials | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const db = getDB();
@@ -64,6 +83,7 @@ export function useAuthDB(): UseAuthDBResult {
       const result = await db.execute(`SELECT * FROM auth`);
       const newTokens = new Map<string, CampaignToken>();
       let user: CurrentUser | null = null;
+      let creds: SyncCredentials | null = null;
 
       for (const row of result.rows) {
         const r = row as unknown as AuthRow;
@@ -75,11 +95,14 @@ export function useAuthDB(): UseAuthDBResult {
           if (token) {
             newTokens.set(campaignId, token);
           }
+        } else if (r.key === 'sync_credentials') {
+          creds = parseCredentials(r.value);
         }
       }
 
       setCurrentUserState(user);
       setTokensState(newTokens);
+      setSyncCredentialsState(creds);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load auth data');
     } finally {
@@ -148,15 +171,54 @@ export function useAuthDB(): UseAuthDBResult {
       await db.execute(`DELETE FROM auth`);
       setCurrentUserState(null);
       setTokensState(new Map());
+      setSyncCredentialsState(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to clear auth data');
       throw e;
     }
   }, [db]);
 
+  const saveCredentials = useCallback(async (credentials: SyncCredentials) => {
+    setError(null);
+    try {
+      const now = new Date().toISOString();
+      const value = JSON.stringify(credentials).replace(/'/g, "''");
+      await db.execute(`INSERT OR REPLACE INTO auth (key, value, updated_at) VALUES ('sync_credentials', '${value}', '${now}')`);
+      setSyncCredentialsState(credentials);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to save credentials');
+      throw e;
+    }
+  }, [db]);
+
+  const getCredentials = useCallback((): SyncCredentials | null => {
+    return syncCredentials;
+  }, [syncCredentials]);
+
+  const testConnection = useCallback(async (credentials?: SyncCredentials): Promise<boolean> => {
+    const creds = credentials ?? syncCredentials;
+    if (!creds?.serverUrl || !creds?.username) {
+      return false;
+    }
+    try {
+      // Try to connect to the server's health endpoint
+      const response = await fetch(`${creds.serverUrl}/health`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Basic ${btoa(`${creds.username}:${creds.password}`)}`,
+        },
+        signal: AbortSignal.timeout(5000),
+      });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }, [syncCredentials]);
+
   return {
     currentUser,
     tokens,
+    syncCredentials,
     loading,
     error,
     setCurrentUser,
@@ -165,5 +227,8 @@ export function useAuthDB(): UseAuthDBResult {
     deleteToken,
     clearAll,
     refresh,
+    saveCredentials,
+    getCredentials,
+    testConnection,
   };
 }
