@@ -256,3 +256,7 @@ export function closeDB(): void {
     _db = null;
   }
 }
+
+export { seedDatabase } from './seed';
+export type { FichaAgente } from '../../app/src/shared/ordem/esquemas';
+export type { RitualBiblioteca, ItemBiblioteca } from '../../app/src/shared/ordem/esquemas';
