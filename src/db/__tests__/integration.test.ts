@@ -2,7 +2,7 @@ import { openDB, runMigrations, seedDatabase, DB_TABLES } from '../index';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import type { DB } from '@op-engineering/op-sqlite';
 import * as fs from 'fs';
-import type { FichaAgente } from '../../../app/src/shared/ordem/esquemas';
+import type { FichaAgente } from '../../shared/ordem/esquemas';
 
 describe('Seed Data + Integration Test', () => {
   let db: DB;

@@ -1,7 +1,7 @@
 import type { DB } from '@op-engineering/op-sqlite';
 import { DB_TABLES } from './index';
-import type { FichaAgente } from '../../app/src/shared/ordem/esquemas';
-import type { RitualBiblioteca, ItemBiblioteca } from '../../app/src/shared/ordem/esquemas';
+import type { FichaAgente } from '../shared/ordem/esquemas';
+import type { RitualBiblioteca, ItemBiblioteca } from '../shared/ordem/esquemas';
 
 const SAMPLE_CAMPAIGN_ID = 'campaign-seed-001';
 const SAMPLE_USER_ID = 'user-seed-001';

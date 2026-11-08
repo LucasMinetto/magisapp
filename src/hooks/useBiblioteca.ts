@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getDB } from '../db';
-import type { RitualBiblioteca as RitualBibliotecaBase, ItemBiblioteca as ItemBibliotecaBase } from '../../app/src/shared/ordem/esquemas';
+import type { RitualBiblioteca as RitualBibliotecaBase, ItemBiblioteca as ItemBibliotecaBase } from '../shared/ordem/esquemas';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface RitualBiblioteca extends RitualBibliotecaBase {

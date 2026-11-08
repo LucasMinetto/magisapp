@@ -7,13 +7,8 @@ export default function Index() {
   const { isAuthenticated, loading } = useAuth();
 
   useEffect(() => {
-    if (!loading) {
-      if (isAuthenticated) {
-        router.replace('/campanha');
-      } else {
-        router.replace('/login');
-      }
-    }
+    if (loading) return;
+    router.replace(isAuthenticated ? '/campanha/ficha' : '/login');
   }, [isAuthenticated, loading, router]);
 
   return null;

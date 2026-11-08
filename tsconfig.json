@@ -12,7 +12,7 @@
         "./src/*"
       ],
       "shared/*": [
-        "../app/src/shared/*"
+        "./src/shared/*"
       ]
     }
   },

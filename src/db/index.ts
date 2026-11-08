@@ -1,4 +1,4 @@
-import { open, type DB } from '@op-engineering/op-sqlite';
+import { openDriver, type DB } from './driver';
 // Node.js fs for test environment
 import * as fs from 'fs';
 import * as path from 'path';
@@ -188,22 +188,17 @@ let _db: DB | null = null;
 
 export function getDB(): DB {
   if (!_db) {
-    _db = open({ name: 'magistrado.db' });
-    _db.executeSync('PRAGMA foreign_keys = ON;');
-    _db.executeSync('PRAGMA journal_mode = WAL;');
+    _db = openDriver({ name: 'magistrado.db' });
   }
   return _db;
 }
 
 export async function openDB(dbPath: string = 'magistrado.db'): Promise<DB> {
-  const options = { name: dbPath };
+  const options: { name: string; location?: string } = { name: dbPath };
   if (dbPath === ':memory:') {
-    (options as any).location = ':memory:';
+    options.location = ':memory:';
   }
-  const db = open(options);
-  db.executeSync('PRAGMA foreign_keys = ON;');
-  db.executeSync('PRAGMA journal_mode = WAL;');
-  return db;
+  return openDriver(options);
 }
 
 function readMigrationFileNode(): string {
@@ -226,7 +221,9 @@ async function readMigrationFile(): Promise<string> {
 }
 
 export async function runMigrations(db: DB): Promise<void> {
-  const currentVersion = db.executeSync('PRAGMA user_version;').rows[0]?.version ?? 0;
+  // Async-only so the same code path works on native and on the web backend.
+  const versionRow = (await db.execute('PRAGMA user_version;')).rows?.[0] ?? {};
+  const currentVersion = Number(versionRow.version ?? versionRow.user_version ?? 0);
 
   if (currentVersion === 0) {
     const sql = await readMigrationFile();
@@ -239,13 +236,13 @@ export async function runMigrations(db: DB): Promise<void> {
     // Execute PRAGMA statements first (they don't work well in batch)
     for (const stmt of statements) {
       if (stmt.toUpperCase().startsWith('PRAGMA ')) {
-        db.executeSync(stmt);
+        await db.execute(stmt);
       }
     }
     // Execute remaining statements in batch
     const nonPragmaStatements = statements.filter(s => !s.toUpperCase().startsWith('PRAGMA '));
     await db.executeBatch(nonPragmaStatements.map(s => [s]));
-    db.executeSync('PRAGMA user_version = 1;');
+    await db.execute('PRAGMA user_version = 1;');
   }
   // Future migrations: if (currentVersion === 1) { ... }
 }
@@ -258,5 +255,5 @@ export function closeDB(): void {
 }
 
 export { seedDatabase } from './seed';
-export type { FichaAgente } from '../../app/src/shared/ordem/esquemas';
-export type { RitualBiblioteca, ItemBiblioteca } from '../../app/src/shared/ordem/esquemas';
+export type { FichaAgente } from '../shared/ordem/esquemas';
+export type { RitualBiblioteca, ItemBiblioteca } from '../shared/ordem/esquemas';

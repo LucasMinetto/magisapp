@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getDB } from '../db';
-import type { FichaAgente } from '../../app/src/shared/ordem/esquemas';
+import type { FichaAgente } from '../shared/ordem/esquemas';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface UseFichaResult {

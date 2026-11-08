@@ -10,7 +10,8 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { BarCodeScanner, BarCodeScannerResult } from 'expo-barcode-scanner';
+import { CameraView, Camera } from 'expo-camera';
+import type { BarcodeScanningResult } from 'expo-camera';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, CardContent } from '@/components/ui/Card';
@@ -46,7 +47,7 @@ export default function QRScannerScreen() {
       );
       setHasPermission(granted === PermissionsAndroid.RESULTS.GRANTED);
     } else {
-      const { status } = await BarCodeScanner.requestPermissionsAsync();
+      const { status } = await Camera.requestCameraPermissionsAsync();
       setHasPermission(status === 'granted');
     }
   }, []);
@@ -65,7 +66,7 @@ export default function QRScannerScreen() {
     }
   };
 
-  const handleBarCodeScanned = async (result: BarCodeScannerResult) => {
+  const handleBarCodeScanned = async (result: BarcodeScanningResult) => {
     if (scanned || !result.data) return;
     setScanned(true);
 
@@ -177,10 +178,11 @@ export default function QRScannerScreen() {
           </View>
 
           <View style={styles.scannerContainer}>
-            <BarCodeScanner
-              onBarCodeScanned={handleBarCodeScanned}
+            <CameraView
+              onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
               style={StyleSheet.absoluteFill}
-              barCodeTypes={['qr']}
+              facing="back"
+              barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
             />
             <View style={[styles.scanOverlay, StyleSheet.absoluteFill]}>
               <View style={styles.scanFrame}>
