@@ -1,4 +1,16 @@
 -- Schema v1 reference (same as migrations/001_init.sql)
+-- Shared types mapping (shared/ordem/esquemas.ts, shared/types.ts):
+-- ficha              -> FichaAgente (zod), FichaAgenteDB (types.ts)
+-- biblioteca_ritual  -> RitualBiblioteca (zod), RitualBibliotecaDB (types.ts)
+-- biblioteca_item    -> ItemBiblioteca (zod), ItemBibliotecaDB (types.ts)
+-- regras             -> RegraLivro (zod), RegraLivroDB (types.ts)
+-- arquivo_pessoa     -> ArquivoPessoa (zod), ArquivoPessoaDB (types.ts)
+-- arquivo_lugar      -> ArquivoLugar (zod), ArquivoLugarDB (types.ts)
+-- arquivo_anotacao   -> ArquivoAnotacao (zod), ArquivoAnotacaoDB (types.ts)
+-- arquivo_historico  -> ArquivoHistorico (zod), ArquivoHistoricoDB (types.ts)
+-- sync_queue         -> SyncQueueItem (zod), SyncQueueItemDB (types.ts)
+-- auth               -> AuthEntry (zod), AuthEntryDB (types.ts)
+
 PRAGMA foreign_keys = ON;
 PRAGMA journal_mode = WAL;
 
@@ -128,7 +140,8 @@ CREATE TABLE arquivo_historico (
   titulo TEXT NOT NULL,
   conteudo TEXT NOT NULL,
   autor TEXT NOT NULL,
-  created_at TEXT NOT NULL
+  created_at TEXT NOT NULL,
+  CHECK (tipo IN ('pessoa_v1', 'lugar_v2', 'interludio', 'anotacao'))
 );
 CREATE INDEX idx_historico_campaign_user ON arquivo_historico(campaign_id, user_id);
 
@@ -143,7 +156,8 @@ CREATE TABLE sync_queue (
   tentativas INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL,
   processed_at TEXT,
-  error TEXT
+  error TEXT,
+  CHECK (operacao IN ('pull', 'push_ficha', 'push_rolagem', 'push_anotacao'))
 );
 CREATE INDEX idx_sync_queue_status ON sync_queue(status, created_at);
 
@@ -151,5 +165,6 @@ CREATE INDEX idx_sync_queue_status ON sync_queue(status, created_at);
 CREATE TABLE auth (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL,
-  updated_at TEXT NOT NULL
+  updated_at TEXT NOT NULL,
+  CHECK (key = 'current_user' OR key LIKE 'token_%')
 );

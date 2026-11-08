@@ -1,4 +1,8 @@
 import { open, type DB } from '@op-engineering/op-sqlite';
+// Node.js fs for test environment
+import * as fs from 'fs';
+import * as path from 'path';
+import { fileURLToPath } from 'url';
 
 type OpenOptions = {
   name: string;
@@ -32,9 +36,9 @@ export function getDB(): DB {
   return _db;
 }
 
-export async function openDB(path: string = 'magistrado.db'): Promise<DB> {
-  const options: OpenOptions = { name: path };
-  if (path === ':memory:') {
+export async function openDB(dbPath: string = 'magistrado.db'): Promise<DB> {
+  const options: OpenOptions = { name: dbPath };
+  if (dbPath === ':memory:') {
     options.location = ':memory:';
   }
   const db = open(options);
@@ -43,157 +47,56 @@ export async function openDB(path: string = 'magistrado.db'): Promise<DB> {
   return db;
 }
 
+function isTestEnvironment(): boolean {
+  return typeof process !== 'undefined' && !!process.versions?.node && !!process.env.VITEST;
+}
+
+async function readMigrationFileExpo(): Promise<string> {
+  // Dynamic imports to avoid static analysis issues in test environment
+  const { Asset } = await import('expo-asset');
+  const FileSystem = await import('expo-file-system');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const asset = Asset.fromModule(require('../migrations/001_init.sql'));
+  await asset.downloadAsync();
+  return FileSystem.readAsStringAsync(asset.localUri ?? asset.uri);
+}
+
+async function readMigrationFileNode(): Promise<string> {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  // Migration file is in src/db/migrations/ relative to src/db/index.ts
+  const migrationPath = path.resolve(__dirname, 'migrations/001_init.sql');
+  return fs.readFileSync(migrationPath, 'utf-8');
+}
+
+async function readMigrationFile(): Promise<string> {
+  if (isTestEnvironment()) {
+    return readMigrationFileNode();
+  }
+  return readMigrationFileExpo();
+}
+
 export async function runMigrations(db: DB): Promise<void> {
   const currentVersion = db.executeSync('PRAGMA user_version;').rows[0]?.version ?? 0;
 
   if (currentVersion === 0) {
-    const statements = [
-      'PRAGMA foreign_keys = ON;',
-      'PRAGMA journal_mode = WAL;',
-
-      `CREATE TABLE ficha (
-        id TEXT PRIMARY KEY,
-        campaign_id TEXT NOT NULL,
-        user_id TEXT NOT NULL,
-        sheet_data TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
-        synced_at TEXT,
-        UNIQUE(campaign_id, user_id)
-      )`,
-      'CREATE INDEX idx_ficha_updated_at ON ficha(updated_at);',
-
-      `CREATE TABLE biblioteca_ritual (
-        id TEXT PRIMARY KEY,
-        source_id TEXT NOT NULL,
-        nome TEXT NOT NULL,
-        elemento TEXT NOT NULL,
-        circulo INTEGER NOT NULL,
-        execucao TEXT,
-        alcance TEXT,
-        alvo TEXT,
-        duracao TEXT,
-        resistencia TEXT,
-        efeito TEXT,
-        discente TEXT,
-        verdadeiro TEXT,
-        dano_normal TEXT,
-        dano_discente TEXT,
-        dano_verdadeiro TEXT,
-        tipo_dano TEXT,
-        alvo_tipo TEXT,
-        pagina INTEGER,
-        data TEXT NOT NULL,
-        synced_at TEXT,
-        UNIQUE(source_id, nome)
-      )`,
-      'CREATE INDEX idx_bib_ritual_elemento_circulo ON biblioteca_ritual(elemento, circulo);',
-
-      `CREATE TABLE biblioteca_item (
-        id TEXT PRIMARY KEY,
-        source_id TEXT NOT NULL,
-        nome TEXT NOT NULL,
-        tipo TEXT NOT NULL,
-        categoria INTEGER NOT NULL,
-        espacos REAL NOT NULL,
-        defesa REAL NOT NULL,
-        dano TEXT,
-        tipo_dano TEXT,
-        critico TEXT,
-        alcance TEXT,
-        proficiencia TEXT,
-        empunhadura TEXT,
-        elemento TEXT,
-        descricao TEXT,
-        quantidade INTEGER NOT NULL DEFAULT 1,
-        pagina INTEGER,
-        data TEXT NOT NULL,
-        synced_at TEXT,
-        UNIQUE(source_id, nome)
-      )`,
-      'CREATE INDEX idx_bib_item_tipo_categoria ON biblioteca_item(tipo, categoria);',
-
-      `CREATE TABLE regras (
-        id TEXT PRIMARY KEY,
-        capitulo INTEGER NOT NULL,
-        titulo TEXT NOT NULL,
-        conteudo TEXT NOT NULL,
-        pagina_livro INTEGER,
-        visivel_para_jogadores INTEGER NOT NULL DEFAULT 1,
-        updated_at TEXT NOT NULL,
-        UNIQUE(capitulo)
-      )`,
-
-      `CREATE TABLE arquivo_pessoa (
-        id TEXT PRIMARY KEY,
-        campaign_id TEXT NOT NULL,
-        user_id TEXT NOT NULL,
-        nome TEXT NOT NULL,
-        retrato_url TEXT,
-        o_que_sabe TEXT NOT NULL,
-        versao_atual INTEGER NOT NULL DEFAULT 1,
-        updated_at TEXT NOT NULL,
-        UNIQUE(campaign_id, user_id, id)
-      )`,
-
-      `CREATE TABLE arquivo_lugar (
-        id TEXT PRIMARY KEY,
-        campaign_id TEXT NOT NULL,
-        user_id TEXT NOT NULL,
-        nome TEXT NOT NULL,
-        imagem_url TEXT,
-        descricao_publica TEXT NOT NULL,
-        versao_atual INTEGER NOT NULL DEFAULT 1,
-        updated_at TEXT NOT NULL,
-        UNIQUE(campaign_id, user_id, id)
-      )`,
-
-      `CREATE TABLE arquivo_anotacao (
-        id TEXT PRIMARY KEY,
-        campaign_id TEXT NOT NULL,
-        user_id TEXT NOT NULL,
-        titulo TEXT NOT NULL,
-        conteudo TEXT NOT NULL,
-        linked_pessoa_id TEXT REFERENCES arquivo_pessoa(id) ON DELETE SET NULL,
-        linked_lugar_id TEXT REFERENCES arquivo_lugar(id) ON DELETE SET NULL,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL
-      )`,
-      'CREATE INDEX idx_anotacao_campaign_user ON arquivo_anotacao(campaign_id, user_id);',
-
-      `CREATE TABLE arquivo_historico (
-        id TEXT PRIMARY KEY,
-        campaign_id TEXT NOT NULL,
-        user_id TEXT NOT NULL,
-        tipo TEXT NOT NULL,
-        ref_id TEXT NOT NULL,
-        titulo TEXT NOT NULL,
-        conteudo TEXT NOT NULL,
-        autor TEXT NOT NULL,
-        created_at TEXT NOT NULL
-      )`,
-      'CREATE INDEX idx_historico_campaign_user ON arquivo_historico(campaign_id, user_id);',
-
-      `CREATE TABLE sync_queue (
-        id TEXT PRIMARY KEY,
-        campaign_id TEXT NOT NULL,
-        user_id TEXT NOT NULL,
-        operacao TEXT NOT NULL,
-        payload TEXT NOT NULL,
-        status TEXT NOT NULL DEFAULT 'pending',
-        tentativas INTEGER NOT NULL DEFAULT 0,
-        created_at TEXT NOT NULL,
-        processed_at TEXT,
-        error TEXT
-      )`,
-      'CREATE INDEX idx_sync_queue_status ON sync_queue(status, created_at);',
-
-      `CREATE TABLE auth (
-        key TEXT PRIMARY KEY,
-        value TEXT NOT NULL,
-        updated_at TEXT NOT NULL
-      )`,
-    ];
-    await db.executeBatch(statements.map(s => [s]));
+    const sql = await readMigrationFile();
+    // Split by semicolon, remove comment lines, filter empty statements
+    const statements = sql
+      .split(';')
+      .map(s => s.trim())
+      .map(s => s.split('\n').filter(line => !line.trim().startsWith('--')).join('\n').trim())
+      .filter(s => s.length > 0);
+    // Execute PRAGMA statements first (they don't work well in batch)
+    for (const stmt of statements) {
+      const upper = stmt.toUpperCase();
+      if (upper.startsWith('PRAGMA ')) {
+        db.executeSync(stmt);
+      }
+    }
+    // Execute remaining statements in batch
+    const nonPragmaStatements = statements.filter(s => !s.toUpperCase().startsWith('PRAGMA '));
+    await db.executeBatch(nonPragmaStatements.map(s => [s]));
     db.executeSync('PRAGMA user_version = 1;');
   }
   // Future migrations: if (currentVersion === 1) { ... }

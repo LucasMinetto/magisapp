@@ -128,7 +128,8 @@ CREATE TABLE arquivo_historico (
   titulo TEXT NOT NULL,
   conteudo TEXT NOT NULL,
   autor TEXT NOT NULL,                    -- 'mestre' | 'jogador'
-  created_at TEXT NOT NULL
+  created_at TEXT NOT NULL,
+  CHECK (tipo IN ('pessoa_v1', 'lugar_v2', 'interludio', 'anotacao'))
 );
 CREATE INDEX idx_historico_campaign_user ON arquivo_historico(campaign_id, user_id);
 
@@ -143,7 +144,8 @@ CREATE TABLE sync_queue (
   tentativas INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL,
   processed_at TEXT,
-  error TEXT
+  error TEXT,
+  CHECK (operacao IN ('pull', 'push_ficha', 'push_rolagem', 'push_anotacao'))
 );
 CREATE INDEX idx_sync_queue_status ON sync_queue(status, created_at);
 
@@ -151,5 +153,6 @@ CREATE INDEX idx_sync_queue_status ON sync_queue(status, created_at);
 CREATE TABLE auth (
   key TEXT PRIMARY KEY,                   -- 'current_user' | 'token_<campaign_id>'
   value TEXT NOT NULL,
-  updated_at TEXT NOT NULL
+  updated_at TEXT NOT NULL,
+  CHECK (key = 'current_user' OR key LIKE 'token_%')
 );
