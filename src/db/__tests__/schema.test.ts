@@ -25,7 +25,7 @@ describe('DB Schema v1', () => {
     }
   });
 
-  it('creates all 10 tables', async () => {
+  it('creates all 11 tables', async () => {
     const tables = await db.execute('SELECT name FROM sqlite_master WHERE type=\'table\' AND name NOT LIKE \'sqlite_%\'');
     const names = tables.rows.map(t => t.name).sort();
     expect(names).toEqual([
@@ -39,6 +39,7 @@ describe('DB Schema v1', () => {
       'arquivo_historico',
       'sync_queue',
       'auth',
+      'rolagens',
     ].sort());
   });
 

@@ -1,4 +1,5 @@
 import { openDriver, type DB } from './driver';
+import { seedDatabase } from './seed';
 // Node.js fs for test environment
 import * as fs from 'fs';
 import * as path from 'path';
@@ -163,6 +164,26 @@ CREATE TABLE auth (
 );
 `;
 
+// Migration v2 (expo embedded copy; migrations/002_rolagens.sql is the node source of truth)
+const MIGRATION_V2_SQL = `
+-- Migration 002: histórico de rolagens do jogador
+CREATE TABLE rolagens (
+  id TEXT PRIMARY KEY,
+  campaign_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  tipo TEXT NOT NULL CHECK (tipo IN ('teste', 'ataque', 'dano', 'ritual', 'iniciativa')),
+  rotulo TEXT,
+  formula TEXT NOT NULL,
+  dados TEXT NOT NULL,
+  total INTEGER NOT NULL,
+  critico INTEGER NOT NULL DEFAULT 0,
+  falha INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  synced_at TEXT
+);
+CREATE INDEX idx_rolagens_campaign_user_created ON rolagens(campaign_id, user_id, created_at);
+`;
+
 type OpenOptions = {
   name: string;
   location?: string;
@@ -182,15 +203,57 @@ export enum DB_TABLES {
   ARQUIVO_HISTORICO = 'arquivo_historico',
   SYNC_QUEUE = 'sync_queue',
   AUTH = 'auth',
+  ROLAGENS = 'rolagens',
 }
 
 let _db: DB | null = null;
+let _gatedDb: DB | null = null;
 
-export function getDB(): DB {
+/** Underlying (ungated) connection — used by the bootstrap so the gate can't deadlock. */
+function getRawDB(): DB {
   if (!_db) {
     _db = openDriver({ name: 'magistrado.db' });
   }
   return _db;
+}
+
+/**
+ * Métodos do DB que precisam esperar o bootstrap. Qualquer outra propriedade
+ * (incl. `close`) passa direto para a conexão real.
+ */
+const GATED_METHODS = new Set<PropertyKey>(['execute', 'executeBatch', 'transaction']);
+
+/**
+ * Envolve o DB para que toda consulta (`execute` / `executeBatch` / `transaction`)
+ * aguarde o bootstrap (migrações + seed) antes de rodar. Assim nenhum hook ou tela
+ * consegue consultar antes da hora, mesmo disparando a query no primeiro render.
+ */
+function createGatedDB(raw: DB): DB {
+  return new Proxy(raw, {
+    get(target, prop) {
+      if (prop === 'close') {
+        return () => (target as unknown as { close: () => void }).close();
+      }
+      const value = Reflect.get(target, prop, target);
+      if (typeof value !== 'function') {
+        return value;
+      }
+      if (GATED_METHODS.has(prop)) {
+        return (...args: unknown[]) =>
+          ensureDatabaseReady().then(() =>
+            (value as (...a: unknown[]) => unknown).apply(target, args)
+          );
+      }
+      return (value as (...a: unknown[]) => unknown).bind(target);
+    },
+  });
+}
+
+export function getDB(): DB {
+  if (!_gatedDb) {
+    _gatedDb = createGatedDB(getRawDB());
+  }
+  return _gatedDb;
 }
 
 export async function openDB(dbPath: string = 'magistrado.db'): Promise<DB> {
@@ -220,31 +283,118 @@ async function readMigrationFile(): Promise<string> {
   return readMigrationFileExpo();
 }
 
+function readMigrationV2FileNode(): string {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const migrationPath = path.resolve(__dirname, 'migrations/002_rolagens.sql');
+  return fs.readFileSync(migrationPath, 'utf-8');
+}
+
+async function readMigrationV2File(): Promise<string> {
+  if (typeof process !== 'undefined' && !!process.versions?.node && !!process.env.VITEST) {
+    return readMigrationV2FileNode();
+  }
+  return MIGRATION_V2_SQL;
+}
+
+/** Splits a migration file into executable statements (drops comment-only lines). */
+function splitStatements(sql: string): string[] {
+  return sql
+    .split(';')
+    .map(s =>
+      s
+        .split('\n')
+        .filter(line => !line.trim().startsWith('--'))
+        .join('\n')
+        .trim()
+    )
+    .filter(s => s.length > 0);
+}
+
+async function applyMigration(db: DB, sql: string): Promise<void> {
+  const statements = splitStatements(sql);
+  // PRAGMA statements don't work well inside executeBatch on every driver.
+  for (const stmt of statements) {
+    if (stmt.toUpperCase().startsWith('PRAGMA ')) {
+      await db.execute(stmt);
+    }
+  }
+  const nonPragma = statements.filter(s => !s.toUpperCase().startsWith('PRAGMA '));
+  if (nonPragma.length > 0) {
+    await db.executeBatch(nonPragma.map(s => [s]));
+  }
+}
+
+/**
+ * Lê `PRAGMA user_version` sem depender de o driver devolver linhas para PRAGMAs.
+ * O driver nativo roteia qualquer não-SELECT por `.run()` (sem linhas), então usamos
+ * a função tabular `pragma_user_version`, que é um SELECT normal. Aceita tanto
+ * `user_version` quanto `version` (o driver web devolve nomes diferentes).
+ */
+async function readUserVersion(db: DB): Promise<number> {
+  try {
+    const row = (await db.execute('SELECT user_version FROM pragma_user_version;')).rows?.[0] ?? {};
+    const r = row as Record<string, unknown>;
+    return Number(r.user_version ?? r.version ?? 0);
+  } catch {
+    return 0;
+  }
+}
+
 export async function runMigrations(db: DB): Promise<void> {
   // Async-only so the same code path works on native and on the web backend.
-  const versionRow = (await db.execute('PRAGMA user_version;')).rows?.[0] ?? {};
-  const currentVersion = Number(versionRow.version ?? versionRow.user_version ?? 0);
+  let currentVersion = await readUserVersion(db);
 
   if (currentVersion === 0) {
-    const sql = await readMigrationFile();
-    // Split by semicolon, remove comment lines, filter empty statements
-    const statements = sql
-      .split(';')
-      .map(s => s.trim())
-      .map(s => s.split('\n').filter(line => !line.trim().startsWith('--')).join('\n').trim())
-      .filter(s => s.length > 0);
-    // Execute PRAGMA statements first (they don't work well in batch)
-    for (const stmt of statements) {
-      if (stmt.toUpperCase().startsWith('PRAGMA ')) {
-        await db.execute(stmt);
-      }
-    }
-    // Execute remaining statements in batch
-    const nonPragmaStatements = statements.filter(s => !s.toUpperCase().startsWith('PRAGMA '));
-    await db.executeBatch(nonPragmaStatements.map(s => [s]));
+    await applyMigration(db, await readMigrationFile());
     await db.execute('PRAGMA user_version = 1;');
+    currentVersion = 1;
   }
-  // Future migrations: if (currentVersion === 1) { ... }
+
+  if (currentVersion === 1) {
+    await applyMigration(db, await readMigrationV2File());
+    await db.execute('PRAGMA user_version = 2;');
+  }
+}
+
+// --- Bootstrap (migrações + seed) com gate global ---
+
+let _readyPromise: Promise<void> | null = null;
+let _bootstrapError: Error | null = null;
+
+async function bootstrapDatabase(): Promise<void> {
+  const db = getRawDB();
+  await runMigrations(db);
+  // Guarda antes do seed (que também é idempotente por si só).
+  const result = await db.execute(`SELECT COUNT(*) as c FROM ${DB_TABLES.REGRAS};`);
+  const total = Number((result.rows?.[0] as Record<string, unknown> | undefined)?.c ?? 0);
+  if (total === 0) {
+    await seedDatabase(db);
+  }
+}
+
+/**
+ * Prepara o banco uma única vez por processo: abre a conexão, roda as migrações e,
+ * se ainda não houver regras, roda o seed. A promise é memoizada; numa falha, o erro
+ * fica exposto em `getDatabaseError()` e a promise é zerada para permitir nova tentativa.
+ */
+export function ensureDatabaseReady(): Promise<void> {
+  if (!_readyPromise) {
+    _bootstrapError = null;
+    _readyPromise = Promise.resolve()
+      .then(() => bootstrapDatabase())
+      .catch((err: unknown) => {
+        _bootstrapError = err instanceof Error ? err : new Error(String(err));
+        _readyPromise = null;
+        throw _bootstrapError;
+      });
+  }
+  return _readyPromise;
+}
+
+/** Último erro de bootstrap, ou null se o banco ficou pronto (ou nunca tentou). */
+export function getDatabaseError(): Error | null {
+  return _bootstrapError;
 }
 
 export function closeDB(): void {
@@ -252,8 +402,11 @@ export function closeDB(): void {
     _db.close();
     _db = null;
   }
+  _gatedDb = null;
+  _readyPromise = null;
+  _bootstrapError = null;
 }
 
-export { seedDatabase } from './seed';
+export { seedDatabase };
 export type { FichaAgente } from '../shared/ordem/esquemas';
 export type { RitualBiblioteca, ItemBiblioteca } from '../shared/ordem/esquemas';

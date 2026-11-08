@@ -1,4 +1,4 @@
--- Schema v1 reference (same as migrations/001_init.sql)
+-- Schema reference (v1 = migrations/001_init.sql, v2 = migrations/002_rolagens.sql)
 -- Shared types mapping (shared/ordem/esquemas.ts, shared/types.ts):
 -- ficha              -> FichaAgente (zod), FichaAgenteDB (types.ts)
 -- biblioteca_ritual  -> RitualBiblioteca (zod), RitualBibliotecaDB (types.ts)
@@ -168,3 +168,21 @@ CREATE TABLE auth (
   updated_at TEXT NOT NULL,
   CHECK (key = 'current_user' OR key LIKE 'token_%')
 );
+
+-- Rolagens (v2): histórico de rolagens do jogador
+CREATE TABLE rolagens (
+  id TEXT PRIMARY KEY,
+  campaign_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  tipo TEXT NOT NULL,
+  rotulo TEXT,
+  formula TEXT NOT NULL,
+  dados TEXT NOT NULL,
+  total INTEGER NOT NULL,
+  critico INTEGER NOT NULL DEFAULT 0,
+  falha INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  synced_at TEXT,
+  CHECK (tipo IN ('teste', 'ataque', 'dano', 'ritual', 'iniciativa'))
+);
+CREATE INDEX idx_rolagens_campaign_user_created ON rolagens(campaign_id, user_id, created_at);
