@@ -23,7 +23,8 @@
     "web": {
       "output": "single",
       "favicon": "./assets/favicon.png",
-      "bundler": "metro"
+      "bundler": "metro",
+      "baseUrl": "/magisapp/"
     },
     "plugins": [
       "expo-router",
@@ -34,8 +35,7 @@
     ],
     "scheme": "magistrado",
     "experiments": {
-      "typedRoutes": false,
-      "baseUrl": "/magisapp"
+      "typedRoutes": false
     }
   }
 }

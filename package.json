@@ -53,5 +53,6 @@
     "export:web": "expo export --platform web --output-dir dist_temp && node scripts/copy-public.js dist_temp && rm -rf dist && mv dist_temp dist 2>/dev/null || (rmdir /s /q dist 2>nul && move dist_temp dist)",
     "deploy": "npm run export:web && npx gh-pages -d dist"
   },
-  "private": true
+  "private": true,
+  "homepage": "https://lucasminetto.github.io/magisapp"
 }
