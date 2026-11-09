@@ -26,16 +26,16 @@
       "bundler": "metro"
     },
     "plugins": [
-          "expo-router",
-          "expo-status-bar",
-          "expo-font",
-          "expo-splash-screen",
-          "expo-asset"
-        ],
+      "expo-router",
+      "expo-status-bar",
+      "expo-font",
+      "expo-splash-screen",
+      "expo-asset"
+    ],
     "scheme": "magistrado",
     "experiments": {
       "typedRoutes": false,
-      "baseUrl": "/magistrado"
+      "baseUrl": "/magisapp"
     }
   }
 }
