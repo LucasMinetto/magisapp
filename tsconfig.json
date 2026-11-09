@@ -23,10 +23,7 @@
     "app/login/**/*.tsx",
     "app/campanha/**/*.tsx",
     "src/**/*.ts",
-    "src/**/*.tsx",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts",
-    "nativewind-env.d.ts"
+    "src/**/*.tsx"
   ],
   "exclude": [
     "app/src",

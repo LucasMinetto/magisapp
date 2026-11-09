@@ -114,6 +114,8 @@ export interface UseArquivoResult {
   refresh: () => Promise<void>;
 }
 
+type Scalar = string | number | null;
+
 function rowToPessoa(row: Record<string, unknown>): ArquivoPessoa {
   const r = row as unknown as ArquivoPessoaRow;
   return {
@@ -215,6 +217,23 @@ function historicoToRow(historico: Omit<ArquivoHistorico, 'id' | 'createdAt'>): 
   };
 }
 
+function insertParts(row: Record<string, unknown>): { cols: string; placeholders: string; values: Scalar[] } {
+  const keys = Object.keys(row);
+  return {
+    cols: keys.join(', '),
+    placeholders: keys.map(() => '?').join(', '),
+    values: keys.map((k) => row[k] as Scalar),
+  };
+}
+
+function setParts(row: Record<string, unknown>): { clause: string; values: Scalar[] } {
+  const keys = Object.keys(row);
+  return {
+    clause: keys.map((k) => `${k} = ?`).join(', '),
+    values: keys.map((k) => row[k] as Scalar),
+  };
+}
+
 export function useArquivo(campaignId: string, userId: string): UseArquivoResult {
   const [pessoas, setPessoas] = useState<ArquivoPessoa[]>([]);
   const [lugares, setLugares] = useState<ArquivoLugar[]>([]);
@@ -224,15 +243,15 @@ export function useArquivo(campaignId: string, userId: string): UseArquivoResult
   const [error, setError] = useState<string | null>(null);
   const db = getDB();
 
-  const refresh = useCallback(async () => {
+  const doRefresh = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const [pessoasResult, lugaresResult, anotacoesResult, historicoResult] = await Promise.all([
-        db.execute(`SELECT * FROM arquivo_pessoa WHERE campaign_id = '${campaignId}' AND user_id = '${userId}' ORDER BY updated_at DESC`),
-        db.execute(`SELECT * FROM arquivo_lugar WHERE campaign_id = '${campaignId}' AND user_id = '${userId}' ORDER BY updated_at DESC`),
-        db.execute(`SELECT * FROM arquivo_anotacao WHERE campaign_id = '${campaignId}' AND user_id = '${userId}' ORDER BY updated_at DESC`),
-        db.execute(`SELECT * FROM arquivo_historico WHERE campaign_id = '${campaignId}' AND user_id = '${userId}' ORDER BY created_at DESC`),
+        db.execute(`SELECT * FROM arquivo_pessoa WHERE campaign_id = ? AND user_id = ? ORDER BY updated_at DESC`, [campaignId, userId]),
+        db.execute(`SELECT * FROM arquivo_lugar WHERE campaign_id = ? AND user_id = ? ORDER BY updated_at DESC`, [campaignId, userId]),
+        db.execute(`SELECT * FROM arquivo_anotacao WHERE campaign_id = ? AND user_id = ? ORDER BY updated_at DESC`, [campaignId, userId]),
+        db.execute(`SELECT * FROM arquivo_historico WHERE campaign_id = ? AND user_id = ? ORDER BY created_at DESC`, [campaignId, userId]),
       ]);
 
       setPessoas(pessoasResult.rows.map(rowToPessoa));
@@ -246,26 +265,30 @@ export function useArquivo(campaignId: string, userId: string): UseArquivoResult
     }
   }, [campaignId, userId, db]);
 
+  const refresh = useCallback(async () => {
+    await Promise.resolve();
+    await doRefresh();
+  }, [doRefresh]);
+
   useEffect(() => {
-    refresh();
-  }, [refresh]);
+    Promise.resolve().then(() => doRefresh());
+  }, [doRefresh]);
 
   const savePessoa = useCallback(async (pessoa: Omit<ArquivoPessoa, 'id' | 'versaoAtual' | 'updatedAt'>): Promise<ArquivoPessoa> => {
     setError(null);
     try {
       const now = new Date().toISOString();
       const id = uuidv4();
-      const row = pessoaToRow(pessoa);
+      const row = pessoaToRow(pessoa) as Record<string, unknown>;
+      const { cols, placeholders, values } = insertParts(row);
 
-      const cols = ['campaign_id', 'user_id', 'nome', 'retrato_url', 'o_que_sabe'];
-      const vals = cols.map(c => {
-        const v = (row as Record<string, unknown>)[c];
-        return typeof v === 'string' ? `'${String(v).replace(/'/g, "''")}'` : v === null ? 'NULL' : v;
-      }).join(', ');
+      await db.execute(
+        `INSERT INTO arquivo_pessoa (id, ${cols}, versao_atual, updated_at) VALUES (?, ${placeholders}, 1, ?)`,
+        [id, ...values, now]
+      );
 
-      await db.execute(`INSERT INTO arquivo_pessoa (id, ${cols.join(', ')}, versao_atual, updated_at) VALUES ('${id}', ${vals}, 1, '${now}')`);
-
-      await refresh();
+      await Promise.resolve();
+      await doRefresh();
       const saved = pessoas.find(p => p.id === id);
       if (!saved) throw new Error('Pessoa not found after save');
       return saved;
@@ -273,29 +296,26 @@ export function useArquivo(campaignId: string, userId: string): UseArquivoResult
       setError(e instanceof Error ? e.message : 'Failed to save pessoa');
       throw e;
     }
-  }, [db, refresh, pessoas]);
+  }, [db, pessoas, doRefresh]);
 
   const updatePessoa = useCallback(async (id: string, pessoa: Partial<Omit<ArquivoPessoa, 'id' | 'versaoAtual' | 'updatedAt'>>): Promise<ArquivoPessoa> => {
     setError(null);
     try {
       const now = new Date().toISOString();
-      const row = pessoaToRow(pessoa);
+      const row = pessoaToRow(pessoa) as Record<string, unknown>;
 
-      // Get current version
-      const current = await db.execute(`SELECT versao_atual FROM arquivo_pessoa WHERE id = '${id}'`);
+      const current = await db.execute(`SELECT versao_atual FROM arquivo_pessoa WHERE id = ?`, [id]);
       const currentVersion = (current.rows[0] as unknown as { versao_atual: number })?.versao_atual ?? 1;
 
-      const setClause = Object.entries(row)
-        .map(([key, value]) => {
-          const col = key;
-          const v = value;
-          return `${col} = ${typeof v === 'string' ? `'${String(v).replace(/'/g, "''")}'` : v === null ? 'NULL' : v}`;
-        })
-        .join(', ');
+      const { clause, values } = setParts(row);
 
-      await db.execute(`UPDATE arquivo_pessoa SET ${setClause}, versao_atual = ${currentVersion + 1}, updated_at = '${now}' WHERE id = '${id}'`);
+      await db.execute(
+        `UPDATE arquivo_pessoa SET ${clause}, versao_atual = ?, updated_at = ? WHERE id = ?`,
+        [...values, currentVersion + 1, now, id]
+      );
 
-      await refresh();
+      await Promise.resolve();
+      await doRefresh();
       const saved = pessoas.find(p => p.id === id);
       if (!saved) throw new Error('Pessoa not found after update');
       return saved;
@@ -303,12 +323,12 @@ export function useArquivo(campaignId: string, userId: string): UseArquivoResult
       setError(e instanceof Error ? e.message : 'Failed to update pessoa');
       throw e;
     }
-  }, [db, refresh, pessoas]);
+  }, [db, pessoas, doRefresh]);
 
   const deletePessoa = useCallback(async (id: string) => {
     setError(null);
     try {
-      await db.execute(`DELETE FROM arquivo_pessoa WHERE id = '${id}'`);
+      await db.execute(`DELETE FROM arquivo_pessoa WHERE id = ?`, [id]);
       setPessoas(prev => prev.filter(p => p.id !== id));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to delete pessoa');
@@ -321,17 +341,16 @@ export function useArquivo(campaignId: string, userId: string): UseArquivoResult
     try {
       const now = new Date().toISOString();
       const id = uuidv4();
-      const row = lugarToRow(lugar);
+      const row = lugarToRow(lugar) as Record<string, unknown>;
+      const { cols, placeholders, values } = insertParts(row);
 
-      const cols = ['campaign_id', 'user_id', 'nome', 'imagem_url', 'descricao_publica'];
-      const vals = cols.map(c => {
-        const v = (row as Record<string, unknown>)[c];
-        return typeof v === 'string' ? `'${String(v).replace(/'/g, "''")}'` : v === null ? 'NULL' : v;
-      }).join(', ');
+      await db.execute(
+        `INSERT INTO arquivo_lugar (id, ${cols}, versao_atual, updated_at) VALUES (?, ${placeholders}, 1, ?)`,
+        [id, ...values, now]
+      );
 
-      await db.execute(`INSERT INTO arquivo_lugar (id, ${cols.join(', ')}, versao_atual, updated_at) VALUES ('${id}', ${vals}, 1, '${now}')`);
-
-      await refresh();
+      await Promise.resolve();
+      await doRefresh();
       const saved = lugares.find(l => l.id === id);
       if (!saved) throw new Error('Lugar not found after save');
       return saved;
@@ -339,28 +358,26 @@ export function useArquivo(campaignId: string, userId: string): UseArquivoResult
       setError(e instanceof Error ? e.message : 'Failed to save lugar');
       throw e;
     }
-  }, [db, refresh, lugares]);
+  }, [db, lugares, doRefresh]);
 
   const updateLugar = useCallback(async (id: string, lugar: Partial<Omit<ArquivoLugar, 'id' | 'versaoAtual' | 'updatedAt'>>): Promise<ArquivoLugar> => {
     setError(null);
     try {
       const now = new Date().toISOString();
-      const row = lugarToRow(lugar);
+      const row = lugarToRow(lugar) as Record<string, unknown>;
 
-      const current = await db.execute(`SELECT versao_atual FROM arquivo_lugar WHERE id = '${id}'`);
+      const current = await db.execute(`SELECT versao_atual FROM arquivo_lugar WHERE id = ?`, [id]);
       const currentVersion = (current.rows[0] as unknown as { versao_atual: number })?.versao_atual ?? 1;
 
-      const setClause = Object.entries(row)
-        .map(([key, value]) => {
-          const col = key;
-          const v = value;
-          return `${col} = ${typeof v === 'string' ? `'${String(v).replace(/'/g, "''")}'` : v === null ? 'NULL' : v}`;
-        })
-        .join(', ');
+      const { clause, values } = setParts(row);
 
-      await db.execute(`UPDATE arquivo_lugar SET ${setClause}, versao_atual = ${currentVersion + 1}, updated_at = '${now}' WHERE id = '${id}'`);
+      await db.execute(
+        `UPDATE arquivo_lugar SET ${clause}, versao_atual = ?, updated_at = ? WHERE id = ?`,
+        [...values, currentVersion + 1, now, id]
+      );
 
-      await refresh();
+      await Promise.resolve();
+      await doRefresh();
       const saved = lugares.find(l => l.id === id);
       if (!saved) throw new Error('Lugar not found after update');
       return saved;
@@ -368,12 +385,12 @@ export function useArquivo(campaignId: string, userId: string): UseArquivoResult
       setError(e instanceof Error ? e.message : 'Failed to update lugar');
       throw e;
     }
-  }, [db, refresh, lugares]);
+  }, [db, lugares, doRefresh]);
 
   const deleteLugar = useCallback(async (id: string) => {
     setError(null);
     try {
-      await db.execute(`DELETE FROM arquivo_lugar WHERE id = '${id}'`);
+      await db.execute(`DELETE FROM arquivo_lugar WHERE id = ?`, [id]);
       setLugares(prev => prev.filter(l => l.id !== id));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to delete lugar');
@@ -386,17 +403,16 @@ export function useArquivo(campaignId: string, userId: string): UseArquivoResult
     try {
       const now = new Date().toISOString();
       const id = uuidv4();
-      const row = anotacaoToRow(anotacao);
+      const row = anotacaoToRow(anotacao) as Record<string, unknown>;
+      const { cols, placeholders, values } = insertParts(row);
 
-      const cols = ['campaign_id', 'user_id', 'titulo', 'conteudo', 'linked_pessoa_id', 'linked_lugar_id'];
-      const vals = cols.map(c => {
-        const v = (row as Record<string, unknown>)[c];
-        return typeof v === 'string' ? `'${String(v).replace(/'/g, "''")}'` : v === null ? 'NULL' : v;
-      }).join(', ');
+      await db.execute(
+        `INSERT INTO arquivo_anotacao (id, ${cols}, created_at, updated_at) VALUES (?, ${placeholders}, ?, ?)`,
+        [id, ...values, now, now]
+      );
 
-      await db.execute(`INSERT INTO arquivo_anotacao (id, ${cols.join(', ')}, created_at, updated_at) VALUES ('${id}', ${vals}, '${now}', '${now}')`);
-
-      await refresh();
+      await Promise.resolve();
+      await doRefresh();
       const saved = anotacoes.find(a => a.id === id);
       if (!saved) throw new Error('Anotação not found after save');
       return saved;
@@ -404,25 +420,22 @@ export function useArquivo(campaignId: string, userId: string): UseArquivoResult
       setError(e instanceof Error ? e.message : 'Failed to save anotação');
       throw e;
     }
-  }, [db, refresh, anotacoes]);
+  }, [db, anotacoes, doRefresh]);
 
   const updateAnotacao = useCallback(async (id: string, anotacao: Partial<Omit<ArquivoAnotacao, 'id' | 'createdAt' | 'updatedAt'>>): Promise<ArquivoAnotacao> => {
     setError(null);
     try {
       const now = new Date().toISOString();
-      const row = anotacaoToRow(anotacao);
+      const row = anotacaoToRow(anotacao) as Record<string, unknown>;
+      const { clause, values } = setParts(row);
 
-      const setClause = Object.entries(row)
-        .map(([key, value]) => {
-          const col = key;
-          const v = value;
-          return `${col} = ${typeof v === 'string' ? `'${String(v).replace(/'/g, "''")}'` : v === null ? 'NULL' : v}`;
-        })
-        .join(', ');
+      await db.execute(
+        `UPDATE arquivo_anotacao SET ${clause}, updated_at = ? WHERE id = ?`,
+        [...values, now, id]
+      );
 
-      await db.execute(`UPDATE arquivo_anotacao SET ${setClause}, updated_at = '${now}' WHERE id = '${id}'`);
-
-      await refresh();
+      await Promise.resolve();
+      await doRefresh();
       const saved = anotacoes.find(a => a.id === id);
       if (!saved) throw new Error('Anotação not found after update');
       return saved;
@@ -430,12 +443,12 @@ export function useArquivo(campaignId: string, userId: string): UseArquivoResult
       setError(e instanceof Error ? e.message : 'Failed to update anotação');
       throw e;
     }
-  }, [db, refresh, anotacoes]);
+  }, [db, anotacoes, doRefresh]);
 
   const deleteAnotacao = useCallback(async (id: string) => {
     setError(null);
     try {
-      await db.execute(`DELETE FROM arquivo_anotacao WHERE id = '${id}'`);
+      await db.execute(`DELETE FROM arquivo_anotacao WHERE id = ?`, [id]);
       setAnotacoes(prev => prev.filter(a => a.id !== id));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to delete anotação');
@@ -448,17 +461,16 @@ export function useArquivo(campaignId: string, userId: string): UseArquivoResult
     try {
       const now = new Date().toISOString();
       const id = uuidv4();
-      const row = historicoToRow(historicoEntry);
+      const row = historicoToRow(historicoEntry) as unknown as Record<string, unknown>;
+      const { cols, placeholders, values } = insertParts(row);
 
-      const cols = ['campaign_id', 'user_id', 'tipo', 'ref_id', 'titulo', 'conteudo', 'autor'];
-      const vals = cols.map(c => {
-        const v = (row as Record<string, unknown>)[c];
-        return typeof v === 'string' ? `'${String(v).replace(/'/g, "''")}'` : v === null ? 'NULL' : v;
-      }).join(', ');
+      await db.execute(
+        `INSERT INTO arquivo_historico (id, ${cols}, created_at) VALUES (?, ${placeholders}, ?)`,
+        [id, ...values, now]
+      );
 
-      await db.execute(`INSERT INTO arquivo_historico (id, ${cols.join(', ')}, created_at) VALUES ('${id}', ${vals}, '${now}')`);
-
-      await refresh();
+      await Promise.resolve();
+      await doRefresh();
       const saved = historico.find(h => h.id === id);
       if (!saved) throw new Error('Histórico not found after save');
       return saved;
@@ -466,7 +478,7 @@ export function useArquivo(campaignId: string, userId: string): UseArquivoResult
       setError(e instanceof Error ? e.message : 'Failed to add histórico');
       throw e;
     }
-  }, [db, refresh, historico]);
+  }, [db, historico, doRefresh]);
 
   return {
     pessoas,

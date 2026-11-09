@@ -18,7 +18,7 @@ const ABAS: { chave: Aba; rotulo: string }[] = [
 export default function ArquivoScreen() {
   const { campaignId } = useLocalSearchParams<{ campaignId?: string }>();
   const { user } = useAuth();
-  const campanha = campaignId ?? user?.campaignId ?? 'default';
+  const campanha = campaignId ?? useAuth.getState().campaignId ?? 'default';
   const userId = user?.id ?? 'user-1';
   const {
     pessoas, lugares, anotacoes, historico,

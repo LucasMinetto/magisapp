@@ -1,7 +1,14 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
 import { getDB } from '../db';
+import {
+  loadFicha,
+  saveFicha as persistFicha,
+  deleteFicha as removeFicha,
+  markFichaSynced,
+} from '../db/fichaStore';
+import { createDebouncedSaver, type DebouncedSaver } from '../lib/debounce';
 import type { FichaAgente } from '../shared/ordem/esquemas';
-import { v4 as uuidv4 } from 'uuid';
 
 export interface UseFichaResult {
   ficha: FichaAgente | null;
@@ -13,37 +20,47 @@ export interface UseFichaResult {
   refresh: () => Promise<void>;
 }
 
-interface FichaRow {
-  id: string;
-  campaign_id: string;
-  user_id: string;
-  sheet_data: string;
-  updated_at: string;
-  synced_at: string | null;
-}
-
-function rowToFicha(row: FichaRow): FichaAgente {
-  return JSON.parse(row.sheet_data);
-}
-
+/**
+ * Ficha da campanha/usuário. As edições atualizam o estado na hora (digitação
+ * responsiva) e a gravação no SQLite é debounced: uma rajada de teclas gera uma
+ * única gravação e uma única linha em `sync_queue`. As pendências são gravadas
+ * ao sair da tela (blur) e ao desmontar.
+ */
 export function useFicha(campaignId: string, userId: string): UseFichaResult {
   const [ficha, setFicha] = useState<FichaAgente | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const db = getDB();
 
-  const refresh = useCallback(async () => {
+  // Contexto lido no momento da gravação (o saver é criado uma vez por montagem).
+  const contextRef = useRef({ campaignId, userId });
+  const saverRef = useRef<DebouncedSaver<FichaAgente> | null>(null);
+
+  // Initialize refs in a useEffect to avoid ref access during render
+  useEffect(() => {
+    contextRef.current = { campaignId, userId };
+    if (!saverRef.current) {
+      saverRef.current = createDebouncedSaver<FichaAgente>(async (data) => {
+        const ctx = contextRef.current;
+        await persistFicha(db, ctx.campaignId, ctx.userId, data);
+      });
+    }
+  }, [campaignId, userId, db]);
+
+  const flush = useCallback(async () => {
+    try {
+      await saverRef.current?.flush();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to save ficha');
+    }
+  }, []);
+
+  const doRefresh = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const result = await db.execute(
-        `SELECT * FROM ficha WHERE campaign_id = '${campaignId}' AND user_id = '${userId}'`
-      );
-      if (result.rows.length > 0) {
-        setFicha(rowToFicha(result.rows[0] as unknown as FichaRow));
-      } else {
-        setFicha(null);
-      }
+      await saverRef.current?.flush(); // grava pendências antes de ler
+      setFicha(await loadFicha(db, campaignId, userId));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load ficha');
     } finally {
@@ -51,60 +68,32 @@ export function useFicha(campaignId: string, userId: string): UseFichaResult {
     }
   }, [campaignId, userId, db]);
 
+  const refresh = useCallback(async () => {
+    // Schedule state updates as microtasks to avoid "setState in effect" warnings
+    await Promise.resolve();
+    await doRefresh();
+  }, [doRefresh]);
+
   useEffect(() => {
-    refresh();
-  }, [refresh]);
+    Promise.resolve().then(() => doRefresh());
+  }, [doRefresh]);
+
+  // Grava as pendências ao sair da tela (blur) e ao desmontar.
+  useFocusEffect(useCallback(() => () => { void flush(); }, [flush]));
+  useEffect(() => () => { void flush(); }, [flush]);
 
   const saveFicha = useCallback(async (fichaData: FichaAgente) => {
     setError(null);
-    try {
-      const now = new Date().toISOString();
-      const fichaId = uuidv4();
-      const sheetData = JSON.stringify(fichaData).replace(/'/g, "''");
-
-      // Check if ficha exists
-      const existing = await db.execute(
-        `SELECT id FROM ficha WHERE campaign_id = '${campaignId}' AND user_id = '${userId}'`
-      );
-
-      if (existing.rows.length > 0) {
-        // Update existing
-        const existingId = (existing.rows[0] as unknown as { id: string }).id;
-        await db.execute(
-          `UPDATE ficha SET sheet_data = '${sheetData}', updated_at = '${now}' WHERE id = '${existingId}'`
-        );
-      } else {
-        // Insert new
-        await db.execute(
-          `INSERT INTO ficha (id, campaign_id, user_id, sheet_data, updated_at) VALUES ('${fichaId}', '${campaignId}', '${userId}', '${sheetData}', '${now}')`
-        );
-      }
-
-      // Add to sync queue
-      const syncId = uuidv4();
-      const targetFichaId = existing.rows.length > 0 ? (existing.rows[0] as unknown as { id: string }).id : fichaId;
-      await db.execute(
-        `INSERT INTO sync_queue (id, campaign_id, user_id, operacao, payload, created_at) VALUES ('${syncId}', '${campaignId}', '${userId}', 'push_ficha', '${JSON.stringify({ fichaId: targetFichaId }).replace(/'/g, "''")}', '${now}')`
-      );
-
-      await refresh();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to save ficha');
-      throw e;
-    }
-  }, [campaignId, userId, db, refresh]);
+    setFicha(fichaData); // otimista: mantém a tela responsiva entre edições
+    saverRef.current?.schedule(fichaData);
+  }, []);
 
   const deleteFicha = useCallback(async () => {
     setError(null);
     try {
-      const result = await db.execute(
-        `SELECT id FROM ficha WHERE campaign_id = '${campaignId}' AND user_id = '${userId}'`
-      );
-      if (result.rows.length > 0) {
-        const fichaId = (result.rows[0] as unknown as { id: string }).id;
-        await db.execute(`DELETE FROM ficha WHERE id = '${fichaId}'`);
-        setFicha(null);
-      }
+      saverRef.current?.cancel();
+      await removeFicha(db, campaignId, userId);
+      setFicha(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to delete ficha');
       throw e;
@@ -114,20 +103,14 @@ export function useFicha(campaignId: string, userId: string): UseFichaResult {
   const markSynced = useCallback(async () => {
     setError(null);
     try {
-      const now = new Date().toISOString();
-      const result = await db.execute(
-        `SELECT id FROM ficha WHERE campaign_id = '${campaignId}' AND user_id = '${userId}'`
-      );
-      if (result.rows.length > 0) {
-        const fichaId = (result.rows[0] as unknown as { id: string }).id;
-        await db.execute(`UPDATE ficha SET synced_at = '${now}' WHERE id = '${fichaId}'`);
-        await refresh();
-      }
+      await flush();
+      await markFichaSynced(db, campaignId, userId);
+      setFicha(await loadFicha(db, campaignId, userId));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to mark ficha as synced');
       throw e;
     }
-  }, [campaignId, userId, db, refresh]);
+  }, [flush, campaignId, userId, db]);
 
   return {
     ficha,

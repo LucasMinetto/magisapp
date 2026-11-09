@@ -4,6 +4,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthDB } from '@/hooks/useAuthDB';
 import { useSyncQueue } from '@/hooks/useSyncQueue';
+import { toBase64 } from '@/lib/base64';
+import { timeoutSignal } from '@/lib/timeout';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 
@@ -13,7 +15,7 @@ export default function SyncScreen() {
   const { campaignId } = useLocalSearchParams<{ campaignId?: string }>();
   const router = useRouter();
   const { user } = useAuth();
-  const campanha = campaignId ?? user?.campaignId ?? 'default';
+  const campanha = campaignId ?? useAuth.getState().campaignId ?? 'default';
   const userId = user?.id ?? 'user-1';
 
   const { syncCredentials, saveCredentials, testConnection } = useAuthDB();
@@ -47,7 +49,7 @@ export default function SyncScreen() {
         return;
       }
       const creds = { serverUrl, username, password };
-      const auth = 'Basic ' + btoa(creds.username + ':' + creds.password);
+      const auth = 'Basic ' + toBase64(creds.username + ':' + creds.password);
       for (const item of pendentes) {
         await markProcessing(item.id);
         try {
@@ -59,7 +61,7 @@ export default function SyncScreen() {
               operacao: item.operacao,
               payload: item.payload,
             }),
-            signal: AbortSignal.timeout(10000),
+            signal: timeoutSignal(10000),
           });
           if (resp.ok) {
             await markSynced(item.id);

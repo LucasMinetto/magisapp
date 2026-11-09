@@ -71,7 +71,8 @@ export function useSyncQueue(campaignId: string, userId: string): UseSyncQueueRe
     setError(null);
     try {
       const result = await db.execute(
-        `SELECT * FROM sync_queue WHERE campaign_id = '${campaignId}' AND user_id = '${userId}' ORDER BY created_at ASC`
+        'SELECT * FROM sync_queue WHERE campaign_id = ? AND user_id = ? ORDER BY created_at ASC',
+        [campaignId, userId]
       );
       setQueue(result.rows.map(rowToEntry));
     } catch (e) {
@@ -82,7 +83,7 @@ export function useSyncQueue(campaignId: string, userId: string): UseSyncQueueRe
   }, [campaignId, userId, db]);
 
   useEffect(() => {
-    refresh();
+    Promise.resolve().then(() => refresh());
   }, [refresh]);
 
   const enqueue = useCallback(async (operacao: SyncOperacao, payload: unknown): Promise<SyncQueueEntry> => {
@@ -90,10 +91,11 @@ export function useSyncQueue(campaignId: string, userId: string): UseSyncQueueRe
     try {
       const now = new Date().toISOString();
       const id = uuidv4();
-      const payloadStr = JSON.stringify(payload).replace(/'/g, "''");
 
       await db.execute(
-        `INSERT INTO sync_queue (id, campaign_id, user_id, operacao, payload, status, tentativas, created_at) VALUES ('${id}', '${campaignId}', '${userId}', '${operacao}', '${payloadStr}', 'pending', 0, '${now}')`
+        `INSERT INTO sync_queue (id, campaign_id, user_id, operacao, payload, status, tentativas, created_at)
+         VALUES (?, ?, ?, ?, ?, 'pending', 0, ?)`,
+        [id, campaignId, userId, operacao, JSON.stringify(payload), now]
       );
 
       await refresh();
@@ -109,7 +111,7 @@ export function useSyncQueue(campaignId: string, userId: string): UseSyncQueueRe
   const markProcessing = useCallback(async (id: string) => {
     setError(null);
     try {
-      await db.execute(`UPDATE sync_queue SET status = 'processing' WHERE id = '${id}'`);
+      await db.execute(`UPDATE sync_queue SET status = 'processing' WHERE id = ?`, [id]);
       await refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to mark as processing');
@@ -121,7 +123,7 @@ export function useSyncQueue(campaignId: string, userId: string): UseSyncQueueRe
     setError(null);
     try {
       const now = new Date().toISOString();
-      await db.execute(`UPDATE sync_queue SET status = 'synced', processed_at = '${now}' WHERE id = '${id}'`);
+      await db.execute(`UPDATE sync_queue SET status = 'synced', processed_at = ? WHERE id = ?`, [now, id]);
       await refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to mark as synced');
@@ -133,8 +135,10 @@ export function useSyncQueue(campaignId: string, userId: string): UseSyncQueueRe
     setError(null);
     try {
       const now = new Date().toISOString();
-      const errorEscaped = errorMsg.replace(/'/g, "''");
-      await db.execute(`UPDATE sync_queue SET status = 'failed', processed_at = '${now}', error = '${errorEscaped}', tentativas = tentativas + 1 WHERE id = '${id}'`);
+      await db.execute(
+        `UPDATE sync_queue SET status = 'failed', processed_at = ?, error = ?, tentativas = tentativas + 1 WHERE id = ?`,
+        [now, errorMsg, id]
+      );
       await refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to mark as failed');
@@ -145,8 +149,10 @@ export function useSyncQueue(campaignId: string, userId: string): UseSyncQueueRe
   const retry = useCallback(async (id: string) => {
     setError(null);
     try {
-      const now = new Date().toISOString();
-      await db.execute(`UPDATE sync_queue SET status = 'pending', error = NULL, tentativas = tentativas + 1 WHERE id = '${id}'`);
+      await db.execute(
+        `UPDATE sync_queue SET status = 'pending', error = NULL, tentativas = tentativas + 1 WHERE id = ?`,
+        [id]
+      );
       await refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to retry');

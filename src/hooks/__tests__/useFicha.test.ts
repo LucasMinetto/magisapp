@@ -1,12 +1,22 @@
 import { openDB, runMigrations } from '../../db/index';
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { loadFicha, saveFicha, deleteFicha, markFichaSynced } from '../../db/fichaStore';
+import { createDebouncedSaver } from '../../lib/debounce';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import type { DB } from '@op-engineering/op-sqlite';
 import * as fs from 'fs';
 import type { FichaAgente } from '../../shared/ordem/esquemas';
 
-describe('useFicha hook', () => {
+/**
+ * Exercita a camada que o hook `useFicha` usa de fato (`src/db/fichaStore`), com um
+ * banco SQLite real: é aí que está a lógica (consultas parametrizadas, upsert da ficha
+ * e inserção na fila de sync). O hook só embrulha essas funções em estado React.
+ */
+describe('useFicha → fichaStore', () => {
   let db: DB;
   let tempDbPath: string;
+
+  const campaignId = 'campaign-1';
+  const userId = 'user-1';
 
   beforeEach(async () => {
     tempDbPath = `test_ficha_${Date.now()}_${Math.random().toString(36).slice(2)}.db`;
@@ -16,9 +26,11 @@ describe('useFicha hook', () => {
 
   afterEach(() => {
     if (db) db.close();
-    if (tempDbPath && fs.existsSync(tempDbPath)) fs.unlinkSync(tempDbPath);
-    if (tempDbPath && fs.existsSync(tempDbPath + '-wal')) fs.unlinkSync(tempDbPath + '-wal');
-    if (tempDbPath && fs.existsSync(tempDbPath + '-shm')) fs.unlinkSync(tempDbPath + '-shm');
+    for (const suffix of ['', '-wal', '-shm']) {
+      const p = tempDbPath + suffix;
+      if (p && fs.existsSync(p)) fs.unlinkSync(p);
+    }
+    vi.useRealTimers();
   });
 
   const sampleFicha: FichaAgente = {
@@ -47,138 +59,103 @@ describe('useFicha hook', () => {
     investigacao: { aparencia: '', personalidade: '', historico: '', objetivo: '', anotacoes: '' },
   };
 
-  const escape = (str: string) => str.replace(/'/g, "''");
+  async function countRows(table: string): Promise<number> {
+    const res = await db.execute(`SELECT COUNT(*) as c FROM ${table}`);
+    return Number((res.rows[0] as unknown as { c: number }).c);
+  }
 
-  it('creates a ficha and adds to sync queue', async () => {
-    const campaignId = 'campaign-1';
-    const userId = 'user-1';
-    const fichaId = 'ficha-1';
-    const now = new Date().toISOString();
-    const sheetData = escape(JSON.stringify(sampleFicha));
+  it('não há ficha até salvar; saveFicha cria a ficha e enfileira um push_ficha', async () => {
+    expect(await loadFicha(db, campaignId, userId)).toBeNull();
 
-    await db.execute(
-      `INSERT INTO ficha (id, campaign_id, user_id, sheet_data, updated_at) VALUES ('${fichaId}', '${campaignId}', '${userId}', '${sheetData}', '${now}')`
-    );
+    await saveFicha(db, campaignId, userId, sampleFicha);
 
-    const result = await db.execute(`SELECT * FROM ficha WHERE id = '${fichaId}'`);
-    expect(result.rows.length).toBe(1);
-    expect(result.rows[0].campaign_id).toBe(campaignId);
-    expect(result.rows[0].user_id).toBe(userId);
-    expect(JSON.parse(result.rows[0].sheet_data as string)).toEqual(sampleFicha);
-    expect(result.rows[0].synced_at).toBeNull();
+    const loaded = await loadFicha(db, campaignId, userId);
+    expect(loaded).toEqual(sampleFicha);
+    expect(await countRows('ficha')).toBe(1);
 
-    const syncId = 'sync-1';
-    await db.execute(
-      `INSERT INTO sync_queue (id, campaign_id, user_id, operacao, payload, created_at) VALUES ('${syncId}', '${campaignId}', '${userId}', 'push_ficha', '${escape(JSON.stringify({ fichaId }))}', '${now}')`
-    );
-
-    const syncResult = await db.execute(`SELECT * FROM sync_queue WHERE id = '${syncId}'`);
-    expect(syncResult.rows.length).toBe(1);
-    expect(syncResult.rows[0].operacao).toBe('push_ficha');
-    expect(syncResult.rows[0].status).toBe('pending');
+    const queue = await db.execute('SELECT * FROM sync_queue');
+    expect(queue.rows.length).toBe(1);
+    expect(queue.rows[0].operacao).toBe('push_ficha');
+    expect(queue.rows[0].status).toBe('pending');
+    expect(JSON.parse(queue.rows[0].payload as string).fichaId).toBeTruthy();
   });
 
-  it('reads ficha by campaign and user', async () => {
-    const campaignId = 'campaign-1';
-    const userId = 'user-1';
-    const fichaId = 'ficha-1';
-    const now = new Date().toISOString();
-    const sheetData = escape(JSON.stringify(sampleFicha));
+  it('preserva valores com aspas (consulta parametrizada, sem escape manual)', async () => {
+    const ficha: FichaAgente = { ...sampleFicha, jogador: "O'Brien — 'aspas'" };
 
-    await db.execute(
-      `INSERT INTO ficha (id, campaign_id, user_id, sheet_data, updated_at) VALUES ('${fichaId}', '${campaignId}', '${userId}', '${sheetData}', '${now}')`
-    );
+    await saveFicha(db, campaignId, userId, ficha);
 
-    const result = await db.execute(
-      `SELECT * FROM ficha WHERE campaign_id = '${campaignId}' AND user_id = '${userId}'`
-    );
-
-    expect(result.rows.length).toBe(1);
-    expect(result.rows[0].id).toBe(fichaId);
+    const loaded = await loadFicha(db, campaignId, userId);
+    expect(loaded?.jogador).toBe("O'Brien — 'aspas'");
   });
 
-  it('updates ficha and adds to sync queue', async () => {
-    const campaignId = 'campaign-1';
-    const userId = 'user-1';
-    const fichaId = 'ficha-1';
-    const now = new Date().toISOString();
-    const later = new Date(Date.now() + 1000).toISOString();
-    const sheetData = escape(JSON.stringify(sampleFicha));
+  it('não interpreta SQL vindo do usuário (injeção fica como texto)', async () => {
+    const ficha: FichaAgente = { ...sampleFicha, jogador: "x'); DROP TABLE ficha;--" };
 
-    await db.execute(
-      `INSERT INTO ficha (id, campaign_id, user_id, sheet_data, updated_at) VALUES ('${fichaId}', '${campaignId}', '${userId}', '${sheetData}', '${now}')`
-    );
+    await saveFicha(db, campaignId, userId, ficha);
 
-    const updatedFicha = { ...sampleFicha, nex: 15, pvAtual: 10 };
-    const updatedSheetData = escape(JSON.stringify(updatedFicha));
-
-    await db.execute(
-      `UPDATE ficha SET sheet_data = '${updatedSheetData}', updated_at = '${later}' WHERE id = '${fichaId}'`
-    );
-
-    const result = await db.execute(`SELECT * FROM ficha WHERE id = '${fichaId}'`);
-    expect(JSON.parse(result.rows[0].sheet_data as string).nex).toBe(15);
-    expect(JSON.parse(result.rows[0].sheet_data as string).pvAtual).toBe(10);
-    expect(result.rows[0].updated_at).toBe(later);
-
-    const syncId = 'sync-2';
-    await db.execute(
-      `INSERT INTO sync_queue (id, campaign_id, user_id, operacao, payload, created_at) VALUES ('${syncId}', '${campaignId}', '${userId}', 'push_ficha', '${escape(JSON.stringify({ fichaId }))}', '${later}')`
-    );
-
-    const syncResult = await db.execute(`SELECT * FROM sync_queue WHERE id = '${syncId}'`);
-    expect(syncResult.rows[0].operacao).toBe('push_ficha');
+    expect(await countRows('ficha')).toBe(1);
+    expect((await loadFicha(db, campaignId, userId))?.jogador).toBe("x'); DROP TABLE ficha;--");
   });
 
-  it('deletes ficha', async () => {
-    const campaignId = 'campaign-1';
-    const userId = 'user-1';
-    const fichaId = 'ficha-1';
-    const now = new Date().toISOString();
-    const sheetData = escape(JSON.stringify(sampleFicha));
+  it('salvar de novo atualiza a mesma ficha e enfileira outro push_ficha', async () => {
+    await saveFicha(db, campaignId, userId, sampleFicha);
+    await saveFicha(db, campaignId, userId, { ...sampleFicha, nex: 15, pvAtual: 10 });
 
-    await db.execute(
-      `INSERT INTO ficha (id, campaign_id, user_id, sheet_data, updated_at) VALUES ('${fichaId}', '${campaignId}', '${userId}', '${sheetData}', '${now}')`
-    );
+    expect(await countRows('ficha')).toBe(1); // upsert: continua uma só ficha por campanha/usuário
+    const loaded = await loadFicha(db, campaignId, userId);
+    expect(loaded?.nex).toBe(15);
+    expect(loaded?.pvAtual).toBe(10);
 
-    await db.execute(`DELETE FROM ficha WHERE id = '${fichaId}'`);
-
-    const result = await db.execute(`SELECT * FROM ficha WHERE id = '${fichaId}'`);
-    expect(result.rows.length).toBe(0);
+    const queue = await db.execute('SELECT * FROM sync_queue');
+    expect(queue.rows.length).toBe(2);
   });
 
-  it('marks ficha as synced', async () => {
-    const campaignId = 'campaign-1';
-    const userId = 'user-1';
-    const fichaId = 'ficha-1';
-    const now = new Date().toISOString();
-    const syncedAt = new Date(Date.now() + 1000).toISOString();
-    const sheetData = escape(JSON.stringify(sampleFicha));
+  it('markFichaSynced grava synced_at', async () => {
+    await saveFicha(db, campaignId, userId, sampleFicha);
+    await markFichaSynced(db, campaignId, userId);
 
-    await db.execute(
-      `INSERT INTO ficha (id, campaign_id, user_id, sheet_data, updated_at) VALUES ('${fichaId}', '${campaignId}', '${userId}', '${sheetData}', '${now}')`
-    );
-
-    await db.execute(`UPDATE ficha SET synced_at = '${syncedAt}' WHERE id = '${fichaId}'`);
-
-    const result = await db.execute(`SELECT * FROM ficha WHERE id = '${fichaId}'`);
-    expect(result.rows[0].synced_at).toBe(syncedAt);
+    const res = await db.execute('SELECT synced_at FROM ficha WHERE campaign_id = ? AND user_id = ?', [campaignId, userId]);
+    expect(res.rows[0].synced_at).toBeTruthy();
   });
 
-  it('enforces unique constraint on (campaign_id, user_id)', async () => {
-    const campaignId = 'campaign-1';
-    const userId = 'user-1';
-    const now = new Date().toISOString();
-    const sheetData = escape(JSON.stringify(sampleFicha));
+  it('deleteFicha remove a ficha', async () => {
+    await saveFicha(db, campaignId, userId, sampleFicha);
+    await deleteFicha(db, campaignId, userId);
+    expect(await loadFicha(db, campaignId, userId)).toBeNull();
+  });
 
-    await db.execute(
-      `INSERT INTO ficha (id, campaign_id, user_id, sheet_data, updated_at) VALUES ('ficha-1', '${campaignId}', '${userId}', '${sheetData}', '${now}')`
-    );
+  it('debounce: uma rajada de edições gera uma única gravação e uma linha de fila', async () => {
+    vi.useFakeTimers();
 
-    await expect(
-      db.execute(
-        `INSERT INTO ficha (id, campaign_id, user_id, sheet_data, updated_at) VALUES ('ficha-2', '${campaignId}', '${userId}', '${sheetData}', '${now}')`
-      )
-    ).rejects.toThrow();
+    let calls = 0;
+    const saver = createDebouncedSaver<FichaAgente>(async (f) => {
+      calls += 1;
+      await saveFicha(db, campaignId, userId, f);
+    }, 600);
+
+    for (let i = 0; i < 5; i++) {
+      saver.schedule({ ...sampleFicha, nex: i * 5, jogador: `J${i}` });
+    }
+    expect(calls).toBe(0); // nada gravado durante a rajada
+
+    await vi.advanceTimersByTimeAsync(600);
+    await saver.flush();
+
+    expect(calls).toBe(1); // uma edição (a última) → uma gravação
+    expect((await loadFicha(db, campaignId, userId))?.jogador).toBe('J4');
+    expect(await countRows('ficha')).toBe(1);
+    expect(await countRows('sync_queue')).toBe(1);
+  });
+
+  it('debounce: flush grava imediatamente o pendente', async () => {
+    let saved: FichaAgente | null = null;
+    const saver = createDebouncedSaver<FichaAgente>((f) => { saved = f; }, 10_000);
+
+    saver.schedule({ ...sampleFicha, jogador: 'Pending' });
+    expect(saved).toBeNull();
+
+    await saver.flush();
+    expect((saved as FichaAgente | null)?.jogador).toBe('Pending');
   });
 });

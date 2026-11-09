@@ -4,6 +4,7 @@ import type { DB } from '@op-engineering/op-sqlite';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
+import { TIPOS_ROLAGEM } from '../../shared/ordem/esquemas';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const V1_SQL = fs.readFileSync(path.resolve(here, '../migrations/001_init.sql'), 'utf-8');
@@ -97,6 +98,29 @@ describe('migração v2 (rolagens)', () => {
       db.execute(
         `INSERT INTO rolagens (id, campaign_id, user_id, tipo, formula, dados, total, created_at)
          VALUES ('x', 'c1', 'u1', 'invalido', '1d20', '[1]', 1, '2026-01-01T00:00:00Z')`
+      )
+    ).rejects.toThrow();
+  });
+
+  it('CHECK de tipo casa exatamente com TIPOS_ROLAGEM (a autoridade)', async () => {
+    await runMigrations(db);
+
+    // Todo tipo do shared é aceito.
+    for (const tipo of TIPOS_ROLAGEM) {
+      await db.execute(
+        `INSERT INTO rolagens (id, campaign_id, user_id, tipo, formula, dados, total, created_at)
+         VALUES (?, 'c1', 'u1', ?, '1d20', '[1]', 1, '2026-01-01T00:00:00Z')`,
+        [`t-${tipo}`, tipo]
+      );
+    }
+    const total = await db.execute('SELECT COUNT(*) as c FROM rolagens');
+    expect(Number(total.rows[0].c)).toBe(TIPOS_ROLAGEM.length);
+
+    // Um valor que não está no shared (o antigo 'iniciativa') é recusado.
+    await expect(
+      db.execute(
+        `INSERT INTO rolagens (id, campaign_id, user_id, tipo, formula, dados, total, created_at)
+         VALUES ('bad', 'c1', 'u1', 'iniciativa', '1d20', '[1]', 1, '2026-01-01T00:00:00Z')`
       )
     ).rejects.toThrow();
   });

@@ -166,6 +166,16 @@ function itemToRow(item: Omit<ItemBiblioteca, 'id'>): Omit<ItemBibliotecaRow, 'i
   };
 }
 
+/** Colunas fixas (nomeadas no código) + valores parametrizados. */
+function insertColumns(row: Record<string, unknown>): { cols: string; placeholders: string; values: (string | number | null)[] } {
+  const keys = Object.keys(row);
+  return {
+    cols: keys.join(', '),
+    placeholders: keys.map(() => '?').join(', '),
+    values: keys.map((k) => row[k] as string | number | null),
+  };
+}
+
 export function useBiblioteca(sourceId?: string): UseBibliotecaResult {
   const [rituais, setRituais] = useState<RitualBiblioteca[]>([]);
   const [itens, setItens] = useState<ItemBiblioteca[]>([]);
@@ -205,22 +215,20 @@ export function useBiblioteca(sourceId?: string): UseBibliotecaResult {
   }, [sourceId, db]);
 
   useEffect(() => {
-    refresh();
+    Promise.resolve().then(() => refresh());
   }, [refresh]);
 
   const saveRitual = useCallback(async (ritual: Omit<RitualBiblioteca, 'id'>): Promise<RitualBiblioteca> => {
     setError(null);
     try {
-      const now = new Date().toISOString();
       const id = uuidv4();
-      const row = ritualToRow(ritual);
+      const row = ritualToRow(ritual) as unknown as Record<string, unknown>;
+      const { cols, placeholders, values } = insertColumns(row);
 
-      const cols = Object.keys(row).join(', ');
-      const vals = Object.values(row)
-        .map(v => (typeof v === 'string' ? `'${v.replace(/'/g, "''")}'` : v === null ? 'NULL' : v))
-        .join(', ');
-
-      await db.execute(`INSERT INTO biblioteca_ritual (id, ${cols}) VALUES ('${id}', ${vals})`);
+      await db.execute(
+        `INSERT INTO biblioteca_ritual (id, ${cols}) VALUES (?, ${placeholders})`,
+        [id, ...values]
+      );
 
       await refresh();
       const saved = rituais.find(r => r.id === id);
@@ -235,16 +243,14 @@ export function useBiblioteca(sourceId?: string): UseBibliotecaResult {
   const saveItem = useCallback(async (item: Omit<ItemBiblioteca, 'id'>): Promise<ItemBiblioteca> => {
     setError(null);
     try {
-      const now = new Date().toISOString();
       const id = uuidv4();
-      const row = itemToRow(item);
+      const row = itemToRow(item) as unknown as Record<string, unknown>;
+      const { cols, placeholders, values } = insertColumns(row);
 
-      const cols = Object.keys(row).join(', ');
-      const vals = Object.values(row)
-        .map(v => (typeof v === 'string' ? `'${v.replace(/'/g, "''")}'` : v === null ? 'NULL' : v))
-        .join(', ');
-
-      await db.execute(`INSERT INTO biblioteca_item (id, ${cols}) VALUES ('${id}', ${vals})`);
+      await db.execute(
+        `INSERT INTO biblioteca_item (id, ${cols}) VALUES (?, ${placeholders})`,
+        [id, ...values]
+      );
 
       await refresh();
       const saved = itens.find(i => i.id === id);
@@ -259,7 +265,7 @@ export function useBiblioteca(sourceId?: string): UseBibliotecaResult {
   const deleteRitual = useCallback(async (id: string) => {
     setError(null);
     try {
-      await db.execute(`DELETE FROM biblioteca_ritual WHERE id = '${id}'`);
+      await db.execute(`DELETE FROM biblioteca_ritual WHERE id = ?`, [id]);
       setRituais(prev => prev.filter(r => r.id !== id));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to delete ritual');
@@ -270,7 +276,7 @@ export function useBiblioteca(sourceId?: string): UseBibliotecaResult {
   const deleteItem = useCallback(async (id: string) => {
     setError(null);
     try {
-      await db.execute(`DELETE FROM biblioteca_item WHERE id = '${id}'`);
+      await db.execute(`DELETE FROM biblioteca_item WHERE id = ?`, [id]);
       setItens(prev => prev.filter(i => i.id !== id));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to delete item');

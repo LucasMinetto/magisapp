@@ -4,7 +4,6 @@ import { View, StyleSheet, ActivityIndicator, Text } from 'react-native';
 export interface SpinnerProps {
   size?: 'sm' | 'md' | 'lg';
   color?: string;
-  className?: string;
   fullScreen?: boolean;
 }
 
@@ -33,7 +32,7 @@ export const Spinner = ({
   return <ActivityIndicator size={sizeMap[size]} color={color} />;
 };
 
-export const SpinnerOverlay = ({ visible, children, message = 'Carregando...' }: { visible: boolean; children: React.ReactNode; message?: string }) => {
+export const SpinnerOverlay = ({ visible, message = 'Carregando...' }: { visible: boolean; children?: React.ReactNode; message?: string }) => {
   if (!visible) return null;
 
   return (

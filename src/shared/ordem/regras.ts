@@ -46,13 +46,15 @@ export const ORIGENS = [
   'Mergulhador', 'Motorista', 'Nerd Entusiasta', 'Profetizado', 'Psicólogo', 'Repórter Investigativo',
 ]
 
-// Apêndice de condições do livro de regras.
+// Apêndice de condições do livro de regras (57 condições oficiais).
 export const CONDICOES = [
-  'Abalado', 'Agarrado', 'Alquebrado', 'Apavorado', 'Asfixiado', 'Atordoado', 'Caído', 'Cego', 'Confuso',
-  'Debilitado', 'Desprevenido', 'Doente', 'Em Chamas', 'Enjoado', 'Enlouquecendo', 'Enredado', 'Envenenado',
-  'Esmorecido', 'Exausto', 'Fascinado', 'Fatigado', 'Fraco', 'Frustrado', 'Imóvel', 'Inconsciente', 'Indefeso',
-  'Lento', 'Machucado', 'Morrendo', 'Ofuscado', 'Paralisado', 'Pasmo', 'Perturbado', 'Petrificado', 'Sangrando',
-  'Surdo', 'Surpreendido', 'Vulnerável',
+  'Abalado', 'Afogado', 'Agarrado', 'Alquebrado', 'Amortecido', 'Apavorado', 'Asfixiado', 'Atônito', 'Atordoado',
+  'Caçando', 'Caído', 'Calmo', 'Cego', 'Concentrado', 'Confuso', 'Controlado', 'Curado', 'Debilitado',
+  'Defendendo', 'Desprevenido', 'Doente', 'Em Chamas', 'Enfurecido', 'Enjoado', 'Enlouquecendo', 'Enredado', 'Envenenado',
+  'Escondido', 'Esmorecido', 'Exausto', 'Exposto', 'Fascinado', 'Fatigado', 'Fervoroso', 'Flutuando', 'Fraco',
+  'Frustrado', 'Furtivo', 'Imóvel', 'Inconsciente', 'Indefeso', 'Invisível', 'Lento', 'Machucado', 'Morrendo',
+  'Obcecado', 'Ofuscado', 'Paralisado', 'Pasmo', 'Perseguido', 'Perturbado', 'Petrificado', 'Protegido', 'Sangrando',
+  'Silencioso', 'Surdo', 'Surpreendido', 'Vulnerável',
 ]
 
 export const NEX_VALORES = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 99]

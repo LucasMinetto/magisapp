@@ -1,6 +1,6 @@
 import { openAsync, type DB as NativeDB } from '@op-engineering/op-sqlite';
 
-export type DB = NativeDB;
+export type DB = NativeDB & { ready?: Promise<NativeDB> };
 
 export type DriverOptions = { name: string; location?: string };
 

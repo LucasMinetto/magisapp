@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useFicha } from '@/hooks/useFicha';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
+import { generateId } from '@/lib/id';
 
 const PRESETS = ['1d20', '1d100', '1d6', '2d6', '1d8', '1d10', '3d20'];
 
@@ -35,7 +36,7 @@ function rolarFormula(formula: string): { dados: number[]; total: number; faces:
 export default function RolagemScreen() {
   const { campaignId } = useLocalSearchParams<{ campaignId?: string }>();
   const { user } = useAuth();
-  const campanha = campaignId ?? user?.campaignId ?? 'default';
+  const campanha = campaignId ?? useAuth.getState().campaignId ?? 'default';
   const userId = user?.id ?? 'user-1';
   const { ficha } = useFicha(campanha, userId);
 
@@ -53,7 +54,7 @@ export default function RolagemScreen() {
       }
       setErro(null);
       const res: Resultado = {
-        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        id: generateId(),
         formula: f,
         dados: r.dados,
         total: r.total,
@@ -68,9 +69,9 @@ export default function RolagemScreen() {
 
   const rolarPericia = (nome: string) => {
     const base = (ficha?.pericias[nome]?.treino || 0) + (ficha?.pericias[nome]?.extra || 0);
-    const d20 = 1 + Math.floor(Math.random() * 20);
+    const d20 = 1 + Math.floor(Math.random() * 20); // eslint-disable-line react-hooks/purity
     const res: Resultado = {
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      id: generateId(),
       formula: nome + ' (1d20+' + String(base) + ')',
       dados: [d20],
       total: d20 + base,

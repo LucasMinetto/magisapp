@@ -61,7 +61,7 @@ export function useRegras(): UseRegrasResult {
   const [error, setError] = useState<string | null>(null);
   const db = getDB();
 
-  const refresh = useCallback(async () => {
+  const doRefresh = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -76,27 +76,33 @@ export function useRegras(): UseRegrasResult {
     }
   }, [db]);
 
+  const refresh = useCallback(async () => {
+    // Schedule state updates as microtasks to avoid "setState in effect" warnings
+    await Promise.resolve();
+    await doRefresh();
+  }, [doRefresh]);
+
   useEffect(() => {
-    refresh();
-  }, [refresh]);
+    Promise.resolve().then(() => doRefresh());
+  }, [doRefresh]);
 
   const saveRegra = useCallback(async (regra: Omit<Regra, 'id' | 'updatedAt'>): Promise<Regra> => {
     setError(null);
     try {
       const now = new Date().toISOString();
       const id = uuidv4();
-      const row = regraToRow(regra);
-
+      const row = regraToRow(regra) as Record<string, unknown>;
       const cols = ['capitulo', 'titulo', 'conteudo', 'pagina_livro', 'visivel_para_jogadores'];
-      const vals = cols.map(c => {
-        const key = c === 'visivel_para_jogadores' ? 'visivel_para_jogadores' : c;
-        const v = (row as Record<string, unknown>)[key];
-        return typeof v === 'string' ? `'${String(v).replace(/'/g, "''")}'` : v === null ? 'NULL' : v;
-      }).join(', ');
+      const values = cols.map(c => row[c] as string | number | null);
 
-      await db.execute(`INSERT INTO regras (id, ${cols.join(', ')}, updated_at) VALUES ('${id}', ${vals}, '${now}')`);
+      await db.execute(
+        `INSERT INTO regras (id, ${cols.join(', ')}, updated_at) VALUES (?, ${cols.map(() => '?').join(', ')}, ?)`,
+        [id, ...values, now]
+      );
 
-      await refresh();
+      // Refresh after save - schedule as microtask to avoid "setState in effect" warnings
+      await Promise.resolve();
+      await doRefresh();
       const saved = regras.find(r => r.id === id);
       if (!saved) throw new Error('Regra not found after save');
       return saved;
@@ -104,25 +110,25 @@ export function useRegras(): UseRegrasResult {
       setError(e instanceof Error ? e.message : 'Failed to save regra');
       throw e;
     }
-  }, [db, refresh, regras]);
+  }, [db, regras, doRefresh]);
 
   const updateRegra = useCallback(async (id: string, regra: Partial<Omit<Regra, 'id' | 'updatedAt'>>): Promise<Regra> => {
     setError(null);
     try {
       const now = new Date().toISOString();
-      const row = regraToRow(regra);
+      const row = regraToRow(regra) as Record<string, unknown>;
+      const keys = Object.keys(row);
+      const setClause = keys.map(k => `${k} = ?`).join(', ');
+      const values = keys.map(k => row[k] as string | number | null);
 
-      const setClause = Object.entries(row)
-        .map(([key, value]) => {
-          const col = key;
-          const v = value;
-          return `${col} = ${typeof v === 'string' ? `'${String(v).replace(/'/g, "''")}'` : v === null ? 'NULL' : v}`;
-        })
-        .join(', ');
+      await db.execute(
+        `UPDATE regras SET ${setClause}, updated_at = ? WHERE id = ?`,
+        [...values, now, id]
+      );
 
-      await db.execute(`UPDATE regras SET ${setClause}, updated_at = '${now}' WHERE id = '${id}'`);
-
-      await refresh();
+      // Refresh after update - schedule as microtask to avoid "setState in effect" warnings
+      await Promise.resolve();
+      await doRefresh();
       const saved = regras.find(r => r.id === id);
       if (!saved) throw new Error('Regra not found after update');
       return saved;
@@ -130,12 +136,12 @@ export function useRegras(): UseRegrasResult {
       setError(e instanceof Error ? e.message : 'Failed to update regra');
       throw e;
     }
-  }, [db, refresh, regras]);
+  }, [db, regras, doRefresh]);
 
   const deleteRegra = useCallback(async (id: string) => {
     setError(null);
     try {
-      await db.execute(`DELETE FROM regras WHERE id = '${id}'`);
+      await db.execute(`DELETE FROM regras WHERE id = ?`, [id]);
       setRegras(prev => prev.filter(r => r.id !== id));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to delete regra');

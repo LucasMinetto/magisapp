@@ -5,11 +5,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { useFicha } from '@/hooks/useFicha';
 import { useBiblioteca } from '@/hooks/useBiblioteca';
 import { Card, CardContent } from '@/components/ui/Card';
+import { generateId } from '@/lib/id';
 
 export default function FichaRituaisScreen() {
   const { campaignId } = useLocalSearchParams<{ campaignId?: string }>();
   const { user } = useAuth();
-  const campanha = campaignId ?? user?.campaignId ?? 'default';
+  const campanha = campaignId ?? useAuth.getState().campaignId ?? 'default';
   const userId = user?.id ?? 'user-1';
   const { ficha, loading, error, saveFicha } = useFicha(campanha, userId);
   const { rituais } = useBiblioteca();
@@ -28,7 +29,7 @@ export default function FichaRituaisScreen() {
       rituais: [
         ...ficha.rituais,
         {
-          id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+          id: generateId(),
           nome,
           elemento: modelo?.elemento ?? '',
           circulo: modelo?.circulo ?? 1,

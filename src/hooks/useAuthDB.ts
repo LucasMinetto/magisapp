@@ -1,5 +1,12 @@
-import { useCallback, useEffect, useState } from 'react';
-import { getDB } from '../db';
+/**
+ * Auth DB Store (Zustand) - persistência de credenciais, tokens e usuário no SQLite.
+ * Substitui o hook useAuthDB por um store global acessível fora de componentes React.
+ */
+
+import { create } from 'zustand';
+import { getDB, ensureDatabaseReady } from '../db';
+import { toBase64 } from '../lib/base64';
+import { timeoutSignal } from '../lib/timeout';
 
 export interface AuthRow {
   key: string;
@@ -27,18 +34,19 @@ export interface SyncCredentials {
   password: string;
 }
 
-export interface UseAuthDBResult {
+interface AuthDBState {
   currentUser: CurrentUser | null;
   tokens: Map<string, CampaignToken>;
   syncCredentials: SyncCredentials | null;
   loading: boolean;
   error: string | null;
+
+  refresh: () => Promise<void>;
   setCurrentUser: (user: CurrentUser | null) => Promise<void>;
   getToken: (campaignId: string) => CampaignToken | null;
   setToken: (campaignId: string, token: CampaignToken) => Promise<void>;
   deleteToken: (campaignId: string) => Promise<void>;
   clearAll: () => Promise<void>;
-  refresh: () => Promise<void>;
   saveCredentials: (credentials: SyncCredentials) => Promise<void>;
   getCredentials: () => SyncCredentials | null;
   testConnection: (credentials?: SyncCredentials) => Promise<boolean>;
@@ -68,18 +76,18 @@ function parseCredentials(value: string): SyncCredentials | null {
   }
 }
 
-export function useAuthDB(): UseAuthDBResult {
-  const [currentUser, setCurrentUserState] = useState<CurrentUser | null>(null);
-  const [tokens, setTokensState] = useState<Map<string, CampaignToken>>(new Map());
-  const [syncCredentials, setSyncCredentialsState] = useState<SyncCredentials | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const db = getDB();
+export const useAuthDB = create<AuthDBState>()((set, get) => ({
+  currentUser: null,
+  tokens: new Map<string, CampaignToken>(),
+  syncCredentials: null,
+  loading: true,
+  error: null,
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  refresh: async () => {
+    set({ loading: true, error: null });
     try {
+      await ensureDatabaseReady();
+      const db = getDB();
       const result = await db.execute(`SELECT * FROM auth`);
       const newTokens = new Map<string, CampaignToken>();
       let user: CurrentUser | null = null;
@@ -90,7 +98,7 @@ export function useAuthDB(): UseAuthDBResult {
         if (r.key === 'current_user') {
           user = parseCurrentUser(r.value);
         } else if (r.key.startsWith('token_')) {
-          const campaignId = r.key.slice(6); // remove 'token_' prefix
+          const campaignId = r.key.slice(6);
           const token = parseToken(r.value);
           if (token) {
             newTokens.set(campaignId, token);
@@ -100,135 +108,143 @@ export function useAuthDB(): UseAuthDBResult {
         }
       }
 
-      setCurrentUserState(user);
-      setTokensState(newTokens);
-      setSyncCredentialsState(creds);
+      set({ currentUser: user, tokens: newTokens, syncCredentials: creds });
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load auth data');
+      set({ error: e instanceof Error ? e.message : 'Failed to load auth data' });
     } finally {
-      setLoading(false);
+      set({ loading: false });
     }
-  }, [db]);
+  },
 
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
-
-  const setCurrentUser = useCallback(async (user: CurrentUser | null) => {
-    setError(null);
+  setCurrentUser: async (user: CurrentUser | null) => {
+    set({ error: null });
     try {
+      await ensureDatabaseReady();
+      const db = getDB();
       const now = new Date().toISOString();
       if (user) {
-        const value = JSON.stringify(user).replace(/'/g, "''");
-        await db.execute(`INSERT OR REPLACE INTO auth (key, value, updated_at) VALUES ('current_user', '${value}', '${now}')`);
+        await db.execute(
+          `INSERT OR REPLACE INTO auth (key, value, updated_at) VALUES (?, ?, ?)`,
+          ['current_user', JSON.stringify(user), now]
+        );
       } else {
-        await db.execute(`DELETE FROM auth WHERE key = 'current_user'`);
+        await db.execute(`DELETE FROM auth WHERE key = ?`, ['current_user']);
       }
-      setCurrentUserState(user);
+      set({ currentUser: user });
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to set current user');
+      set({ error: e instanceof Error ? e.message : 'Failed to set current user' });
       throw e;
     }
-  }, [db]);
+  },
 
-  const getToken = useCallback((campaignId: string): CampaignToken | null => {
-    return tokens.get(campaignId) ?? null;
-  }, [tokens]);
+  getToken: (campaignId: string): CampaignToken | null => {
+    return get().tokens.get(campaignId) ?? null;
+  },
 
-  const setToken = useCallback(async (campaignId: string, token: CampaignToken) => {
-    setError(null);
+  setToken: async (campaignId: string, token: CampaignToken) => {
+    set({ error: null });
     try {
+      await ensureDatabaseReady();
+      const db = getDB();
       const now = new Date().toISOString();
       const key = `token_${campaignId}`;
-      const value = JSON.stringify(token).replace(/'/g, "''");
-      await db.execute(`INSERT OR REPLACE INTO auth (key, value, updated_at) VALUES ('${key}', '${value}', '${now}')`);
-      setTokensState(prev => new Map(prev).set(campaignId, token));
+      await db.execute(
+        `INSERT OR REPLACE INTO auth (key, value, updated_at) VALUES (?, ?, ?)`,
+        [key, JSON.stringify(token), now]
+      );
+      set({ tokens: new Map(get().tokens).set(campaignId, token) });
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to set token');
+      set({ error: e instanceof Error ? e.message : 'Failed to set token' });
       throw e;
     }
-  }, [db]);
+  },
 
-  const deleteToken = useCallback(async (campaignId: string) => {
-    setError(null);
+  deleteToken: async (campaignId: string) => {
+    set({ error: null });
     try {
+      await ensureDatabaseReady();
+      const db = getDB();
       const key = `token_${campaignId}`;
-      await db.execute(`DELETE FROM auth WHERE key = '${key}'`);
-      setTokensState(prev => {
-        const next = new Map(prev);
-        next.delete(campaignId);
-        return next;
-      });
+      await db.execute(`DELETE FROM auth WHERE key = ?`, [key]);
+      const next = new Map(get().tokens);
+      next.delete(campaignId);
+      set({ tokens: next });
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to delete token');
+      set({ error: e instanceof Error ? e.message : 'Failed to delete token' });
       throw e;
     }
-  }, [db]);
+  },
 
-  const clearAll = useCallback(async () => {
-    setError(null);
+  clearAll: async () => {
+    set({ error: null });
     try {
+      await ensureDatabaseReady();
+      const db = getDB();
       await db.execute(`DELETE FROM auth`);
-      setCurrentUserState(null);
-      setTokensState(new Map());
-      setSyncCredentialsState(null);
+      set({ currentUser: null, tokens: new Map(), syncCredentials: null });
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to clear auth data');
+      set({ error: e instanceof Error ? e.message : 'Failed to clear auth data' });
       throw e;
     }
-  }, [db]);
+  },
 
-  const saveCredentials = useCallback(async (credentials: SyncCredentials) => {
-    setError(null);
+  saveCredentials: async (credentials: SyncCredentials) => {
+    set({ error: null });
     try {
+      await ensureDatabaseReady();
+      const db = getDB();
       const now = new Date().toISOString();
-      const value = JSON.stringify(credentials).replace(/'/g, "''");
-      await db.execute(`INSERT OR REPLACE INTO auth (key, value, updated_at) VALUES ('sync_credentials', '${value}', '${now}')`);
-      setSyncCredentialsState(credentials);
+      await db.execute(
+        `INSERT OR REPLACE INTO auth (key, value, updated_at) VALUES (?, ?, ?)`,
+        ['sync_credentials', JSON.stringify(credentials), now]
+      );
+      set({ syncCredentials: credentials });
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to save credentials');
+      set({ error: e instanceof Error ? e.message : 'Failed to save credentials' });
       throw e;
     }
-  }, [db]);
+  },
 
-  const getCredentials = useCallback((): SyncCredentials | null => {
-    return syncCredentials;
-  }, [syncCredentials]);
+  getCredentials: (): SyncCredentials | null => {
+    return get().syncCredentials;
+  },
 
-  const testConnection = useCallback(async (credentials?: SyncCredentials): Promise<boolean> => {
-    const creds = credentials ?? syncCredentials;
+  testConnection: async (credentials?: SyncCredentials): Promise<boolean> => {
+    const creds = credentials ?? get().syncCredentials;
     if (!creds?.serverUrl || !creds?.username) {
       return false;
     }
     try {
-      // Try to connect to the server's health endpoint
       const response = await fetch(`${creds.serverUrl}/health`, {
         method: 'GET',
         headers: {
-          'Authorization': `Basic ${btoa(`${creds.username}:${creds.password}`)}`,
+          'Authorization': `Basic ${toBase64(`${creds.username}:${creds.password}`)}`,
         },
-        signal: AbortSignal.timeout(5000),
+        signal: timeoutSignal(5000),
       });
       return response.ok;
     } catch {
       return false;
     }
-  }, [syncCredentials]);
+  },
+}));
+
+// Initialize on import (fire-and-forget)
+useAuthDB.getState().refresh();
+
+// React hook wrapper for components that need reactive state
+import { useSyncExternalStore } from 'react';
+
+export function useAuthDBHook() {
+  const state = useSyncExternalStore(
+    useAuthDB.subscribe,
+    () => useAuthDB.getState(),
+    () => ({ ...useAuthDB.getState(), loading: true })
+  );
 
   return {
-    currentUser,
-    tokens,
-    syncCredentials,
-    loading,
-    error,
-    setCurrentUser,
-    getToken,
-    setToken,
-    deleteToken,
-    clearAll,
-    refresh,
-    saveCredentials,
-    getCredentials,
-    testConnection,
+    ...state,
+    getToken: (campaignId: string) => useAuthDB.getState().getToken(campaignId),
+    getCredentials: () => useAuthDB.getState().getCredentials(),
   };
 }

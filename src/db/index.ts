@@ -171,7 +171,7 @@ CREATE TABLE rolagens (
   id TEXT PRIMARY KEY,
   campaign_id TEXT NOT NULL,
   user_id TEXT NOT NULL,
-  tipo TEXT NOT NULL CHECK (tipo IN ('teste', 'ataque', 'dano', 'ritual', 'iniciativa')),
+  tipo TEXT NOT NULL CHECK (tipo IN ('teste', 'ataque', 'dano', 'ritual', 'livre')),
   rotulo TEXT,
   formula TEXT NOT NULL,
   dados TEXT NOT NULL,
@@ -184,13 +184,6 @@ CREATE TABLE rolagens (
 CREATE INDEX idx_rolagens_campaign_user_created ON rolagens(campaign_id, user_id, created_at);
 `;
 
-type OpenOptions = {
-  name: string;
-  location?: string;
-  encryptionKey?: string;
-  failOnCreate?: boolean;
-  readOnly?: boolean;
-};
 
 export enum DB_TABLES {
   FICHA = 'ficha',
@@ -215,6 +208,14 @@ function getRawDB(): DB {
     _db = openDriver({ name: 'magistrado.db' });
   }
   return _db;
+}
+
+/** Await the driver's ready promise (native: PRAGMAs; web: async open). */
+async function waitDriverReady(db: DB): Promise<void> {
+  // The driver wrapper exposes a `ready` property (getter returning Promise<NativeDB>).
+  if (db.ready) {
+    await db.ready;
+  }
 }
 
 /**
@@ -364,6 +365,7 @@ let _bootstrapError: Error | null = null;
 
 async function bootstrapDatabase(): Promise<void> {
   const db = getRawDB();
+  await waitDriverReady(db);
   await runMigrations(db);
   // Guarda antes do seed (que também é idempotente por si só).
   const result = await db.execute(`SELECT COUNT(*) as c FROM ${DB_TABLES.REGRAS};`);

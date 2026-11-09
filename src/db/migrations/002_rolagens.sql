@@ -3,7 +3,7 @@ CREATE TABLE rolagens (
   id TEXT PRIMARY KEY,
   campaign_id TEXT NOT NULL,
   user_id TEXT NOT NULL,
-  tipo TEXT NOT NULL CHECK (tipo IN ('teste', 'ataque', 'dano', 'ritual', 'iniciativa')),
+  tipo TEXT NOT NULL CHECK (tipo IN ('teste', 'ataque', 'dano', 'ritual', 'livre')),
   rotulo TEXT,
   formula TEXT NOT NULL,
   dados TEXT NOT NULL,              -- JSON com os dados individuais da rolagem

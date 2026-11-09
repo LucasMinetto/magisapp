@@ -11,7 +11,7 @@ const ATRIBUTOS = ['agi', 'for', 'int', 'pre', 'vig'] as const;
 export default function FichaAtributosScreen() {
   const { campaignId } = useLocalSearchParams<{ campaignId?: string }>();
   const { user } = useAuth();
-  const campanha = campaignId ?? user?.campaignId ?? 'default';
+  const campanha = campaignId ?? useAuth.getState().campaignId ?? 'default';
   const userId = user?.id ?? 'user-1';
   const { ficha, loading, error, saveFicha } = useFicha(campanha, userId);
 

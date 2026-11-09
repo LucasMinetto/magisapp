@@ -3,8 +3,8 @@ import { DB_TABLES } from './index';
 import type { FichaAgente } from '../shared/ordem/esquemas';
 import type { RitualBiblioteca, ItemBiblioteca } from '../shared/ordem/esquemas';
 
-const SAMPLE_CAMPAIGN_ID = 'campaign-seed-001';
-const SAMPLE_USER_ID = 'user-seed-001';
+const SAMPLE_CAMPAIGN_ID = 'default';
+const SAMPLE_USER_ID = 'user-1';
 const SAMPLE_SOURCE_ID = 'source-oficial-001';
 
 function generateUUID(): string {

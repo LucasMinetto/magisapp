@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { toBase64, fromBase64 } from '../lib/base64';
 
 export interface QRCodePayload {
   serverUrl: string;
@@ -18,7 +19,7 @@ export interface ParsedQRResult {
  */
 export function encodeQRPayload(payload: QRCodePayload): string {
   const json = JSON.stringify(payload);
-  return btoa(json);
+  return toBase64(json);
 }
 
 /**
@@ -26,7 +27,7 @@ export function encodeQRPayload(payload: QRCodePayload): string {
  */
 export function decodeQRPayload(base64: string): ParsedQRResult {
   try {
-    const json = atob(base64);
+    const json = fromBase64(base64);
     const payload = JSON.parse(json) as QRCodePayload;
 
     // Validate required fields

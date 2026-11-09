@@ -1,27 +1,25 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, StyleProp, ViewStyle, TextStyle } from 'react-native';
 
 export interface CheckboxProps {
   label?: string;
   value: boolean;
   onChange: (value: boolean) => void;
   disabled?: boolean;
-  className?: string;
-  labelClassName?: string;
   size?: 'sm' | 'md' | 'lg';
   indeterminate?: boolean;
 }
 
-const sizeStyles = {
-  sm: 'w-4 h-4',
-  md: 'w-5 h-5',
-  lg: 'w-6 h-6',
+const boxSizes: Record<'sm' | 'md' | 'lg', number> = {
+  sm: 16,
+  md: 20,
+  lg: 24,
 };
 
-const labelSizeStyles = {
-  sm: 'text-sm',
-  md: 'text-md',
-  lg: 'text-lg',
+const labelSizes: Record<'sm' | 'md' | 'lg', number> = {
+  sm: 14,
+  md: 15,
+  lg: 17,
 };
 
 export const Checkbox = ({
@@ -29,8 +27,6 @@ export const Checkbox = ({
   value,
   onChange,
   disabled = false,
-  className = '',
-  labelClassName = '',
   size = 'md',
   indeterminate = false,
 }: CheckboxProps) => {
@@ -40,42 +36,34 @@ export const Checkbox = ({
     }
   };
 
+  const boxStyle: StyleProp<ViewStyle> = [
+    styles.box,
+    { width: boxSizes[size], height: boxSizes[size] },
+    value
+      ? styles.boxChecked
+      : indeterminate
+        ? styles.boxIndeterminate
+        : styles.boxUnchecked,
+    disabled ? styles.disabled : null,
+  ];
+
+  const labelStyle: StyleProp<TextStyle> = [styles.label, { fontSize: labelSizes[size] }, disabled ? styles.disabled : null];
+
   return (
     <TouchableOpacity
       onPress={handlePress}
       disabled={disabled}
-      className={`flex-row items-center gap-2 ${className}`}
+      style={styles.row}
       activeOpacity={0.7}
     >
-      <View
-        className={`
-          ${sizeStyles[size]}
-          rounded border-2
-          flex-shrink-0
-          transition-colors duration-150
-          ${value ? 'bg-accent border-accent' : indeterminate ? 'bg-accent/50 border-accent' : 'border-border'}
-          ${disabled ? 'opacity-50' : ''}
-        `}
-        style={{
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-      >
-        {value && (
-          <Text className="text-white text-xs" style={{ lineHeight: 1 }}>✓</Text>
-        )}
-        {indeterminate && !value && (
-          <View className="w-full h-0.5 bg-white" />
-        )}
+      <View style={boxStyle}>
+        {value ? (
+          <Text style={styles.check}>✓</Text>
+        ) : indeterminate ? (
+          <View style={styles.dash} />
+        ) : null}
       </View>
-      {label && (
-        <Text
-          className={`font-medium text-text ${labelSizeStyles[size]} ${labelClassName}`}
-          disabled={disabled}
-        >
-          {label}
-        </Text>
-      )}
+      {label ? <Text style={labelStyle}>{label}</Text> : null}
     </TouchableOpacity>
   );
 };
@@ -86,7 +74,6 @@ export interface CheckboxGroupProps {
   value: string[];
   onChange: (value: string[]) => void;
   disabled?: boolean;
-  className?: string;
   columns?: 1 | 2 | 3;
 }
 
@@ -96,7 +83,6 @@ export const CheckboxGroup = ({
   value,
   onChange,
   disabled = false,
-  className = '',
   columns = 1,
 }: CheckboxGroupProps) => {
   const handleChange = (optionValue: string) => {
@@ -107,22 +93,16 @@ export const CheckboxGroup = ({
     onChange(newValue);
   };
 
-  const columnStyles = {
-    1: 'flex-col gap-2',
-    2: 'flex-row flex-wrap gap-4',
-    3: 'flex-row flex-wrap gap-4',
-  };
-
   return (
-    <View className={className}>
-      {label && <Text className="text-sm font-medium text-text mb-2">{label}</Text>}
-      <View className={columnStyles[columns]}>
+    <View>
+      {label ? <Text style={styles.groupLabel}>{label}</Text> : null}
+      <View style={[styles.group, columns === 1 ? styles.groupColumn : styles.groupRow]}>
         {options.map((opt) => (
           <Checkbox
             key={opt.value}
             label={opt.label}
             value={value.includes(opt.value)}
-            onChange={(checked) => handleChange(opt.value)}
+            onChange={() => handleChange(opt.value)}
             disabled={disabled || opt.disabled}
             size="md"
           />
@@ -131,3 +111,64 @@ export const CheckboxGroup = ({
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  box: {
+    borderWidth: 2,
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexShrink: 0,
+  },
+  boxChecked: {
+    backgroundColor: '#3b82f6',
+    borderColor: '#3b82f6',
+  },
+  boxIndeterminate: {
+    backgroundColor: 'rgba(59, 130, 246, 0.5)',
+    borderColor: '#3b82f6',
+  },
+  boxUnchecked: {
+    backgroundColor: 'transparent',
+    borderColor: '#2a2a3e',
+  },
+  check: {
+    color: '#ffffff',
+    fontSize: 12,
+    lineHeight: 14,
+  },
+  dash: {
+    width: '60%',
+    height: 2,
+    backgroundColor: '#ffffff',
+  },
+  label: {
+    fontWeight: '500',
+    color: '#e8e8f0',
+  },
+  disabled: {
+    opacity: 0.5,
+  },
+  groupLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#e8e8f0',
+    marginBottom: 8,
+  },
+  group: {
+    gap: 8,
+  },
+  groupColumn: {
+    flexDirection: 'column',
+  },
+  groupRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
+  },
+});

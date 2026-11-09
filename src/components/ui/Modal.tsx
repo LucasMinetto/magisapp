@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal as RNModal } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal as RNModal, ViewStyle } from 'react-native';
 
 export interface ModalProps {
   visible: boolean;
@@ -11,12 +11,12 @@ export interface ModalProps {
   closeOnOverlayPress?: boolean;
 }
 
-const sizeStyles = {
-  sm: 'max-w-[320px]',
-  md: 'max-w-[400px]',
-  lg: 'max-w-[560px]',
-  xl: 'max-w-[720px]',
-  full: 'max-w-full mx-4',
+const sizeStyles: Record<NonNullable<ModalProps['size']>, ViewStyle> = {
+  sm: { maxWidth: 320 },
+  md: { maxWidth: 400 },
+  lg: { maxWidth: 560 },
+  xl: { maxWidth: 720 },
+  full: { maxWidth: '100%', marginHorizontal: 16 },
 };
 
 export const Modal = ({
@@ -39,18 +39,18 @@ export const Modal = ({
     >
       <View style={StyleSheet.absoluteFill} onTouchStart={closeOnOverlayPress !== false ? onClose : undefined} />
       <View style={styles.container}>
-        <View className={`bg-bgElevated rounded-xl overflow-hidden ${sizeStyles[size]}`} style={styles.modal}>
+        <View style={[styles.modal, sizeStyles[size]]}>
           {(title || !hideCloseButton) && (
-            <View className="flex-row items-center justify-between p-4 border-b border-border">
-              {title && <Text className="text-lg font-semibold text-text">{title}</Text>}
+            <View style={styles.header}>
+              {title ? <Text style={styles.title}>{title}</Text> : <View />}
               {!hideCloseButton && (
-                <TouchableOpacity onPress={onClose} className="p-2 rounded-lg">
-                  <Text className="text-2xl text-textMuted">✕</Text>
+                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                  <Text style={styles.closeIcon}>✕</Text>
                 </TouchableOpacity>
               )}
             </View>
           )}
-          <View className="p-4 max-h-[70vh] overflow-y-auto">
+          <View style={styles.body}>
             {children}
           </View>
         </View>
@@ -69,6 +69,34 @@ const styles = StyleSheet.create({
   modal: {
     backgroundColor: '#1a1a2e',
     borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#2a2a3e',
     width: '100%',
+    overflow: 'hidden',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2a2a3e',
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#e8e8f0',
+  },
+  closeButton: {
+    padding: 8,
+    borderRadius: 8,
+  },
+  closeIcon: {
+    fontSize: 22,
+    color: '#8888a0',
+  },
+  body: {
+    padding: 16,
+    maxHeight: 560,
   },
 });

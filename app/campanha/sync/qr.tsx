@@ -33,14 +33,7 @@ export default function QRScannerScreen() {
   const [password, setPassword] = useState('');
   const [campaignId, setCampaignId] = useState(params.campaignId || '');
 
-  // If deep link data is passed, parse it immediately
-  useEffect(() => {
-    if (params.data && !scanned) {
-      handleDeepLinkData(params.data);
-    }
-  }, [params.data, scanned]);
-
-  const requestCameraPermission = useCallback(async () => {
+const requestCameraPermission = useCallback(async () => {
     if (Platform.OS === 'android') {
       const granted = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.CAMERA
@@ -52,10 +45,8 @@ export default function QRScannerScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    requestCameraPermission();
-  }, [requestCameraPermission]);
 
+  // If deep link data is passed, parse it immediately
   const handleDeepLinkData = async (data: string) => {
     const result = parseDeepLinkUrl(`magistrado://sync?data=${data}`);
     if (result.success && result.payload) {
@@ -165,6 +156,21 @@ export default function QRScannerScreen() {
       </View>
     );
   }
+
+
+
+useEffect(() => {
+    if (params.data && !scanned) {
+      handleDeepLinkData(params.data);
+    }
+  }, [params.data, scanned]);
+
+  
+  useEffect(() => {
+    Promise.resolve().then(() => requestCameraPermission());
+  }, [requestCameraPermission]);
+
+  
 
   return (
     <View style={styles.container}>

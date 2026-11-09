@@ -11,7 +11,7 @@ type Aba = 'rituais' | 'itens';
 export default function BibliotecaScreen() {
   const { campaignId } = useLocalSearchParams<{ campaignId?: string }>();
   const { user } = useAuth();
-  const campanha = campaignId ?? user?.campaignId ?? 'default';
+  const campanha = campaignId ?? useAuth.getState().campaignId ?? 'default';
   const userId = user?.id ?? 'user-1';
   const { rituais, itens, loading, error } = useBiblioteca();
   const [aba, setAba] = useState<Aba>('rituais');

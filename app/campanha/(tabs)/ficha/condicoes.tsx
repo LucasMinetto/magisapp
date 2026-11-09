@@ -5,18 +5,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { useFicha } from '@/hooks/useFicha';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
-
-const CONDICOES = [
-  'Sangrando', 'Envenenado', 'Queimando', 'Frio', 'Atordoado',
-  'Caído', 'Agarrado', 'Imobilizado', 'Lento', 'Silenciado',
-  'Cego', 'Surdo', 'Apavorado', 'Enlouquecendo', 'Inconsciente',
-  'Morrendo', 'Morto',
-];
+import { CONDICOES } from 'shared/ordem/regras';
 
 export default function FichaCondicoesScreen() {
   const { campaignId } = useLocalSearchParams<{ campaignId?: string }>();
   const { user } = useAuth();
-  const campanha = campaignId ?? user?.campaignId ?? 'default';
+  const campanha = campaignId ?? useAuth.getState().campaignId ?? 'default';
   const userId = user?.id ?? 'user-1';
   const { ficha, loading, error, saveFicha } = useFicha(campanha, userId);
 

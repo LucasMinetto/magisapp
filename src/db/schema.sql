@@ -183,6 +183,6 @@ CREATE TABLE rolagens (
   falha INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL,
   synced_at TEXT,
-  CHECK (tipo IN ('teste', 'ataque', 'dano', 'ritual', 'iniciativa'))
+  CHECK (tipo IN ('teste', 'ataque', 'dano', 'ritual', 'livre'))
 );
 CREATE INDEX idx_rolagens_campaign_user_created ON rolagens(campaign_id, user_id, created_at);

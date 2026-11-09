@@ -74,11 +74,11 @@ const AnimatedToast = React.memo(({ toast, onClose }: { toast: Toast; onClose: (
         { transform: [{ translateX: slideAnim }], opacity: fadeAnim },
       ]}
     >
-      <View className="flex-row items-center gap-3">
-        <Text className="text-white text-lg">{icons[toast.type]}</Text>
-        <Text className="flex-1 text-white text-sm">{toast.message}</Text>
-        <TouchableOpacity onPress={onClose} className="p-1">
-          <Text className="text-white text-lg">✕</Text>
+      <View style={styles.toastRow}>
+        <Text style={styles.icon}>{icons[toast.type]}</Text>
+        <Text style={styles.message}>{toast.message}</Text>
+        <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+          <Text style={styles.closeIcon}>✕</Text>
         </TouchableOpacity>
       </View>
     </Animated.View>
@@ -92,12 +92,12 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({
 }) => {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const showToast = useCallback((message: string, type: ToastType = 'info', duration = 4000) => {
-    const id = Math.random().toString(36).substr(2, 9);
+  const showToast = useCallback((message: string, type: ToastType = 'info', duration = defaultDuration) => {
+    const id = Math.random().toString(36).slice(2, 11);
     const newToast: Toast = { id, message, type, duration };
     setToasts((prev) => [...prev.slice(-(maxToasts - 1)), newToast]);
     return id;
-  }, [maxToasts]);
+  }, [maxToasts, defaultDuration]);
 
   const hideToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
@@ -124,11 +124,8 @@ const styles = StyleSheet.create({
     zIndex: 9999,
     flexDirection: 'column',
     gap: 8,
-    pointerEvents: 'box-none',
   },
   toast: {
-    flexDirection: 'row',
-    alignItems: 'center',
     padding: 12,
     borderRadius: 12,
     shadowColor: '#000',
@@ -138,5 +135,26 @@ const styles = StyleSheet.create({
     elevation: 8,
     minWidth: 280,
     maxWidth: '90%',
+  },
+  toastRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  icon: {
+    color: '#ffffff',
+    fontSize: 18,
+  },
+  message: {
+    flex: 1,
+    color: '#ffffff',
+    fontSize: 14,
+  },
+  closeButton: {
+    padding: 4,
+  },
+  closeIcon: {
+    color: '#ffffff',
+    fontSize: 18,
   },
 });
